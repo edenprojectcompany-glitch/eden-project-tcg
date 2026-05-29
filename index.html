@@ -2164,13 +2164,13 @@ window.addEventListener('load', () => {
     {id:18, qty:12}, // SV10 — Glory Rocket (JP)
     {id:11, qty:12}, // M2 — Méga Inferno X (JP)
     {id:15, qty:12}, // SV8a — Terastal Fest (JP)
-    {id:10, qty:12}, // M2a — Méga Dream EX (JP)
+    {id:10, qty:20}, // M2a — Méga Dream EX (JP — 20 displays)
     {id:2,  qty:20}, // CN151 Vol.4 (CN)
     {id:1,  qty:20}, // CN151 Vol.3 (CN)
-    {id:21, qty:12}, // SV2a — Pokémon 151 (JP)
+    {id:21, qty:20}, // SV2a — Pokémon 151 (JP — 20 displays)
     {id:22, qty:12}, // M5 — Mega Abyss Eye (JP)
   ];
-  const CASE_SURCHARGE = 150; // €, frais logistique/livraison case complète
+  const CASE_SURCHARGE = 150;
 
   function renderCases(){
     const grid=document.getElementById('caseGrid'); if(!grid) return;
@@ -2196,7 +2196,6 @@ window.addEventListener('load', () => {
           <div class="case-foot">
             <div>
               <div class="case-price">${caseTotal}<span class="case-unit">€/case</span></div>
-              <div style="font-size:10.5px;color:var(--text-dimmer);margin-top:2px">dont 150€ frais logistique</div>
               ${saving>0?`<div class="case-save">Économie : ${saving}€ vs prix unitaire</div>`:''}
             </div>
             <button class="add-btn" onclick="event.stopPropagation(); for(let i=0;i<${caseQty};i++) addToCart(${p.id})" aria-label="Ajouter">
