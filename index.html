@@ -314,25 +314,47 @@ h1 span{display:block}
   padding:3px 9px;border-radius:100px;background:rgba(127,255,170,.1);
   border:1px solid rgba(127,255,170,.2);color:var(--success)}
 
-/* ── FORTUNE WHEEL ── */
-.wheel-section{padding:28px;border-radius:var(--radius-card);background:var(--obsidian-2);
-  border:1px solid var(--glass-border);margin-bottom:24px}
-.wheel-section h4{font-family:'Fraunces',serif;font-size:20px;font-weight:500;margin-bottom:6px}
-.wheel-section .desc{font-size:13px;color:var(--text-dim);margin-bottom:20px;line-height:1.5}
-.wheel-wrap{display:flex;gap:36px;align-items:center;flex-wrap:wrap}
+/* ── FORTUNE WHEEL DASHBOARD ── */
+.wheel-section{padding:32px;border-radius:var(--radius-card);background:var(--obsidian-2);
+  border:1px solid var(--glass-border);margin-bottom:24px;position:relative;overflow:hidden}
+.wheel-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(201,168,255,.06) 0%,transparent 60%);pointer-events:none}
+.wheel-section h4{font-family:'Fraunces',serif;font-size:22px;font-weight:500;margin-bottom:6px}
+.wheel-section .desc{font-size:13px;color:var(--text-dim);margin-bottom:24px;line-height:1.5}
+.wheel-wrap{display:flex;gap:48px;align-items:center;flex-wrap:wrap}
+/* Canvas wrap avec halo */
 .wheel-canvas-wrap{position:relative;flex-shrink:0}
-#wheelCanvas{border-radius:50%;display:block}
-.wheel-needle{position:absolute;top:-12px;left:50%;transform:translateX(-50%);
-  width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;
-  border-top:22px solid var(--text);filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));z-index:2}
-.wheel-prize-display{flex:1;min-width:220px}
-.wheel-prize-display .prize-label{font-family:'Fraunces',serif;font-size:26px;font-weight:400;margin-bottom:8px;min-height:36px}
-.wheel-prize-display .prize-code{font-size:13px;color:var(--text-dim);margin-bottom:16px}
-.wheel-prize-display .code-chip{display:inline-block;padding:6px 14px;border-radius:8px;
-  background:rgba(127,255,170,.1);border:1px solid rgba(127,255,170,.2);
-  color:var(--success);font-family:monospace;font-size:15px;font-weight:700;letter-spacing:.08em}
-.wheel-cooldown{font-size:12.5px;color:var(--text-dim);margin-top:8px}
-.wheel-spin-btn{width:100%}
+.wheel-canvas-wrap::before{content:'';position:absolute;inset:-24px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(201,168,255,.18) 0%,rgba(127,217,255,.08) 40%,transparent 70%);
+  animation:wGlow 3.5s ease-in-out infinite;pointer-events:none;z-index:0}
+@keyframes wGlow{0%,100%{opacity:.6;transform:scale(.95)}50%{opacity:1;transform:scale(1.05)}}
+/* Anneau déco rotatif */
+.wheel-ring{position:absolute;border-radius:50%;border:1px solid rgba(201,168,255,.1);pointer-events:none;z-index:1;top:50%;left:50%;transform:translate(-50%,-50%)}
+.wheel-ring-1{width:calc(100% + 28px);height:calc(100% + 28px);animation:wRing1 30s linear infinite}
+.wheel-ring-2{width:calc(100% + 50px);height:calc(100% + 50px);border-color:rgba(127,217,255,.07);animation:wRing1 20s linear infinite reverse}
+@keyframes wRing1{to{transform:translate(-50%,-50%) rotate(360deg)}}
+#wheelCanvas{border-radius:50%;display:block;position:relative;z-index:2;
+  box-shadow:0 0 40px rgba(201,168,255,.2),0 0 80px rgba(127,217,255,.06)}
+/* Aiguille SVG */
+.wheel-needle{position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+  width:24px;height:42px;z-index:10;filter:drop-shadow(0 2px 10px rgba(201,168,255,.7));
+  animation:needlePulse 2s ease-in-out infinite}
+@keyframes needlePulse{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-3px)}}
+/* Affichage prize */
+.wheel-prize-display{flex:1;min-width:240px}
+.wheel-prize-display .prize-label{font-family:'Fraunces',serif;font-size:28px;font-weight:400;margin-bottom:10px;min-height:38px;
+  background:linear-gradient(135deg,#fff 0%,var(--foil-2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.wheel-prize-display .prize-label.neutral{background:none;-webkit-text-fill-color:var(--text)}
+.wheel-prize-display .prize-code{font-size:13.5px;color:var(--text-dim);margin-bottom:18px;line-height:1.6}
+.wheel-prize-display .code-chip{display:inline-block;padding:7px 16px;border-radius:10px;
+  background:rgba(127,217,255,.1);border:1px solid rgba(127,217,255,.3);
+  color:var(--foil-1);font-family:monospace;font-size:16px;font-weight:700;letter-spacing:.08em;
+  box-shadow:0 0 16px rgba(127,217,255,.15)}
+.wheel-cooldown{font-size:12.5px;color:var(--text-dim);margin-top:10px;min-height:18px}
+.wheel-spin-btn{width:100%;background:linear-gradient(135deg,var(--foil-2),var(--foil-1));color:#0a0a0c;
+  font-weight:700;border:none;border-radius:12px;padding:14px;font-size:15px;cursor:pointer;
+  box-shadow:0 4px 24px rgba(201,168,255,.3);transition:transform .2s,box-shadow .2s}
+.wheel-spin-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 32px rgba(201,168,255,.45)}
+.wheel-spin-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;background:var(--glass)}
 
 /* ── CART SIDEBAR ── */
 .cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);
@@ -970,8 +992,23 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
           <div class="desc">Un tirage gratuit tous les 30 jours. Tentez de gagner des réductions, des boosters ou une display gratuite.</div>
           <div class="wheel-wrap">
             <div class="wheel-canvas-wrap">
-              <div class="wheel-needle"></div>
-              <canvas id="wheelCanvas" width="280" height="280"></canvas>
+              <div class="wheel-ring wheel-ring-1"></div>
+              <div class="wheel-ring wheel-ring-2"></div>
+              <div class="wheel-needle">
+                <svg viewBox="0 0 24 42" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="42">
+                  <path d="M12 42 L1 7 Q12 0 23 7 Z" fill="url(#wng)"/>
+                  <circle cx="12" cy="7" r="5" fill="url(#wng2)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+                  <defs>
+                    <linearGradient id="wng" x1="12" y1="0" x2="12" y2="42" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#ffffff"/><stop offset="1" stop-color="#c9a8ff"/>
+                    </linearGradient>
+                    <radialGradient id="wng2" cx="50%" cy="50%" r="50%">
+                      <stop stop-color="#fff"/><stop offset="1" stop-color="#7fd9ff"/>
+                    </radialGradient>
+                  </defs>
+                </svg>
+              </div>
+              <canvas id="wheelCanvas" width="360" height="360"></canvas>
             </div>
             <div class="wheel-prize-display">
               <div class="prize-label" id="prizeLabel">Tournez la roue !</div>
@@ -1586,44 +1623,141 @@ window.addEventListener('load', () => {
 
   /* ══ CANVAS HOLO BG ══ */
   (function initBg() {
+    /* ══ LUCIOLES DORÉES ══ */
     const canvas = document.getElementById('holoCanvas');
     const ctx = canvas.getContext('2d');
-    let W, H, mouse = {x:-9999,y:-9999}, nodes = [];
-    const COLORS = ['#7fd9ff','#c9a8ff','#ffb3e6','#a8ffd4'];
+    let W, H, mouse = {x:-9999,y:-9999}, fireflies = [];
+
+    // Palette dorée / ambrée avec quelques touches foil
+    const GOLD = [
+      {h:'#ffd97f',g:'#ffb830'}, // or chaud
+      {h:'#ffe4a0',g:'#ffc94d'}, // or pale
+      {h:'#ffcc55',g:'#ff9f00'}, // ambre
+      {h:'#fff0c0',g:'#ffd060'}, // crème dorée
+      {h:'#c9a8ff',g:'#9b70ff'}, // touche foil violet (rare)
+      {h:'#7fd9ff',g:'#3ab8ff'}, // touche foil cyan (rare)
+    ];
+
+    function mkFirefly(W,H,i) {
+      const rare = Math.random() < .12; // 12% foil
+      const col = rare ? GOLD[4+Math.floor(Math.random()*2)] : GOLD[Math.floor(Math.random()*4)];
+      return {
+        x: Math.random()*W, y: Math.random()*H,
+        vx: (Math.random()-.5)*.22, vy: (Math.random()-.5)*.22,
+        r: .8 + Math.random()*2.2,        // rayon noyau
+        glow: 6 + Math.random()*18,        // rayon halo
+        phase: Math.random()*Math.PI*2,
+        speed: .004 + Math.random()*.008,
+        drift: (Math.random()-.5)*.12,
+        col, rare,
+        pulse: Math.random()*Math.PI*2,    // phase clignotement
+        pulseSpeed: .015 + Math.random()*.025,
+        alpha: .3 + Math.random()*.5,
+        trail: [],                          // traînée
+        trailLen: rare ? 8 : 4,
+      };
+    }
+
     function resize() {
       W = canvas.width = innerWidth; H = canvas.height = innerHeight;
-      const count = Math.min(Math.floor((W*H)/20000), 65);
-      nodes = Array.from({length:count},(_,i) => ({
-        x:Math.random()*W, y:Math.random()*H,
-        vx:(Math.random()-.5)*.35, vy:(Math.random()-.5)*.35,
-        r:1.5+Math.random()*1.5, color:COLORS[i%4], phase:Math.random()*Math.PI*2
-      }));
+      const count = Math.min(Math.floor((W*H)/14000), 80);
+      fireflies = Array.from({length:count},(_,i)=>mkFirefly(W,H,i));
     }
+
     function draw() {
       ctx.clearRect(0,0,W,H);
-      nodes.forEach(n => {
-        n.phase += .008; n.x += n.vx+Math.sin(n.phase)*.18; n.y += n.vy+Math.cos(n.phase*.7)*.18;
-        if(n.x<0||n.x>W) n.vx*=-1; if(n.y<0||n.y>H) n.vy*=-1;
-        n.x=Math.max(0,Math.min(W,n.x)); n.y=Math.max(0,Math.min(H,n.y));
-        const md=Math.hypot(n.x-mouse.x,n.y-mouse.y);
-        if(md<200){const f=(1-md/200)*.6;n.x+=(mouse.x-n.x)*f*.015;n.y+=(mouse.y-n.y)*f*.015;}
+      const t = performance.now()*.001;
+
+      fireflies.forEach(f => {
+        // Mouvement organique
+        f.phase += f.speed;
+        f.pulse += f.pulseSpeed;
+        f.x += f.vx + Math.sin(f.phase)*f.drift;
+        f.y += f.vy + Math.cos(f.phase*.73)*f.drift*.8;
+
+        // Rebond doux sur les bords
+        if(f.x<0||f.x>W) f.vx*=-1;
+        if(f.y<0||f.y>H) f.vy*=-1;
+        f.x = Math.max(0,Math.min(W,f.x));
+        f.y = Math.max(0,Math.min(H,f.y));
+
+        // Répulsion / attraction souris
+        const mx = mouse.x, my = mouse.y;
+        const md = Math.hypot(f.x-mx, f.y-my);
+        if(md < 180 && md > 0) {
+          const force = (1-md/180)*.04;
+          // Légère fuite de la souris
+          f.x += (f.x-mx)/md * force * 12;
+          f.y += (f.y-my)/md * force * 12;
+        }
+        // Légère attraction douce à distance
+        if(md > 180 && md < 400) {
+          const force = (1-(md-180)/220)*.008;
+          f.x += (mx-f.x)*force;
+          f.y += (my-f.y)*force;
+        }
+
+        // Traînée
+        f.trail.push({x:f.x, y:f.y});
+        if(f.trail.length > f.trailLen) f.trail.shift();
+
+        // Alpha clignotant
+        const pulseAlpha = f.alpha * (.6 + .4*Math.sin(f.pulse));
+        const proximity = md < 200 ? 1+(1-md/200)*.8 : 1;
+
+        // Dessiner traînée
+        if(f.trail.length > 1) {
+          for(let i=1;i<f.trail.length;i++) {
+            const ta = (i/f.trail.length)*pulseAlpha*.35*proximity;
+            ctx.beginPath();
+            ctx.moveTo(f.trail[i-1].x, f.trail[i-1].y);
+            ctx.lineTo(f.trail[i].x, f.trail[i].y);
+            ctx.strokeStyle = f.col.h;
+            ctx.globalAlpha = ta;
+            ctx.lineWidth = f.r*.4*(i/f.trail.length);
+            ctx.stroke();
+          }
+        }
+
+        // Halo externe (glow)
+        const gr = ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.glow*proximity);
+        gr.addColorStop(0, f.col.g+'88');
+        gr.addColorStop(.4, f.col.h+'44');
+        gr.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(f.x,f.y,f.glow*proximity,0,Math.PI*2);
+        ctx.fillStyle = gr;
+        ctx.globalAlpha = pulseAlpha*.7;
+        ctx.fill();
+
+        // Noyau lumineux
+        const cr = ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*1.8);
+        cr.addColorStop(0,'#ffffff');
+        cr.addColorStop(.3, f.col.h);
+        cr.addColorStop(1, f.col.g+'00');
+        ctx.beginPath();
+        ctx.arc(f.x,f.y,f.r*1.8,0,Math.PI*2);
+        ctx.fillStyle = cr;
+        ctx.globalAlpha = pulseAlpha*proximity;
+        ctx.fill();
+
+        // Étincelle centrale (point blanc pur)
+        ctx.beginPath();
+        ctx.arc(f.x,f.y,f.r*.5,0,Math.PI*2);
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = Math.min(1, pulseAlpha*1.4*proximity);
+        ctx.fill();
       });
-      for(let i=0;i<nodes.length;i++) for(let j=i+1;j<nodes.length;j++) {
-        const d=Math.hypot(nodes[i].x-nodes[j].x,nodes[i].y-nodes[j].y);
-        if(d<160){ctx.beginPath();ctx.moveTo(nodes[i].x,nodes[i].y);ctx.lineTo(nodes[j].x,nodes[j].y);
-          ctx.strokeStyle=nodes[i].color;ctx.globalAlpha=(1-d/160)*.15;ctx.lineWidth=.8;ctx.stroke();}
-      }
-      nodes.forEach(n => {
-        const d=Math.hypot(n.x-mouse.x,n.y-mouse.y);
-        if(d<220){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(mouse.x,mouse.y);
-          ctx.strokeStyle=n.color;ctx.globalAlpha=(1-d/220)*.32;ctx.lineWidth=1;ctx.stroke();}
-        ctx.globalAlpha=.5;ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=n.color;ctx.fill();
-      });
-      ctx.globalAlpha=1; requestAnimationFrame(draw);
+
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(draw);
     }
+
     window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+    window.addEventListener('touchmove',e=>{if(e.touches[0]){mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;}},{passive:true});
     window.addEventListener('mouseleave',()=>{mouse.x=-9999;mouse.y=-9999;});
-    window.addEventListener('resize',resize); resize(); draw();
+    window.addEventListener('resize',resize);
+    resize(); draw();
   })();
 
   /* ══ TILT 3D UNIVERSEL (souris + tactile) ══ */
@@ -2046,33 +2180,65 @@ window.addEventListener('load', () => {
   function drawWheelAt(angleDeg){
     const canvas=document.getElementById('wheelCanvas'); if(!canvas) return;
     const ctx=canvas.getContext('2d');
-    const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2,R=Math.min(cx,cy)-8;
+    const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2,R=Math.min(cx,cy)-10;
     const N=wheelPrizes.length, slice=(2*Math.PI)/N;
     const offset=-angleDeg*Math.PI/180-Math.PI/2;
     ctx.clearRect(0,0,W,H);
-    // Shadow ring
-    ctx.beginPath();ctx.arc(cx,cy,R+2,0,Math.PI*2);
-    ctx.strokeStyle='rgba(201,168,255,0.12)';ctx.lineWidth=4;ctx.stroke();
+
+    // Halo fond
+    const bg=ctx.createRadialGradient(cx,cy,R*.3,cx,cy,R+10);
+    bg.addColorStop(0,'rgba(201,168,255,0.08)'); bg.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(cx,cy,R+10,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
+
     wheelPrizes.forEach((prize,i)=>{
       const start=offset+i*slice, end=start+slice;
+      const mid=(start+end)/2;
+      // Dégradé segment
+      const gx=cx+Math.cos(mid)*R*.55, gy=cy+Math.sin(mid)*R*.55;
+      const sg=ctx.createRadialGradient(gx,gy,0,cx,cy,R);
+      const lighten=(h,a)=>{let r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgb(${Math.min(255,r+255*a)},${Math.min(255,g+255*a)},${Math.min(255,b+255*a)})`};
+      sg.addColorStop(0,lighten(prize.color,.22));
+      sg.addColorStop(.7,prize.color);
+      sg.addColorStop(1,lighten(prize.color,-.1));
       ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,start,end);ctx.closePath();
-      ctx.fillStyle=prize.color;ctx.fill();
-      ctx.strokeStyle='rgba(0,0,0,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle=sg;ctx.fill();
+      // Bordure fine
+      ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=1.5;ctx.stroke();
+      // Shimmer foil sur segments rares
+      if(prize.prob<=3){
+        const fg=ctx.createLinearGradient(cx+Math.cos(start)*R,cy+Math.sin(start)*R,cx+Math.cos(end)*R,cy+Math.sin(end)*R);
+        fg.addColorStop(0,'rgba(255,255,255,0)');fg.addColorStop(.5,'rgba(255,255,255,0.15)');fg.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,start,end);ctx.closePath();
+        ctx.fillStyle=fg;ctx.fill();
+      }
+      // Texte
       ctx.save();ctx.translate(cx,cy);ctx.rotate(offset+i*slice+slice/2);
       ctx.textAlign='right';
-      ctx.fillStyle=prize.color==='#1a1a28'?'rgba(255,255,255,0.45)':'rgba(10,10,12,0.92)';
-      const fs=prize.label.length>16?7.5:prize.label.length>10?9:10.5;
+      const dark=prize.color==='#1a1a28'||prize.color==='#0a0a0c';
+      ctx.fillStyle=dark?'rgba(255,255,255,0.5)':'rgba(10,10,12,0.9)';
+      const fs=prize.label.length>18?7:prize.label.length>12?8.5:prize.label.length>8?10:11.5;
       ctx.font=`700 ${fs}px Manrope,sans-serif`;
-      ctx.fillText(prize.label,R-9,4);ctx.restore();
+      ctx.shadowColor=dark?'transparent':'rgba(0,0,0,0.4)';ctx.shadowBlur=3;
+      ctx.fillText(prize.label,R-14,4);
+      ctx.restore();
+      // Tick
+      ctx.save();ctx.translate(cx,cy);ctx.rotate(offset+i*slice);
+      ctx.beginPath();ctx.moveTo(R-4,0);ctx.lineTo(R+2,0);
+      ctx.strokeStyle='rgba(0,0,0,0.7)';ctx.lineWidth=2;ctx.stroke();ctx.restore();
     });
+
     // Hub
-    const hg=ctx.createRadialGradient(cx,cy,0,cx,cy,26);
-    hg.addColorStop(0,'#252535');hg.addColorStop(1,'#0a0a0c');
-    ctx.beginPath();ctx.arc(cx,cy,26,0,Math.PI*2);ctx.fillStyle=hg;ctx.fill();
-    ctx.strokeStyle='rgba(201,168,255,0.3)';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='#c9a8ff';ctx.font='bold 13px serif';
-    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✦',cx,cy);
-    ctx.textBaseline='alphabetic';
+    ctx.beginPath();ctx.arc(cx,cy,38,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.55)';ctx.fill();
+    const hg=ctx.createRadialGradient(cx-10,cy-10,0,cx,cy,36);
+    hg.addColorStop(0,'#2e2e44');hg.addColorStop(.6,'#131320');hg.addColorStop(1,'#0a0a0c');
+    ctx.beginPath();ctx.arc(cx,cy,36,0,Math.PI*2);ctx.fillStyle=hg;ctx.fill();
+    ctx.strokeStyle='rgba(201,168,255,0.45)';ctx.lineWidth=1.5;ctx.stroke();
+    // Hub icon
+    ctx.fillStyle='#c9a8ff';ctx.font='bold 17px serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowColor='rgba(201,168,255,0.8)';ctx.shadowBlur=8;
+    ctx.fillText('✦',cx,cy);
+    ctx.shadowBlur=0;ctx.textBaseline='alphabetic';
   }
   function spinWheelTo(winIndex){
     const N=wheelPrizes.length, sliceDeg=360/N;
