@@ -534,6 +534,64 @@ h1 span{display:block}
   padding:10px 14px;border-bottom:1px solid var(--glass-border);text-align:left}
 .promo-table td{padding:13px 14px;border-bottom:1px solid var(--glass-border);font-size:13.5px}
 .promo-table tr:last-child td{border-bottom:none}
+/* ── HELP WHEEL ── */
+.hwheel-wrapper{display:flex;flex-direction:column;align-items:center;gap:36px;padding:8px 0 32px}
+.hwheel-header{text-align:center;max-width:520px}
+.hwheel-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;background:rgba(127,217,255,.1);border:1px solid rgba(127,217,255,.25);font-size:11.5px;font-weight:600;color:var(--foil-1);letter-spacing:.04em;text-transform:uppercase;margin-bottom:14px}
+.hwheel-title{font-family:'Fraunces',serif;font-size:clamp(30px,5vw,48px);font-weight:400;line-height:1.1;margin-bottom:12px}
+.hwheel-title em{font-style:italic;background:linear-gradient(135deg,var(--foil-1),var(--foil-2),var(--foil-3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hwheel-sub{font-size:14px;color:var(--text-dim);line-height:1.65;max-width:400px;margin:0 auto}
+/* Scène */
+.hwheel-scene{position:relative;width:440px;height:440px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hwheel-glow{position:absolute;inset:-40px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(201,168,255,.18) 0%,rgba(127,217,255,.08) 40%,transparent 70%);animation:hwGlowPulse 4s ease-in-out infinite}
+@keyframes hwGlowPulse{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+.hwheel-orbs{position:absolute;inset:0;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(1px)}
+.orb1{width:6px;height:6px;background:var(--foil-1);top:8%;left:50%;animation:orbit1 8s linear infinite}
+.orb2{width:4px;height:4px;background:var(--foil-2);top:50%;right:4%;animation:orbit2 11s linear infinite}
+.orb3{width:5px;height:5px;background:var(--foil-3);bottom:10%;left:20%;animation:orbit3 9s linear infinite}
+.orb4{width:3px;height:3px;background:var(--foil-4);top:20%;left:8%;animation:orbit4 13s linear infinite}
+.orb5{width:4px;height:4px;background:var(--foil-1);bottom:20%;right:12%;animation:orbit5 7s linear infinite}
+.orb6{width:5px;height:5px;background:#fff;opacity:.4;top:55%;left:6%;animation:orbit6 15s linear infinite}
+@keyframes orbit1{0%{transform:rotate(0deg) translateX(200px) rotate(0deg)}100%{transform:rotate(360deg) translateX(200px) rotate(-360deg)}}
+@keyframes orbit2{0%{transform:rotate(60deg) translateX(195px) rotate(-60deg)}100%{transform:rotate(420deg) translateX(195px) rotate(-420deg)}}
+@keyframes orbit3{0%{transform:rotate(120deg) translateX(205px) rotate(-120deg)}100%{transform:rotate(480deg) translateX(205px) rotate(-480deg)}}
+@keyframes orbit4{0%{transform:rotate(200deg) translateX(190px) rotate(-200deg)}100%{transform:rotate(560deg) translateX(190px) rotate(-560deg)}}
+@keyframes orbit5{0%{transform:rotate(280deg) translateX(198px) rotate(-280deg)}100%{transform:rotate(640deg) translateX(198px) rotate(-640deg)}}
+@keyframes orbit6{0%{transform:rotate(340deg) translateX(202px) rotate(-340deg)}100%{transform:rotate(700deg) translateX(202px) rotate(-700deg)}}
+.hwheel-ring{position:absolute;border-radius:50%;border:1px solid transparent;pointer-events:none}
+.hwheel-ring-outer{width:420px;height:420px;border-color:rgba(201,168,255,.12);animation:ringRotate 40s linear infinite}
+.hwheel-ring-mid{width:390px;height:390px;border-color:rgba(127,217,255,.08);animation:ringRotate 25s linear infinite reverse}
+@keyframes ringRotate{to{transform:rotate(360deg)}}
+.hwheel-canvas-wrap{position:relative;z-index:2;border-radius:50%;box-shadow:0 0 60px rgba(201,168,255,.2),0 0 120px rgba(127,217,255,.08),inset 0 0 0 2px rgba(255,255,255,.05)}
+#helpWheelCanvas{display:block;border-radius:50%}
+.hwheel-needle{position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:28px;height:48px;z-index:10;filter:drop-shadow(0 2px 8px rgba(201,168,255,.6));animation:needleBob 2s ease-in-out infinite}
+@keyframes needleBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-3px)}}
+/* Résultat */
+.hwheel-result{text-align:center;width:100%;max-width:420px}
+.hwheel-prize-wrap{padding:20px 24px;border-radius:20px;background:var(--obsidian-2);border:1px solid var(--glass-border);margin-bottom:16px;min-height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:border-color .4s,box-shadow .4s}
+.hwheel-prize-wrap.won{border-color:rgba(201,168,255,.4);box-shadow:0 0 30px rgba(201,168,255,.12)}
+.hwheel-prize-icon{font-size:28px;line-height:1}
+.hwheel-prize-text{font-family:'Fraunces',serif;font-size:22px;font-weight:400}
+.hwheel-prize-code{font-size:13px;color:var(--text-dim)}
+.hwheel-prize-code .code-chip{display:inline-block;padding:4px 12px;border-radius:8px;background:rgba(127,217,255,.12);border:1px solid rgba(127,217,255,.3);color:var(--foil-1);font-family:monospace;font-weight:700;font-size:15px;letter-spacing:.06em;margin-top:4px}
+.hwheel-cooldown{font-size:12px;color:var(--text-dim);margin-bottom:14px;min-height:16px}
+/* Bouton */
+.hwheel-btn{width:100%;padding:0;border:none;border-radius:14px;background:linear-gradient(135deg,var(--foil-2),var(--foil-1));cursor:pointer;transition:transform .2s,box-shadow .2s;box-shadow:0 4px 24px rgba(201,168,255,.3)}
+.hwheel-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 32px rgba(201,168,255,.45)}
+.hwheel-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.hwheel-btn-inner{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;font-size:15px;font-weight:700;color:#0a0a0c;letter-spacing:.02em}
+/* Légende */
+.hwheel-legend{width:100%;max-width:560px}
+.hwheel-legend-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;text-align:center}
+.hwheel-legend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.hw-leg-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--obsidian-2);border:1px solid var(--glass-border);font-size:12px}
+.hw-leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.hw-leg-label{color:var(--text-dim);line-height:1.3}
+.hw-leg-prob{margin-left:auto;font-size:10.5px;font-weight:700;opacity:.5}
+/* Responsive */
+@media(max-width:500px){.hwheel-scene{width:320px;height:320px}.hwheel-ring-outer{width:310px;height:310px}.hwheel-ring-mid{width:285px;height:285px}}
+
 .promo-code{font-family:monospace;font-size:14px;font-weight:700;color:var(--foil-1);
   background:rgba(127,217,255,.1);padding:3px 9px;border-radius:5px}
 
@@ -1165,7 +1223,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
       <div class="help-tabs reveal-up">
         <button class="help-tab active" data-help="faq">FAQ</button>
         <button class="help-tab" data-help="livraison">Livraison</button>
-        <button class="help-tab" data-help="promos">Codes promo</button>
+        <button class="help-tab" data-help="promos">🎡 Roue</button>
       </div>
       <!-- FAQ -->
       <div class="help-panel active" id="help-faq">
@@ -1225,28 +1283,75 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
           ℹ️ Les délais sont indicatifs. En cas de retard exceptionnel, vous serez notifié par e-mail. Pour les commandes volumineuses ou les livraisons hors France métropolitaine, contactez-nous avant de commander.
         </p>
       </div>
-      <!-- Codes promo -->
+      <!-- Roue de la fortune (remplace codes promo) -->
       <div class="help-panel" id="help-promos">
-        <p style="color:var(--text-dim);font-size:13.5px;line-height:1.7;max-width:600px;margin-bottom:24px">
-          Utilisez un code promo dans le récapitulatif du panier avant de payer. Un seul code par commande.
-        </p>
-        <table class="promo-table">
-          <thead>
-            <tr><th>Code</th><th>Réduction</th><th>Condition</th><th>Statut</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><span class="promo-code">EDEN5</span></td><td>-5%</td><td>Sans minimum</td><td style="color:var(--success)">✓ Actif</td></tr>
-            <tr><td><span class="promo-code">WELCOME5</span></td><td>-5%</td><td>Première commande</td><td style="color:var(--success)">✓ Actif</td></tr>
-            <tr><td><span class="promo-code">EDEN10</span></td><td>-10%</td><td>Membres inscrits</td><td style="color:var(--success)">✓ Actif</td></tr>
-            <tr><td><span class="promo-code">TCG15</span></td><td>-15%</td><td>Roue de la fortune</td><td style="color:var(--success)">✓ Actif</td></tr>
-            <tr><td><span class="promo-code">EDEN20</span></td><td>-20%</td><td>Tirage rare (roue)</td><td style="color:var(--foil-2)">★ Spécial</td></tr>
-            <tr><td><span class="promo-code">SHIP0</span></td><td>Livraison offerte</td><td>Tirage roue</td><td style="color:var(--foil-2)">★ Spécial</td></tr>
-          </tbody>
-        </table>
-        <p style="color:var(--text-dim);font-size:12px;margin-top:18px">Des codes exclusifs sont régulièrement partagés sur notre compte Instagram et par e-mail aux membres. Inscrivez-vous pour ne rien manquer.</p>
-        <div style="margin-top:16px;padding:14px 18px;border-radius:12px;background:rgba(201,168,255,.07);border:1px solid rgba(201,168,255,.18)">
-          <div style="font-weight:600;font-size:13.5px;margin-bottom:6px;color:var(--foil-2)">🎡 Codes roue de la fortune</div>
-          <div style="font-size:12.5px;color:var(--text-dim);line-height:1.6">Les codes gagnés via la roue de la fortune sont à usage unique et valables 30 jours. Ils s'appliquent à toute commande du catalogue.</div>
+        <div class="hwheel-wrapper">
+
+          <!-- Titre -->
+          <div class="hwheel-header">
+            <div class="hwheel-badge">1 tirage / 30 jours</div>
+            <h3 class="hwheel-title">Roue de<br><em>la fortune.</em></h3>
+            <p class="hwheel-sub">Tentez votre chance chaque mois. Réductions exclusives, livraison offerte… et peut-être une display gratuite.</p>
+          </div>
+
+          <!-- Scène roue -->
+          <div class="hwheel-scene">
+            <!-- Halo de fond -->
+            <div class="hwheel-glow"></div>
+            <!-- Particules orbitales -->
+            <div class="hwheel-orbs">
+              <span class="orb orb1"></span><span class="orb orb2"></span>
+              <span class="orb orb3"></span><span class="orb orb4"></span>
+              <span class="orb orb5"></span><span class="orb orb6"></span>
+            </div>
+            <!-- Anneau extérieur décoratif -->
+            <div class="hwheel-ring hwheel-ring-outer"></div>
+            <div class="hwheel-ring hwheel-ring-mid"></div>
+            <!-- Canvas -->
+            <div class="hwheel-canvas-wrap">
+              <canvas id="helpWheelCanvas" width="380" height="380"></canvas>
+            </div>
+            <!-- Aiguille -->
+            <div class="hwheel-needle">
+              <svg viewBox="0 0 28 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 48 L2 8 Q14 0 26 8 Z" fill="url(#needleGrad)"/>
+                <circle cx="14" cy="8" r="6" fill="url(#needleGrad2)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+                <defs>
+                  <linearGradient id="needleGrad" x1="14" y1="0" x2="14" y2="48" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#ffffff"/>
+                    <stop offset="1" stop-color="#c9a8ff"/>
+                  </linearGradient>
+                  <radialGradient id="needleGrad2" cx="50%" cy="50%" r="50%">
+                    <stop stop-color="#fff"/>
+                    <stop offset="1" stop-color="#7fd9ff"/>
+                  </radialGradient>
+                </defs>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Résultat + CTA -->
+          <div class="hwheel-result">
+            <div class="hwheel-prize-wrap" id="hwPrizeWrap">
+              <div class="hwheel-prize-icon" id="hwPrizeIcon">🎡</div>
+              <div class="hwheel-prize-text" id="hwPrizeText">Tournez la roue !</div>
+              <div class="hwheel-prize-code" id="hwPrizeCode"></div>
+            </div>
+            <div class="hwheel-cooldown" id="hwCooldown"></div>
+            <button class="hwheel-btn" id="hwSpinBtn">
+              <span class="hwheel-btn-inner">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                Tenter ma chance
+              </span>
+            </button>
+          </div>
+
+          <!-- Légende segments -->
+          <div class="hwheel-legend">
+            <div class="hwheel-legend-title">Gains possibles</div>
+            <div class="hwheel-legend-grid" id="hwLegendGrid"></div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -2146,12 +2251,201 @@ window.addEventListener('load', () => {
   }
 
   /* ══ HELP TABS ══ */
-  document.querySelectorAll('.help-tab').forEach(t=>t.addEventListener('click',()=>{
-    document.querySelectorAll('.help-tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.help-panel').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById('help-'+t.dataset.help)?.classList.add('active');
+  document.querySelectorAll('.help-tab').forEach(t=>t.addEventListener('click',()=>{\
+    document.querySelectorAll('.help-tab').forEach(x=>x.classList.remove('active'));\
+    document.querySelectorAll('.help-panel').forEach(x=>x.classList.remove('active'));\
+    t.classList.add('active');\
+    document.getElementById('help-'+t.dataset.help)?.classList.add('active');\
+    if(t.dataset.help==='promos') initHelpWheel();\
   }));
+
+  /* ══ HELP WHEEL ══ */
+  let hwAngle=0, hwSpinning=false, hwInited=false;
+
+  function drawHelpWheel(angleDeg){
+    const canvas=document.getElementById('helpWheelCanvas');
+    if(!canvas) return;
+    const ctx=canvas.getContext('2d');
+    const isMobile=window.innerWidth<=500;
+    const size=isMobile?300:380;
+    canvas.width=size; canvas.height=size;
+    const W=size,H=size,cx=W/2,cy=H/2,R=cx-10;
+    const prizes=wheelPrizes; const N=prizes.length;
+    const slice=(2*Math.PI)/N;
+    const offset=-angleDeg*Math.PI/180-Math.PI/2;
+    ctx.clearRect(0,0,W,H);
+
+    // Outer glow ring
+    const glowGrad=ctx.createRadialGradient(cx,cy,R-4,cx,cy,R+12);
+    glowGrad.addColorStop(0,'rgba(201,168,255,0.25)');
+    glowGrad.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(cx,cy,R+6,0,Math.PI*2);
+    ctx.fillStyle=glowGrad;ctx.fill();
+
+    prizes.forEach((prize,i)=>{
+      const start=offset+i*slice, end=start+slice;
+      // Segment
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,start,end);ctx.closePath();
+      const mid=(start+end)/2;
+      const gx=cx+Math.cos(mid)*R*0.5, gy=cy+Math.sin(mid)*R*0.5;
+      const sg=ctx.createRadialGradient(gx,gy,0,cx,cy,R);
+      const base=prize.color;
+      sg.addColorStop(0,lighten(base,.18));
+      sg.addColorStop(1,base);
+      ctx.fillStyle=sg; ctx.fill();
+      // Border
+      ctx.strokeStyle='rgba(0,0,0,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+      // Foil shimmer on premium segments
+      if(prize.prob<=3){
+        ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,start,end);ctx.closePath();
+        const fg=ctx.createLinearGradient(cx+Math.cos(start)*R,cy+Math.sin(start)*R,cx+Math.cos(end)*R,cy+Math.sin(end)*R);
+        fg.addColorStop(0,'rgba(255,255,255,0.0)');
+        fg.addColorStop(0.5,'rgba(255,255,255,0.12)');
+        fg.addColorStop(1,'rgba(255,255,255,0.0)');
+        ctx.fillStyle=fg;ctx.fill();
+      }
+      // Label
+      ctx.save();ctx.translate(cx,cy);ctx.rotate(offset+i*slice+slice/2);
+      ctx.textAlign='right';
+      const isDark=prize.color==='#1a1a28'||prize.color==='#0a0a0c';
+      ctx.fillStyle=isDark?'rgba(255,255,255,0.5)':'rgba(10,10,12,0.9)';
+      const len=prize.label.length;
+      const fs=len>18?7:len>12?8.5:len>8?10:11.5;
+      ctx.font=`700 ${fs}px Manrope,sans-serif`;
+      ctx.shadowColor=isDark?'transparent':'rgba(0,0,0,0.3)';
+      ctx.shadowBlur=3;
+      ctx.fillText(prize.label,R-12,4);
+      ctx.restore();
+      // Tick mark
+      ctx.save();ctx.translate(cx,cy);ctx.rotate(offset+i*slice);
+      ctx.beginPath();ctx.moveTo(R-3,0);ctx.lineTo(R+3,0);
+      ctx.strokeStyle='rgba(0,0,0,0.6)';ctx.lineWidth=2;ctx.stroke();
+      ctx.restore();
+    });
+
+    // Hub shadow
+    ctx.beginPath();ctx.arc(cx,cy,36,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fill();
+    // Hub gradient
+    const hg=ctx.createRadialGradient(cx-8,cy-8,0,cx,cy,34);
+    hg.addColorStop(0,'#2a2a3e');hg.addColorStop(0.6,'#131320');hg.addColorStop(1,'#0a0a0c');
+    ctx.beginPath();ctx.arc(cx,cy,33,0,Math.PI*2);ctx.fillStyle=hg;ctx.fill();
+    ctx.strokeStyle='rgba(201,168,255,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+    // Hub icon
+    ctx.fillStyle='#c9a8ff';ctx.font='bold 16px serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✦',cx,cy);
+    ctx.textBaseline='alphabetic';ctx.shadowBlur=0;
+  }
+
+  function lighten(hex,amt){
+    let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    r=Math.min(255,Math.round(r+255*amt));g=Math.min(255,Math.round(g+255*amt));b=Math.min(255,Math.round(b+255*amt));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function hwSpinTo(winIndex){
+    const N=wheelPrizes.length, sliceDeg=360/N;
+    const targetDeg=winIndex*sliceDeg+sliceDeg/2;
+    const currentMod=hwAngle%360;
+    let needed=targetDeg-currentMod; if(needed<0) needed+=360;
+    const finalAngle=hwAngle+360*8+needed;
+    if(hasGSAP){
+      const obj={val:hwAngle};
+      gsap.to(obj,{val:finalAngle,duration:7,ease:'power4.out',
+        onUpdate(){hwAngle=obj.val;drawHelpWheel(hwAngle);},
+        onComplete(){hwAngle=finalAngle%360;hwShowPrize(wheelPrizes[winIndex]);hwSpinning=false;}
+      });
+    } else {
+      hwAngle=finalAngle%360;drawHelpWheel(hwAngle);hwShowPrize(wheelPrizes[winIndex]);hwSpinning=false;
+    }
+  }
+
+  function hwShowPrize(prize){
+    const wrap=document.getElementById('hwPrizeWrap');
+    const icon=document.getElementById('hwPrizeIcon');
+    const text=document.getElementById('hwPrizeText');
+    const code=document.getElementById('hwPrizeCode');
+    wrap.classList.add('won');
+    if(!prize.code){
+      icon.textContent='😔'; text.textContent='Pas de chance…'; code.textContent='Retentez dans 30 jours !';
+    } else {
+      const promoEntry=PROMO_CODES[prize.code];
+      icon.textContent='🎉'; text.textContent='Félicitations !';
+      if(promoEntry?.type==='shipping'){
+        code.innerHTML=`Livraison offerte ! Code : <span class="code-chip">SHIP0</span>`;
+        shipPromo=true; renderCart();
+      } else if(promoEntry?.type==='info'){
+        code.innerHTML=promoEntry.msg||prize.label;
+      } else {
+        code.innerHTML=`Votre code : <span class="code-chip">${prize.code}</span>`;
+        promoDiscount=promoEntry?.pct||0; renderCart();
+      }
+    }
+    document.getElementById('hwSpinBtn').disabled=true;
+    document.getElementById('hwSpinBtn').innerHTML='<span class="hwheel-btn-inner">🎁 Tirage effectué</span>';
+    hwUpdateCooldown();
+    // Sync avec la roue dashboard
+    authUser&&(authUser.lastSpin=new Date().toISOString());
+    authUser&&localStorage.setItem('edn_user',JSON.stringify(authUser));
+  }
+
+  function hwUpdateCooldown(){
+    const cd=document.getElementById('hwCooldown'); if(!cd) return;
+    if(authUser?.lastSpin){
+      const next=new Date(new Date(authUser.lastSpin).getTime()+30*24*60*60*1000);
+      if(next>new Date()){
+        const days=Math.ceil((next-new Date())/(1000*60*60*24));
+        cd.textContent=`Prochain tirage dans ${days} jour${days>1?'s':''} — ${next.toLocaleDateString('fr-FR')}`;
+        document.getElementById('hwSpinBtn').disabled=true;
+        document.getElementById('hwSpinBtn').innerHTML=`<span class="hwheel-btn-inner">⏳ Disponible le ${next.toLocaleDateString('fr-FR')}</span>`;
+        return;
+      }
+    }
+    cd.textContent='Votre tirage mensuel est disponible !';
+  }
+
+  function hwBuildLegend(){
+    const grid=document.getElementById('hwLegendGrid'); if(!grid) return;
+    grid.innerHTML='';
+    wheelPrizes.forEach(p=>{
+      const el=document.createElement('div');
+      el.className='hw-leg-item';
+      el.innerHTML=`<span class="hw-leg-dot" style="background:${p.color}"></span><span class="hw-leg-label">${p.label}</span><span class="hw-leg-prob">${p.prob}%</span>`;
+      grid.appendChild(el);
+    });
+  }
+
+  function initHelpWheel(){
+    if(hwInited) return; hwInited=true;
+    drawHelpWheel(0);
+    hwBuildLegend();
+    hwUpdateCooldown();
+  }
+
+  document.getElementById('hwSpinBtn')?.addEventListener('click',async()=>{
+    if(hwSpinning) return;
+    if(!authUser||!authToken){go('auth');return;}
+    hwSpinning=true;
+    const btn=document.getElementById('hwSpinBtn');
+    btn.disabled=true;
+    btn.innerHTML='<span class="hwheel-btn-inner">En cours…</span>';
+    try{
+      const res=await fetch('/api/spin',{method:'POST',headers:{'Authorization':'Bearer '+authToken,'Content-Type':'application/json'}});
+      const data=await res.json();
+      if(!res.ok) throw new Error(data.error||'Erreur');
+      wheelPrizes=data.wheelConfig||DEFAULT_WHEEL;
+      authUser.lastSpin=new Date().toISOString();
+      authUser.loyalty=(authUser.loyalty||0)+10+(data.prize.code?20:0);
+      localStorage.setItem('edn_user',JSON.stringify(authUser));
+      hwBuildLegend();
+      hwSpinTo(data.winIndex);
+    }catch(err){
+      // Demo mode
+      const rand=Math.random()*100; let cumul=0, winIdx=0;
+      for(let i=0;i<wheelPrizes.length;i++){cumul+=wheelPrizes[i].prob;if(rand<=cumul){winIdx=i;break;}}
+      hwSpinTo(winIdx);
+    }
+  });
   document.querySelectorAll('.faq-item .faq-q').forEach(q=>q.addEventListener('click',()=>{
     q.parentElement.classList.toggle('open');
   }));
