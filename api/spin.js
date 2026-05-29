@@ -57,14 +57,21 @@ module.exports = async (req, res) => {
         return res.status(401).json({ error: 'Session expirée, reconnectez-vous' });
       }
 
-      const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+      // Cooldown basé sur le tier VIP
+      const totalSpent = (user.orders || []).reduce((s, o) => s + parseFloat(o.amount || 0), 0);
+      let cooldownMs;
+      if (totalSpent >= 5000) cooldownMs = 24 * 60 * 60 * 1000;       // Diamond : quotidien
+      else if (totalSpent >= 1500) cooldownMs = 7 * 24 * 60 * 60 * 1000;  // Gold : hebdomadaire
+      else cooldownMs = 30 * 24 * 60 * 60 * 1000;                      // Silver/Bronze : mensuel
+
       const now = Date.now();
       if (user.lastSpin) {
         const elapsed = now - new Date(user.lastSpin).getTime();
-        if (elapsed < THIRTY_DAYS) {
+        if (elapsed < cooldownMs) {
           return res.status(429).json({
             error: 'Prochain tirage disponible le',
-            nextSpin: new Date(new Date(user.lastSpin).getTime() + THIRTY_DAYS).toISOString(),
+            nextSpin: new Date(new Date(user.lastSpin).getTime() + cooldownMs).toISOString(),
+            cooldownMs,
           });
         }
       }

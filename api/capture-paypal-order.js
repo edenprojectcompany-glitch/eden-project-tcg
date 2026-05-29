@@ -1,8 +1,9 @@
-// api/capture-paypal-order.js — Capture PayPal + persistance commande + loyalty points
+// api/capture-paypal-order.js — Capture PayPal + persistance commande + loyalty points + emails
 // Env requis : PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENV, SITE_URL
-// Env optionnel : KV_REST_API_URL, KV_REST_API_TOKEN (pour persistance commande)
+// Env optionnel : KV_REST_API_URL, KV_REST_API_TOKEN, RESEND_API_KEY
 
 const { PAYPAL_BASE, getPayPalToken } = require('../lib/paypal');
+const { sendEmail, orderConfirmationHtml, adminOrderHtml, ADMIN_EMAIL } = require('../lib/email');
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -57,17 +58,19 @@ module.exports = async (req, res) => {
         const { kv } = require('@vercel/kv');
         const key = `user:${userEmail.toLowerCase().trim()}`;
         const user = await kv.get(key);
+
+        const order = {
+          ref,
+          captureId,
+          paypalOrderId: data.id,
+          amount: parseFloat(amount || 0).toFixed(2),
+          currency: captureDetail?.amount?.currency_code || 'EUR',
+          status: 'confirmed',
+          provider: 'paypal',
+          createdAt: new Date().toISOString(),
+        };
+
         if (user) {
-          const order = {
-            ref,
-            captureId,
-            paypalOrderId: data.id,
-            amount: parseFloat(amount || 0).toFixed(2),
-            currency: captureDetail?.amount?.currency_code || 'EUR',
-            status: 'confirmed',
-            provider: 'paypal',
-            createdAt: new Date().toISOString(),
-          };
           user.orders = user.orders || [];
           user.orders.unshift(order);
           const pts = Math.floor(parseFloat(order.amount));
@@ -75,9 +78,41 @@ module.exports = async (req, res) => {
           await kv.set(key, user);
           console.log(`PayPal order ${ref} saved for ${userEmail} (+${pts} pts loyalty)`);
         }
+
+        // Jackpot progressif : 1€ par commande
+        try {
+          const jackpotKey = 'jackpot:pool';
+          const current = (await kv.get(jackpotKey)) || 0;
+          await kv.set(jackpotKey, +(current + 1).toFixed(2));
+        } catch {}
+
+        // Email confirmation client
+        await sendEmail({
+          to: userEmail,
+          subject: `✅ Commande confirmée ${ref} — Eden Project TCG`,
+          html: orderConfirmationHtml({
+            ref,
+            name: user?.name || '',
+            amount: order.amount,
+            provider: 'paypal',
+          }),
+        });
+
+        // Email notification admin
+        await sendEmail({
+          to: ADMIN_EMAIL,
+          subject: `🛒 Nouvelle commande PayPal ${ref} — ${order.amount}€`,
+          html: adminOrderHtml({
+            ref,
+            customerEmail: userEmail,
+            customerName: user?.name || '',
+            amount: order.amount,
+            provider: 'paypal',
+          }),
+        });
+
       } catch (kvErr) {
-        // Ne pas bloquer la confirmation client pour une erreur KV
-        console.error('KV write failed (PayPal):', kvErr.message);
+        console.error('KV/email failed (PayPal):', kvErr.message);
       }
     }
 

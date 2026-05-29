@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eden Project TCG — Marketplace Premium</title>
 <meta name="description" content="Revendeur Pro & Fournisseur · Pokémon TCG premium — displays japonais et chinois scellés, authentifiés. Livraison depuis Brest.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://edenprojecttcg.com">
+<meta property="og:title" content="Eden Project TCG — Marketplace Pokémon Premium">
+<meta property="og:description" content="Displays Pokémon japonaises et chinoises scellées · Revendeur Pro · Prix fournisseur · Livraison depuis Brest">
+<meta property="og:image" content="https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/mega-dream-ex-m2a.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Eden Project TCG — Marketplace Pokémon Premium">
+<meta name="twitter:description" content="Displays JP/CN scellées · Prix fournisseur · Roue de la fortune · Livraison France">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/mega-dream-ex-m2a.png">
+<meta name="theme-color" content="#0a0a0c">
+<link rel="canonical" href="https://edenprojecttcg.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -750,6 +761,82 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   .help-ship-grid{grid-template-columns:1fr}
 }
 
+/* ── JACKPOT BANNER ── */
+.jackpot-banner{margin:0 40px 32px;padding:18px 28px;border-radius:18px;
+  background:linear-gradient(135deg,rgba(255,217,127,.1),rgba(255,122,122,.08));
+  border:1px solid rgba(255,217,127,.25);display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.jackpot-icon{font-size:32px;flex-shrink:0}
+.jackpot-text{flex:1}
+.jackpot-title{font-family:'Fraunces',serif;font-size:17px;font-weight:500;color:var(--gold);margin-bottom:3px}
+.jackpot-sub{font-size:12.5px;color:var(--text-dim)}
+.jackpot-val{font-family:'Fraunces',serif;font-size:36px;font-weight:600;
+  background:linear-gradient(135deg,var(--gold),#ffb347);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-align:right;white-space:nowrap}
+@keyframes jackpot-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,217,127,.3)}50%{box-shadow:0 0 0 8px rgba(255,217,127,0)}}
+.jackpot-banner{animation:jackpot-pulse 3s infinite}
+
+/* ── FLASH SALE ── */
+.badge-flash{position:absolute;top:12px;left:12px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  font-weight:700;padding:4px 9px;border-radius:100px;z-index:3;
+  background:linear-gradient(135deg,#ff4757,#ff6b35);color:#fff;
+  box-shadow:0 2px 12px rgba(255,71,87,.4);animation:flash-glow 1.5s ease-in-out infinite}
+@keyframes flash-glow{0%,100%{box-shadow:0 2px 12px rgba(255,71,87,.4)}50%{box-shadow:0 2px 20px rgba(255,71,87,.8)}}
+.flash-timer{font-size:10.5px;font-weight:700;color:var(--danger);margin-top:4px;
+  display:flex;align-items:center;gap:4px}
+.timer-seg{background:rgba(255,122,122,.15);border:1px solid rgba(255,122,122,.3);
+  border-radius:5px;padding:2px 5px;font-family:monospace;font-size:11px}
+.modal-flash-banner{margin:10px 0;padding:10px 14px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(255,71,87,.12),rgba(255,107,53,.08));
+  border:1px solid rgba(255,71,87,.3);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.modal-flash-banner .flash-timer{margin:0}
+
+/* ── MYSTERY BOX ── */
+.mystery-card{background:linear-gradient(135deg,rgba(201,168,255,.08),rgba(255,179,230,.05)) !important;
+  border-color:rgba(201,168,255,.3) !important}
+.mystery-card:hover{border-color:rgba(201,168,255,.6) !important}
+.mystery-pulse{animation:mystery-aura 2.5s ease-in-out infinite}
+@keyframes mystery-aura{0%,100%{box-shadow:0 0 0 0 rgba(201,168,255,.2),inset 0 0 30px rgba(201,168,255,.04)}
+  50%{box-shadow:0 0 0 8px rgba(201,168,255,0),inset 0 0 40px rgba(201,168,255,.08)}}
+.badge-mystery{position:absolute;top:12px;left:12px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  font-weight:700;padding:4px 9px;border-radius:100px;z-index:3;
+  background:linear-gradient(135deg,rgba(201,168,255,.25),rgba(255,179,230,.2));
+  border:1px solid rgba(201,168,255,.4);color:var(--foil-2)}
+
+/* ── BUNDLE SUGGESTIONS ── */
+.bundle-section{margin-top:16px;padding:14px;border-radius:12px;
+  background:rgba(127,217,255,.05);border:1px solid rgba(127,217,255,.15)}
+.bundle-section h5{font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--text-dim);margin-bottom:10px}
+.bundle-item{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;
+  transition:all .2s ease}
+.bundle-item:last-child{border-bottom:none}
+.bundle-item:hover{color:var(--foil-1)}
+.bundle-item .bi-names{font-size:12.5px;color:var(--text)}
+.bundle-item .bi-save{font-size:11px;font-weight:700;color:var(--foil-4);
+  padding:2px 8px;border-radius:50px;background:rgba(168,255,212,.1);white-space:nowrap}
+
+/* ── CHECKOUT STEPS ── */
+.co-steps{display:flex;align-items:center;gap:0;margin-bottom:32px;padding:0 4px}
+.co-step{display:flex;align-items:center;gap:8px;flex:1}
+.co-step-num{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  font-size:12px;font-weight:700;flex-shrink:0;transition:all .3s ease;
+  background:var(--glass);border:1px solid var(--glass-border);color:var(--text-dim)}
+.co-step-num.active{background:linear-gradient(135deg,var(--foil-1),var(--foil-2));color:#0a0a0c;border-color:transparent}
+.co-step-num.done{background:var(--success);color:#0a0a0c;border-color:transparent}
+.co-step-lbl{font-size:12px;color:var(--text-dim);transition:color .3s}
+.co-step-lbl.active{color:var(--text);font-weight:600}
+.co-step-line{flex:1;height:1px;background:var(--glass-border);margin:0 8px;min-width:20px}
+
+/* ── RESET PASSWORD PAGE ── */
+.reset-wrap{max-width:460px;margin:60px auto;padding:40px;background:var(--obsidian-2);
+  border-radius:var(--radius-card);border:1px solid var(--glass-border)}
+.reset-wrap h2{font-family:'Fraunces',serif;font-size:26px;font-weight:500;margin-bottom:8px}
+.reset-wrap p{color:var(--text-dim);font-size:14px;margin-bottom:24px}
+.forgot-link{font-size:12px;color:var(--foil-1);cursor:pointer;text-decoration:underline;
+  text-underline-offset:3px;display:inline-block;margin-top:8px}
+.forgot-link:hover{color:var(--foil-2)}
+
 /* ── LOYALTY NAV PILL ── */
 .loyalty-pill{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;padding:0 5px;
   border-radius:10px;background:linear-gradient(135deg,var(--gold),#ffb347);color:#0a0a0c;
@@ -872,6 +959,15 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
       </div>
     </div>
   </section>
+  <!-- Jackpot progressif -->
+  <div class="jackpot-banner" id="jackpotBanner" style="display:none">
+    <div class="jackpot-icon">🏆</div>
+    <div class="jackpot-text">
+      <div class="jackpot-title">Jackpot progressif — Display offerte</div>
+      <div class="jackpot-sub">Chaque commande contribue au jackpot. Le prochain gagnant reçoit une display JP de son choix.</div>
+    </div>
+    <div class="jackpot-val" id="jackpotVal">—</div>
+  </div>
   <div class="band" id="band">
     <div class="item reveal-up">
       <div class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg></div>
@@ -900,6 +996,19 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
       <div class="sub">22 displays scellés, vérifiés par notre équipe à Brest. Prix fournisseur direct.</div>
     </div>
     <div class="catalog-wrap">
+      <!-- Mystery Box Banner -->
+      <div class="mystery-banner reveal-up" id="mysteryBanner" style="margin-bottom:24px;padding:18px 22px;border-radius:18px;background:linear-gradient(135deg,rgba(201,168,255,.1),rgba(255,179,230,.06));border:1px solid rgba(201,168,255,.25);display:flex;align-items:center;gap:18px;cursor:pointer" onclick="openMysteryModal()">
+        <div style="font-size:36px">🎁</div>
+        <div style="flex:1">
+          <div style="font-family:'Fraunces',serif;font-size:17px;color:var(--foil-2);margin-bottom:3px">Eden Mystery Box</div>
+          <div style="font-size:12.5px;color:var(--text-dim)">4 displays sélectionnées par nos experts · Valeur garantie supérieure au prix · Stock ultra-limité</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:22px;font-weight:700;color:var(--foil-2)">249 €</div>
+          <div style="font-size:11px;color:var(--text-dim);text-decoration:line-through">≈310 €</div>
+        </div>
+        <button class="btn-primary btn-sm" style="flex-shrink:0" onclick="event.stopPropagation();addToCart(0)">Ajouter</button>
+      </div>
       <div class="filters">
         <button class="chip active" data-filter="all">Tous (22)</button>
         <button class="chip" data-filter="jp">🇯🇵 Japonais (13)</button>
@@ -966,9 +1075,40 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
             <div class="err">Minimum 8 caractères</div>
           </div>
           <button type="submit" class="btn-primary" id="authSubmitBtn">Se connecter</button>
-          <div class="auth-meta"><a href="mailto:contact@edenprojecttcg.com?subject=Mot%20de%20passe%20oubli%C3%A9" id="forgotLink">Mot de passe oublié ?</a></div>
+          <div class="auth-meta"><span class="forgot-link" id="forgotLink">Mot de passe oublié ?</span></div>
         </form>
+        <!-- Formulaire mot de passe oublié (caché par défaut) -->
+        <div id="forgotForm" style="display:none">
+          <p style="color:var(--text-dim);font-size:13.5px;margin-bottom:16px">Entrez votre email — vous recevrez un lien de réinitialisation valable 1 heure.</p>
+          <div class="field">
+            <input type="email" id="forgotEmail" placeholder=" ">
+            <label for="forgotEmail">Adresse e-mail</label>
+          </div>
+          <button class="btn-primary" id="forgotSubmitBtn" style="width:100%">Envoyer le lien</button>
+          <div class="auth-msg" id="forgotMsg" style="margin-top:12px"></div>
+          <div style="margin-top:14px;text-align:center"><span class="forgot-link" id="backToLogin">← Retour à la connexion</span></div>
+        </div>
       </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══ RESET PASSWORD ══ -->
+<div class="page" id="page-reset-pwd">
+  <section>
+    <div class="reset-wrap">
+      <h2>🔑 Nouveau mot de passe</h2>
+      <p>Choisissez un nouveau mot de passe sécurisé (minimum 8 caractères).</p>
+      <div class="field">
+        <input type="password" id="resetPwdInput" placeholder=" " autocomplete="new-password">
+        <label for="resetPwdInput">Nouveau mot de passe</label>
+      </div>
+      <div class="field">
+        <input type="password" id="resetPwdConfirm" placeholder=" ">
+        <label for="resetPwdConfirm">Confirmer le mot de passe</label>
+      </div>
+      <button class="btn-primary" id="resetPwdBtn" style="width:100%;margin-top:8px">Réinitialiser</button>
+      <div class="auth-msg" id="resetPwdMsg" style="margin-top:12px"></div>
     </div>
   </section>
 </div>
@@ -1005,7 +1145,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
         <!-- Roue de la fortune -->
         <div class="wheel-section reveal-up">
           <h4>🎡 Roue de la Fortune</h4>
-          <div class="desc">Un tirage gratuit tous les 30 jours. Tentez de gagner des réductions, des boosters ou une display gratuite.</div>
+          <div class="desc" id="wheelDesc">Un tirage gratuit tous les 30 jours. Tentez de gagner des réductions, des boosters ou une display gratuite.</div>
           <div class="wheel-wrap">
             <div class="wheel-canvas-wrap">
               <div class="wheel-needle"></div>
@@ -1050,6 +1190,14 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
     <div class="sec-head reveal-up">
       <h2>Finaliser<br><em>la commande.</em></h2>
       <div class="sub">Paiement 100% sécurisé · Stripe &amp; PayPal</div>
+    </div>
+    <!-- Indicateur 3 étapes -->
+    <div class="co-steps reveal-up">
+      <div class="co-step"><div class="co-step-num done" id="coStep1Num">✓</div><span class="co-step-lbl active" id="coStep1Lbl">Panier</span></div>
+      <div class="co-step-line"></div>
+      <div class="co-step"><div class="co-step-num active" id="coStep2Num">2</div><span class="co-step-lbl active" id="coStep2Lbl">Livraison &amp; Paiement</span></div>
+      <div class="co-step-line"></div>
+      <div class="co-step"><div class="co-step-num" id="coStep3Num">3</div><span class="co-step-lbl" id="coStep3Lbl">Confirmation</span></div>
     </div>
     <div class="checkout-wrap">
       <div>
@@ -1588,6 +1736,17 @@ window.addEventListener('load', () => {
   ];
 
   /* ══ PRODUITS ══ */
+  // Mystery Box — product id:0 (special)
+  const MYSTERY_BOX = {id:0,name:'Eden Mystery Box',sub:'4 displays sélectionnées par nos experts',price:249,tag:'Mystery Box',cat:'mystery',lang:'all',rare:'ÉDITION LIMITÉE',urgent:true,img:'mega-dream-ex-m2a.png',tiers:[{q:1,p:249}],desc:'Chaque Eden Mystery Box contient 4 displays Pokémon sélectionnées avec soin : valeur marchande garantie supérieure au prix d\'achat. JP/CN mixte selon arrivages. Scellé, authentifié, expédié avec soin depuis Brest.',mystery:true};
+
+  // Bundles — paires suggérées
+  const BUNDLES = [
+    {ids:[18,10],label:'SV10 Glory Rocket + M2a Dream EX',saving:10,desc:'-10% sur le duo le plus demandé'},
+    {ids:[19,20],label:'SV11b Black Bolt + SV11w White Flare',saving:12,desc:'-12% · La paire Black/White complète'},
+    {ids:[1,5],  label:'CN151 Vol.3 + Gempack Vol.3',saving:8, desc:'-8% · Pack CN essentiel'},
+    {ids:[15,16],label:'Terastal Fest + Battle Partners',saving:10,desc:'-10% · Duo High Class SV8-SV9'},
+  ];
+
   const products = [
     {id:1, name:'CN151 Vol.3',           sub:'Pokémon CN · Gengar Edition',     price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'SCELLÉ',   urgent:false,img:'151c-vol3.png',    ebay:78, tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:55}],desc:'Collection 151 Vol.3 — Gengar Edition. 15 boosters/boîte · 5 cartes/booster · 1 holo garanti.'},
     {id:2, name:'CN151 Vol.4',           sub:'Pokémon CN · Pikachu Jungle',     price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'SCELLÉ',   urgent:false,img:'151c-vol4.png',    ebay:76, tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:58}],desc:'Collection 151 Vol.4 — Pikachu Jungle Edition. 15 boosters/boîte · 5 cartes/booster.'},
@@ -1606,9 +1765,9 @@ window.addEventListener('load', () => {
     {id:15,name:'SV8a — Terastal Fest', sub:'High Class Pack JP',              price:100, tag:'Display JP',cat:'display',lang:'jp',rare:'HIGH CLASS',urgent:false,img:'terastal-fest-sv8a.png',  ebay:105,tiers:[{q:10,p:100},{q:20,p:95},{q:60,p:90}],desc:'SV8a — Les 9 Évolitions d\'Eevee en Tera ex. God Pack possible. 10 boosters · 10 cartes.'},
     {id:16,name:'SV9 — Battle Partners',sub:'Display JP · 30 boosters',        price:80,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'battle-partners-sv9.png',  ebay:82, tiers:[{q:6,p:80},{q:12,p:75},{q:36,p:73}],desc:'SV9 — Pikachu de Sacha, Squirtle de Misty. 30 boosters · 5 cartes/booster.'},
     {id:17,name:'SV9a — Heat Wave Arena',sub:'Display JP · 30 boosters',       price:99,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'heat-wave-sv9a.png',       ebay:105,tiers:[{q:6,p:99},{q:12,p:95},{q:36,p:89}],desc:'SV9a — Ethan\'s Ho-Oh, Cynthia\'s Garchomp. 92 cartes · 29 secret rares.'},
-    {id:18,name:'SV10 — Glory Rocket',  sub:'Display JP · 30 boosters',        price:130, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:true, img:'glory-rocket-sv10.png',     ebay:142,tiers:[{q:6,p:130},{q:12,p:125},{q:36,p:120}],desc:'SV10 — Giovanni\'s Mewtwo ex SIR, Persian ex. 132 cartes dont 34 secret rares.'},
-    {id:19,name:'SV11b — Black Bolt',   sub:'Display JP · 20 boosters',        price:115, tag:'Display JP',cat:'display',lang:'jp',rare:'NOUVEAU',  urgent:true, img:'black-bolt-sv11b.png',      ebay:118,tiers:[{q:6,p:115},{q:12,p:110},{q:36,p:99}],desc:'SV11b — Zekrom ex BWR, célébration Unova. 20 boosters · 7 cartes/booster.'},
-    {id:20,name:'SV11w — White Flare',  sub:'Display JP · 20 boosters',        price:110, tag:'Display JP',cat:'display',lang:'jp',rare:'NOUVEAU',  urgent:true, img:'white-flare-sv11w.png',     ebay:112,tiers:[{q:6,p:110},{q:12,p:105},{q:36,p:99}],desc:'SV11w — Reshiram ex BWR. Pendant de Black Bolt. 20 boosters · 7 cartes/booster.'},
+    {id:18,name:'SV10 — Glory Rocket',  sub:'Display JP · 30 boosters',        price:130, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:true, flashSale:true,img:'glory-rocket-sv10.png',     ebay:142,tiers:[{q:6,p:130},{q:12,p:125},{q:36,p:120}],desc:'SV10 — Giovanni\'s Mewtwo ex SIR, Persian ex. 132 cartes dont 34 secret rares.'},
+    {id:19,name:'SV11b — Black Bolt',   sub:'Display JP · 20 boosters',        price:115, tag:'Display JP',cat:'display',lang:'jp',rare:'NOUVEAU',  urgent:true, flashSale:true,img:'black-bolt-sv11b.png',      ebay:118,tiers:[{q:6,p:115},{q:12,p:110},{q:36,p:99}],desc:'SV11b — Zekrom ex BWR, célébration Unova. 20 boosters · 7 cartes/booster.'},
+    {id:20,name:'SV11w — White Flare',  sub:'Display JP · 20 boosters',        price:110, tag:'Display JP',cat:'display',lang:'jp',rare:'NOUVEAU',  urgent:true, flashSale:true,img:'white-flare-sv11w.png',     ebay:112,tiers:[{q:6,p:110},{q:12,p:105},{q:36,p:99}],desc:'SV11w — Reshiram ex BWR. Pendant de Black Bolt. 20 boosters · 7 cartes/booster.'},
     {id:21,name:'SV2a — Pokémon 151',   sub:'Display JP · 20 boosters',        price:299, tag:'Display JP',cat:'display',lang:'jp',rare:'RÉFÉRENCE',urgent:false,img:'pokemon-151-sv2a.png',      ebay:310,tiers:[{q:1,p:299},{q:12,p:295},{q:36,p:280}],desc:'Pokémon 151 JP (SV2a) — Charizard ex, Mewtwo ex, retour Kadabra. 165+ cartes.'},
     {id:22,name:'M5 — Mega Abyss Eye', sub:'Display JP · 30 boosters',         price:120, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'abyss-eye-m5.png',         ebay:128,tiers:[{q:1,p:120},{q:12,p:110},{q:36,p:105}],desc:'M5 — Dragapult en Mega Évolution. Nouvelle rareté MUR. 30 boosters.'},
   ];
@@ -1618,7 +1777,51 @@ window.addEventListener('load', () => {
   let currentFilter = 'all', searchQuery = '';
   let authUser = null, authToken = null;
   let wheelPrizes = [...DEFAULT_WHEEL], wheelAngle = 0, wheelSpinning = false;
-  const PAGES = ['home','catalog','case','auth','dashboard','checkout','confirm','graded','news','help'];
+  let flashTimerInterval = null;
+  const PAGES = ['home','catalog','case','auth','dashboard','checkout','confirm','graded','news','help','reset-pwd'];
+
+  /* ══ FLASH SALE TIMER (reset chaque lundi minuit) ══ */
+  function getFlashSaleEnd() {
+    const now = new Date();
+    const d = new Date(now);
+    // Prochain lundi à minuit
+    d.setDate(d.getDate() + ((7 - d.getDay() + 1) % 7 || 7));
+    d.setHours(0,0,0,0);
+    return d;
+  }
+  function formatFlashTimer(ms) {
+    if(ms <= 0) return '00:00:00';
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    return [h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
+  }
+  function updateFlashTimers() {
+    const end = getFlashSaleEnd();
+    const remaining = end - Date.now();
+    const txt = formatFlashTimer(remaining);
+    document.querySelectorAll('.flash-timer-val').forEach(el => el.textContent = txt);
+  }
+  function startFlashTimers() {
+    if(flashTimerInterval) return;
+    updateFlashTimers();
+    flashTimerInterval = setInterval(updateFlashTimers, 1000);
+  }
+
+  /* ══ JACKPOT ══ */
+  async function initJackpot() {
+    try {
+      const r = await fetch('/api/stats');
+      if(!r.ok) return;
+      const d = await r.json();
+      const banner = document.getElementById('jackpotBanner');
+      const val = document.getElementById('jackpotVal');
+      if(banner && d.jackpot >= 0) {
+        val.textContent = d.jackpot.toFixed(0) + ' €';
+        banner.style.display = 'flex';
+      }
+    } catch {}
+  }
 
   /* ══ LUCIOLES DORÉES ══ */
   (function initBg() {
@@ -1793,11 +1996,12 @@ window.addEventListener('load', () => {
       if(hasGSAP) gsap.fromTo(nxt,{opacity:0,y:12},{opacity:1,y:0,duration:.4,ease:'power3.out'});
       window.scrollTo({top:0,behavior:'smooth'});
       closeMobileMenu(); updateNavLinks(page);
-      if(page==='catalog') renderGrid(currentFilter);
+      if(page==='catalog'){renderGrid(currentFilter);startFlashTimers();}
       if(page==='case') renderCases();
-      if(page==='checkout') renderCheckout();
+      if(page==='checkout'){renderCheckout();document.getElementById('coStep3Num')?.classList.remove('active');}
       if(page==='graded') setTimeout(initHoloCards,80);
       if(page==='dashboard') renderDashboard();
+      if(page==='home') initJackpot();
       // Re-observe reveal-up elements in new page
       nxt.querySelectorAll('.reveal-up').forEach(el=>{
         el.style.opacity=''; el.style.transform=''; revealObs.observe(el);
@@ -1868,6 +2072,7 @@ window.addEventListener('load', () => {
     if(!list.length){grid.innerHTML='<div class="no-results">Aucun produit trouvé.</div>';return;}
     grid.innerHTML=list.map(p=>{
       const hasPrice=p.price!==null;
+      const flashBadge=p.flashSale?`<span class="badge-flash">⚡ Flash</span>`:'';
       const stockBadge=p.stock!=null
         ?(p.stock<=3?`<span class="badge-stock-urgent">⚠️ Dernières ${p.stock} boîtes !</span>`
           :p.stock<=8?`<span class="badge-stock-urgent" style="background:rgba(255,179,51,.15);border-color:rgba(255,179,51,.4);color:#ffb333;animation:none">🔥 Plus que ${p.stock} dispo</span>`
@@ -1875,9 +2080,11 @@ window.addEventListener('load', () => {
         :'';
       return `<article class="product" data-id="${p.id}" tabindex="0" role="button" style="opacity:0;transition:opacity .35s ease,border-color .4s ease,box-shadow .4s ease,transform .25s ease">
         <div class="product-img">
-          ${p.urgent?'<span class="badge-urgent">⚡ Urgent</span>':''}
+          ${p.flashSale?flashBadge:''}
+          ${!p.flashSale&&p.urgent?'<span class="badge-urgent">⚡ Urgent</span>':''}
           ${p.rare?`<span class="badge-rare ${p.lang==='cn'?'badge-cn':'badge-jp'}">${p.rare}</span>`:''}
           ${stockBadge}
+          ${p.flashSale?`<div class="flash-timer" style="position:absolute;bottom:12px;right:12px;z-index:3"><span class="timer-seg flash-timer-val">--:--:--</span></div>`:''}
           <div class="visual">
             <img src="${IMG_BASE}${p.img}" alt="${p.name}" loading="lazy"
                  onerror="this.parentElement.innerHTML='<div class=\\'img-ph\\'>${p.lang==='cn'?'🀄':'🎴'}</div>'">
@@ -1909,6 +2116,7 @@ window.addEventListener('load', () => {
       card.addEventListener('keydown',e=>{if(e.key==='Enter')openModal(+card.dataset.id);});
     });
     grid.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();addToCart(+b.dataset.add);}));
+    startFlashTimers();
   }
   document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
     document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
@@ -1970,6 +2178,26 @@ window.addEventListener('load', () => {
     imgEl.onerror=()=>{imgEl.style.display='none';};
     imgEl.style.display='';
     const fp=p.tiers?p.tiers[0].p:p.price;
+    // Flash sale banner dans modal
+    const flashEnd = getFlashSaleEnd();
+    const flashLine = p.flashSale
+      ? `<div class="modal-flash-banner"><span class="badge-flash" style="position:static;animation:none">⚡ FLASH</span><span style="font-size:12.5px;color:var(--danger)">Offre se termine dans</span><div class="flash-timer"><span class="timer-seg flash-timer-val">--:--:--</span></div></div>`
+      : '';
+
+    // Bundle suggestions pour ce produit
+    const productBundles = BUNDLES.filter(b => b.ids.includes(p.id));
+    const bundleHtml = productBundles.length ? `
+      <div class="bundle-section">
+        <h5>🎁 Souvent achetés ensemble</h5>
+        ${productBundles.map(b => {
+          const other = products.find(x => x.id === b.ids.find(id => id !== p.id));
+          return other ? `<div class="bundle-item" onclick="addToCart(${other.id});document.getElementById('prizeLabel')&&(document.getElementById('prizeLabel').textContent='')">
+            <div class="bi-names">${b.desc}</div>
+            <div class="bi-save">-${b.saving}%</div>
+          </div>` : '';
+        }).join('')}
+      </div>` : '';
+
     const stockLine = p.stock!=null
       ? (p.stock<=3
           ? `<div class="modal-stock-line">⚠️ Attention — Plus que ${p.stock} boîte${p.stock>1?'s':''} en stock !</div>`
@@ -1982,14 +2210,17 @@ window.addEventListener('load', () => {
       <div class="modal-name">${p.name}</div>
       <div class="modal-sub">${p.sub}</div>
       <div class="modal-desc">${p.desc}</div>
+      ${flashLine}
       ${stockLine}
       ${buildTiersHtml(p)}${buildEbayHtml(p)}
+      ${bundleHtml}
       <div class="modal-price-row"><div class="modal-price">${fp!==null?fp+'€':'Sur demande'}<span>/boîte</span></div></div>
       <div class="modal-actions">
         ${fp!==null?`<button class="btn-primary" id="mAddBtn">Ajouter au panier</button>`:`<a href="mailto:Edenprojectcompany@gmail.com" class="btn-ghost" style="flex:1;text-align:center">Demander un prix</a>`}
         <button class="btn-ghost" id="mCloseBtn">Fermer</button>
       </div>`;
     modalOverlay.classList.add('open'); document.body.style.overflow='hidden';
+    if(p.flashSale) startFlashTimers();
     document.getElementById('mAddBtn')?.addEventListener('click',()=>{addToCart(id);closeModal();});
     document.getElementById('mCloseBtn').addEventListener('click',closeModal);
   }
@@ -2004,7 +2235,49 @@ window.addEventListener('load', () => {
     for(let i=AUTO_PROMOS.length-1;i>=0;i--)if(sub<AUTO_PROMOS[i].min)return AUTO_PROMOS[i];
     return null;
   }
+  /* ══ MYSTERY BOX MODAL ══ */
+  window.openMysteryModal = function() {
+    const p = MYSTERY_BOX;
+    const imgEl = modalImg.querySelector('img') || document.createElement('img');
+    if(!modalImg.querySelector('img')) modalImg.insertBefore(imgEl, modalImg.querySelector('.foil-modal'));
+    imgEl.src = IMG_BASE + p.img; imgEl.alt = p.name; imgEl.style.display = '';
+    modalBody.innerHTML = `
+      <div class="modal-tag"><span class="vip-badge vip-diamond" style="margin:0;font-size:9px">🎁 MYSTERY BOX</span></div>
+      <div class="modal-name">${p.name}</div>
+      <div class="modal-sub">${p.sub}</div>
+      <div class="modal-stock-line modal-stock-ok">✓ Stock limité disponible · Chaque box est unique</div>
+      <div class="modal-desc">${p.desc}</div>
+      <div style="margin:14px 0;padding:14px;border-radius:12px;background:rgba(201,168,255,.08);border:1px solid rgba(201,168,255,.2)">
+        <div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px">Ce que vous recevez</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text)">
+          <div>🎴 4 displays Pokémon scellées (JP ou CN)</div>
+          <div>✅ Valeur marchande ≥ 310€ garantie</div>
+          <div>📦 Emballage premium anti-casse</div>
+          <div>🏷️ Authenticité certifiée Eden Project</div>
+          <div>⭐ Bonus surprise dans chaque box</div>
+        </div>
+      </div>
+      <div class="modal-price-row"><div class="modal-price">249€<span>/box</span></div><div style="font-size:12px;color:var(--text-dim);text-decoration:line-through;margin-left:8px">≈310€</div></div>
+      <div class="modal-actions">
+        <button class="btn-primary" id="mAddBtn">🎁 Ajouter au panier</button>
+        <button class="btn-ghost" id="mCloseBtn">Fermer</button>
+      </div>`;
+    modalOverlay.classList.add('open'); document.body.style.overflow = 'hidden';
+    document.getElementById('mAddBtn')?.addEventListener('click', () => { addToCart(0); closeModal(); });
+    document.getElementById('mCloseBtn').addEventListener('click', closeModal);
+  };
+
   function addToCart(id){
+    // Mystery Box
+    if(id === 0) {
+      const ex = cart.find(c=>c.id===0);
+      if(ex) ex.qty++;
+      else cart.push({...MYSTERY_BOX, qty:1, unitPrice:249});
+      renderCart();
+      const cc = document.getElementById('cartCount');
+      cc.classList.remove('pulse'); void cc.offsetWidth; cc.classList.add('pulse');
+      openCart(); return;
+    }
     const p=products.find(x=>x.id===id); if(!p||p.price===null) return;
     const ex=cart.find(c=>c.id===id);
     if(ex){ex.qty++;ex.unitPrice=getActivePrice(p,ex.qty);}
@@ -2150,6 +2423,70 @@ window.addEventListener('load', () => {
   });
   document.getElementById('logoutBtn')?.addEventListener('click',()=>{clearAuth();go('home');});
 
+  /* ══ MOT DE PASSE OUBLIÉ ══ */
+  document.getElementById('forgotLink')?.addEventListener('click',()=>{
+    document.getElementById('authForm').style.display='none';
+    document.getElementById('forgotForm').style.display='block';
+    document.querySelector('.tab-row').style.display='none';
+  });
+  document.getElementById('backToLogin')?.addEventListener('click',()=>{
+    document.getElementById('authForm').style.display='block';
+    document.getElementById('forgotForm').style.display='none';
+    document.querySelector('.tab-row').style.display='flex';
+    document.getElementById('forgotMsg').textContent='';
+  });
+  document.getElementById('forgotSubmitBtn')?.addEventListener('click',async()=>{
+    const email=document.getElementById('forgotEmail').value.trim();
+    const msg=document.getElementById('forgotMsg');
+    const btn=document.getElementById('forgotSubmitBtn');
+    if(!email){msg.className='auth-msg error';msg.textContent='Entrez votre adresse e-mail.';msg.style.display='block';return;}
+    btn.disabled=true;btn.textContent='Envoi en cours…';
+    try{
+      await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+      msg.className='auth-msg';msg.style.background='rgba(127,255,170,.1)';msg.style.border='1px solid rgba(127,255,170,.3)';msg.style.color='var(--success)';
+      msg.textContent='✓ Si cet email existe, un lien de réinitialisation a été envoyé.';msg.style.display='block';
+      btn.textContent='Email envoyé';
+    }catch{
+      msg.className='auth-msg error';msg.textContent='Erreur réseau, réessayez.';msg.style.display='block';
+      btn.disabled=false;btn.textContent='Envoyer le lien';
+    }
+  });
+
+  /* ══ RESET PASSWORD PAGE ══ */
+  document.getElementById('resetPwdBtn')?.addEventListener('click',async()=>{
+    const pwd=document.getElementById('resetPwdInput')?.value||'';
+    const confirm=document.getElementById('resetPwdConfirm')?.value||'';
+    const msg=document.getElementById('resetPwdMsg');
+    const btn=document.getElementById('resetPwdBtn');
+    const token=new URLSearchParams(location.search).get('reset')||sessionStorage.getItem('eden_reset_token');
+    if(!token){msg.className='auth-msg error';msg.textContent='Lien invalide ou expiré.';msg.style.display='block';return;}
+    if(pwd.length<8){msg.className='auth-msg error';msg.textContent='Minimum 8 caractères.';msg.style.display='block';return;}
+    if(pwd!==confirm){msg.className='auth-msg error';msg.textContent='Les mots de passe ne correspondent pas.';msg.style.display='block';return;}
+    btn.disabled=true;btn.textContent='Mise à jour…';
+    try{
+      const res=await fetch('/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,password:pwd})});
+      const data=await res.json();
+      if(!res.ok) throw new Error(data.error||'Erreur');
+      sessionStorage.removeItem('eden_reset_token');
+      saveAuth(data.user,data.token);
+      history.replaceState({},'',location.pathname);
+      go('dashboard');
+    }catch(err){
+      msg.className='auth-msg error';msg.textContent=err.message;msg.style.display='block';
+      btn.disabled=false;btn.textContent='Réinitialiser';
+    }
+  });
+
+  // Détection du token reset dans l'URL (?reset=TOKEN)
+  (function checkResetToken(){
+    const p=new URLSearchParams(location.search);
+    const token=p.get('reset');
+    if(!token) return;
+    sessionStorage.setItem('eden_reset_token',token);
+    history.replaceState({},'',location.pathname);
+    go('reset-pwd');
+  })();
+
   /* ══ VIP TIER ══ */
   function getVipTier(totalSpent){
     if(totalSpent>=5000) return {label:'💎 Diamond',cls:'vip-diamond',perks:'Accès prioritaire nouveautés · Remise permanente -5% · Display offerte à 10 000€'};
@@ -2200,6 +2537,7 @@ window.addEventListener('load', () => {
     // Afficher le tier VIP immédiatement avec données locales
     const localSpent=(authUser.orders||[]).reduce((s,o)=>s+parseFloat(o.amount||0),0);
     renderVipTier(localSpent);
+    updateWheelDesc(localSpent);
     initWheelCanvas();
     updateWheelCooldown();
     // Rafraîchir depuis le serveur (commandes ajoutées après login)
@@ -2216,10 +2554,18 @@ window.addEventListener('load', () => {
           updateAuthUI();
           renderOrderHistory(authUser.orders);
           renderVipTier(data.user.totalSpent||0);
+          updateWheelDesc(data.user.totalSpent||0);
           updateWheelCooldown();
         } else if(res.status===401){ clearAuth(); go('auth'); }
       }catch{}
     }
+  }
+
+  function updateWheelDesc(totalSpent){
+    const el=document.getElementById('wheelDesc'); if(!el) return;
+    if(totalSpent>=5000) el.textContent='💎 Diamond : tirage quotidien ! Gagnez des réductions, boosters ou une display gratuite chaque jour.';
+    else if(totalSpent>=1500) el.textContent='🥇 Gold : tirage hebdomadaire ! Une chance de gagner chaque semaine en récompense de votre fidélité.';
+    else el.textContent='Un tirage gratuit tous les 30 jours. Devenez Gold (1 500€ d\'achats) pour des tirages hebdomadaires !';
   }
 
   function renderVipTier(totalSpent){
@@ -2314,18 +2660,25 @@ window.addEventListener('load', () => {
   }
   function updateWheelCooldown(){
     const cd=document.getElementById('wheelCooldown'); if(!cd) return;
+    const totalSpent=(authUser?.orders||[]).reduce((s,o)=>s+parseFloat(o.amount||0),0);
+    let cooldownMs;
+    let tierLabel;
+    if(totalSpent>=5000){cooldownMs=24*60*60*1000;tierLabel='💎 Diamond — tirage quotidien';}
+    else if(totalSpent>=1500){cooldownMs=7*24*60*60*1000;tierLabel='🥇 Gold — tirage hebdomadaire';}
+    else{cooldownMs=30*24*60*60*1000;tierLabel='tirage mensuel';}
+
     if(authUser?.lastSpin){
-      const next=new Date(new Date(authUser.lastSpin).getTime()+30*24*60*60*1000);
+      const next=new Date(new Date(authUser.lastSpin).getTime()+cooldownMs);
       const now=new Date();
       if(next>now){
         const days=Math.ceil((next-now)/(1000*60*60*24));
-        cd.textContent=`Prochain tirage dans ${days} jour${days>1?'s':''} (${next.toLocaleDateString('fr-FR')})`;
+        cd.textContent=`Prochain tirage dans ${days} jour${days>1?'s':''} (${next.toLocaleDateString('fr-FR')}) · ${tierLabel}`;
         document.getElementById('spinBtn').disabled=true;
         document.getElementById('spinBtn').textContent='⏳ Prochain tirage le '+next.toLocaleDateString('fr-FR');
         return;
       }
     }
-    cd.textContent='Votre tirage mensuel est disponible !';
+    cd.textContent=`Votre ${tierLabel} est disponible !`;
     document.getElementById('spinBtn').disabled=false;
     document.getElementById('spinBtn').textContent='🎰 Tenter ma chance';
   }
@@ -2584,6 +2937,10 @@ window.addEventListener('load', () => {
     function showConfirm(total,ref){
       document.getElementById('confRef').textContent=ref||('EDN-'+Math.floor(100000+Math.random()*900000));
       document.getElementById('confTot').textContent=total||'—';
+      // Step 3 actif dans l'indicateur checkout
+      document.getElementById('coStep3Num')?.classList.add('active');
+      document.getElementById('coStep3Lbl')?.classList.add('active');
+      cart=[]; renderCart();
       go('confirm');
       const pc=document.getElementById('particles');
       if(pc) for(let i=0;i<18;i++){
@@ -2731,6 +3088,7 @@ window.addEventListener('load', () => {
   loadAuth();
   loadProductOverrides().then(()=>renderGrid('all'));
   renderCart();
+  initJackpot();
   go('home');
   // Hero tilt via GSAP
   if(hasGSAP){
