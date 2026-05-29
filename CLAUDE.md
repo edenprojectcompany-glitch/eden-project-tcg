@@ -24,6 +24,7 @@ Site SPA (Single Page Application) hébergé sur Vercel avec APIs serverless Nod
 | Variable | Description | Requis par |
 |---|---|---|
 | `STRIPE_SECRET_KEY` | Clé secrète Stripe (`sk_live_...`) | create-payment.js |
+| `STRIPE_WEBHOOK_SECRET` | Signing secret webhook Stripe (`whsec_...`) ✅ configuré | stripe-webhook.js |
 | `PAYPAL_CLIENT_ID` | Client ID PayPal | create-paypal-order.js, capture-paypal-order.js |
 | `PAYPAL_CLIENT_SECRET` | Secret PayPal | create-paypal-order.js, capture-paypal-order.js |
 | `PAYPAL_ENV` | `live` ou `sandbox` | create-paypal-order.js, capture-paypal-order.js |
@@ -282,9 +283,17 @@ Les overrides admin (KV `admin:prices`) prennent la priorité sur tous les tiers
 - Mobile hamburger nav
 - `visibilitychange` : pause canvas quand onglet caché
 
+### ✅ Implémenté en audit 3 (mai 2026)
+- Webhook Stripe (`/api/stripe-webhook`) → persistence commandes + points fidélité ✅
+- Exit-intent popup WELCOME10 ✅
+- Social proof : toast achats récents + badge "X regardent" ✅
+- Trust signals dans checkout ✅
+- Bug facturation auto-promo corrigé côté serveur ✅
+- STRIPE_WEBHOOK_SECRET configuré dans Vercel + endpoint Stripe actif ✅
+
 ### ❌ Pas encore implémenté (backlog)
-- Webhook Stripe (`/api/stripe-webhook`) → persistence commandes
-- Historique commandes (`user.orders[]` jamais rempli)
+- Historique commandes front (`user.orders[]` rempli par webhook mais pas affiché dans le dashboard)
+- Révocation JWT (tokenVersion dans KV)
 - Révocation JWT (logout serveur-side)
 - Mécanisme reset mot de passe (actuellement → mailto)
 - Sélecteur Mondial Relay (widget officiel)

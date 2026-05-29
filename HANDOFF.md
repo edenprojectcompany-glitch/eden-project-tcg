@@ -33,14 +33,30 @@ opaque sans comprendre pourquoi.
 **Problème** : Erreurs Stripe et PayPal affichées via `alert()` — bloquant, non stylé, mauvaise UX.
 **Fix** : `showPayError(msg)` injecte le message dans un div dédié sous les boutons de paiement.
 
-### 5. FEAT : Webhook Stripe → persistence commandes
+### 5. FEAT : Webhook Stripe → persistence commandes ✅ CONFIGURÉ ET ACTIF
 **Nouveau fichier** : `api/stripe-webhook.js`
 - Lit le raw body (signature Stripe requise — `handler.config = { api: { bodyParser: false } }`)
 - Vérifie la signature avec `STRIPE_WEBHOOK_SECRET`
 - Sur `checkout.session.completed` : pousse la commande dans `user.orders[]` (KV), ajoute les points fidélité (1pt/€)
-- `vercel.json` mis à jour : route `/api/stripe-webhook` + env `STRIPE_WEBHOOK_SECRET`
+- `vercel.json` mis à jour : route `/api/stripe-webhook`
 
-**À faire dans Stripe Dashboard** : Webhooks → Add endpoint → `https://edenprojecttcg.com/api/stripe-webhook` → event `checkout.session.completed` → copier le signing secret dans Vercel comme `STRIPE_WEBHOOK_SECRET`.
+**Stripe Dashboard** : Webhook `we_1TcYDqJwQ3fowDgxPF5QEZsl` configuré sur `checkout.session.completed` → `https://eden-project-tcg-hpw2.vercel.app/api/stripe-webhook`.
+**`STRIPE_WEBHOOK_SECRET`** : ajouté dans Vercel Dashboard → Environment Variables (All Environments).
+
+### 10. FIX DÉPLOIEMENT : vercel.json nettoyé
+
+**Problème** : La section `env` de `vercel.json` utilisait la syntaxe `@ref` (CLI secrets Vercel) pour référencer les variables. Ces secrets CLI n'existaient pas — seules les Environment Variables du dashboard Vercel étaient configurées. Résultat : le webhook GitHub ne déclenchait plus de déploiement depuis le commit `c6bd9ce` (18h avant notre session). Les commits `e0da411` et `5b9b33e` (audit 3) n'avaient jamais été déployés.
+
+**Fix** :
+- Suppression complète de la section `env` de `vercel.json` (toutes les variables sont dans le Vercel Dashboard)
+- Correction d'une virgule traînante qui rendait le JSON invalide après l'édition
+- Commits : `1f28acc`, `3d263a3`, `16b6a06`
+
+**Deploy hook créé** pour contourner le webhook cassé pendant le diagnostic :
+`https://api.vercel.com/v1/integrations/deploy/prj_Kk6W6OQAloyDx2aAtsYwmtHDrP7m/1n13MpeGLg`
+(branch: main — peut être appelé en POST pour forcer un redéploiement)
+
+**État actuel** : Le webhook GitHub fonctionne à nouveau. Tout push sur `main` déclenche automatiquement un déploiement Vercel.
 
 ### 6. COMMERCIAL : Code promo WELCOME10 ajouté
 Ajouté dans `lib/prices.js` (PROMO_CODES) et `index.html` (PROMO_CODES client).
@@ -204,30 +220,11 @@ Appliqué dans `login.js` et `register.js`.
 
 ### Priorité haute
 
-#### Webhook Stripe — `/api/stripe-webhook`
-Actuellement `user.orders[]` n'est jamais rempli. Il n'y a aucune trace serveur des achats.
-Pour le SAV, les remboursements, les confirmations email — il faut ce webhook.
+#### ~~Webhook Stripe~~ ✅ FAIT (audit 3)
+`api/stripe-webhook.js` créé, déployé, endpoint Stripe configuré (`we_1TcYDqJwQ3fowDgxPF5QEZsl`), `STRIPE_WEBHOOK_SECRET` dans Vercel env vars. `user.orders[]` est maintenant rempli à chaque paiement Stripe.
 
-```js
-// Structure à créer
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-module.exports = async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    // kv.get(`user:${session.customer_email}`) → push order → kv.set
-  }
-  res.json({ received: true });
-};
-```
-
-À ajouter dans `vercel.json` :
-```json
-{ "src": "/api/stripe-webhook", "dest": "/api/stripe-webhook" }
-```
-
-Ajouter `STRIPE_WEBHOOK_SECRET` dans les variables d'env Vercel.
+#### Historique commandes front
+`user.orders[]` est maintenant rempli par le webhook. Il reste à afficher cet historique dans le dashboard utilisateur (`renderDashboard()` → lire `authUser.orders` et peupler le bloc `#orderList` déjà présent dans le HTML). ~20 lignes de JS.
 
 #### Révocation JWT
 Actuellement un token volé est valide 30 jours. Ajouter une `tokenVersion` dans l'objet user KV
@@ -239,10 +236,6 @@ Actuellement → mailto. Il faudrait un flow complet :
 2. `POST /api/reset-password` → valide token KV, met à jour hash bcrypt, supprime token
 
 ### Priorité moyenne
-
-#### Historique commandes front
-Le champ `user.orders[]` est dans le modèle KV mais jamais rempli.
-Une fois le webhook Stripe en place, afficher l'historique dans le dashboard utilisateur.
 
 #### Sélecteur Mondial Relay
 Remplacer le bouton "Mondial Relay" par le widget officiel JS pour sélectionner un point relais.
