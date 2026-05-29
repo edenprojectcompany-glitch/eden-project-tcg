@@ -11,7 +11,6 @@
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "env": {
-    "STRIPE_WEBHOOK_SECRET": "@stripe_webhook_secret",
     "STRIPE_SECRET_KEY": "@stripe_secret_key",
     "PAYPAL_CLIENT_ID": "@paypal_client_id",
     "PAYPAL_CLIENT_SECRET": "@paypal_client_secret",
