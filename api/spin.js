@@ -59,9 +59,9 @@ module.exports = async (req, res) => {
     const wheelRaw = await kv.get('admin:wheel');
     const wheel = wheelRaw || DEFAULT_WHEEL;
 
-    // Weighted random draw
+    // Weighted random draw — fallback sur dernier segment si les probs < 100 par drift float
     const rand = Math.random() * 100;
-    let cumul = 0, winIndex = 0;
+    let cumul = 0, winIndex = wheel.length - 1;
     for (let i = 0; i < wheel.length; i++) {
       cumul += wheel[i].prob;
       if (rand <= cumul) { winIndex = i; break; }

@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
     const ratKey = `ratelimit:register:${ip}`;
     try {
       const attempts = await kv.incr(ratKey);
-      if (attempts === 1) await kv.expire(ratKey, 3600);
+      await kv.expire(ratKey, 3600); // toujours reset — évite une clé bloquée si expire a échoué
       if (attempts > 5) {
         return res.status(429).json({ error: 'Trop d\'inscriptions. Réessayez dans 1 heure.' });
       }

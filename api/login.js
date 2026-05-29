@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
     const ratKey = `ratelimit:login:${ip}`;
     try {
       const attempts = await kv.incr(ratKey);
-      if (attempts === 1) await kv.expire(ratKey, 900);
+      await kv.expire(ratKey, 900); // toujours reset — évite une clé bloquée si expire a échoué
       if (attempts > 10) {
         return res.status(429).json({ error: 'Trop de tentatives. Réessayez dans 15 minutes.' });
       }

@@ -1,75 +1,10 @@
 // api/create-paypal-order.js — PayPal Order avec validation prix serveur (prix dégressifs)
-// Env requis : PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENV, SITE_URL
+// Env requis : PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENV, SITE_URL, KV_REST_API_URL, KV_REST_API_TOKEN
+
+const { PAYPAL_BASE, getPayPalToken } = require('../lib/paypal');
+const { PROMO_CODES, PRIZE_CODES, VALID_SHIPPING, getServerPrice } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
-const PAYPAL_ENV = process.env.PAYPAL_ENV || 'live';
-const PAYPAL_BASE = PAYPAL_ENV === 'sandbox'
-  ? 'https://api-m.sandbox.paypal.com'
-  : 'https://api-m.paypal.com';
-
-// Même structure de prix avec dégressivité que create-payment.js
-const BASE_PRICES = {
-  1:{tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:55}]},
-  2:{tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:58}]},
-  3:{tiers:[{q:10,p:65},{q:20,p:55},{q:60,p:55}]},
-  4:{tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:55}]},
-  5:{tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:55}]},
-  6:{tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:60}]},
-  7:{tiers:[{q:10,p:null}]},
-  8:{tiers:[{q:10,p:50},{q:20,p:45},{q:60,p:43}]},
-  9:{tiers:[{q:10,p:50},{q:20,p:45},{q:60,p:43}]},
-  10:{tiers:[{q:10,p:85},{q:20,p:80},{q:60,p:75}]},
-  11:{tiers:[{q:6,p:110},{q:12,p:105},{q:36,p:99}]},
-  12:{tiers:[{q:6,p:89},{q:12,p:85},{q:36,p:79}]},
-  13:{tiers:[{q:6,p:80},{q:12,p:75},{q:36,p:73}]},
-  14:{tiers:[{q:6,p:80},{q:12,p:75},{q:36,p:73}]},
-  15:{tiers:[{q:10,p:100},{q:20,p:95},{q:60,p:90}]},
-  16:{tiers:[{q:6,p:80},{q:12,p:75},{q:36,p:73}]},
-  17:{tiers:[{q:6,p:99},{q:12,p:95},{q:36,p:89}]},
-  18:{tiers:[{q:6,p:130},{q:12,p:125},{q:36,p:120}]},
-  19:{tiers:[{q:6,p:115},{q:12,p:110},{q:36,p:99}]},
-  20:{tiers:[{q:6,p:110},{q:12,p:105},{q:36,p:99}]},
-  21:{tiers:[{q:1,p:299},{q:12,p:295},{q:36,p:280}]},
-  22:{tiers:[{q:1,p:120},{q:12,p:110},{q:36,p:105}]},
-};
-
-const PROMO_CODES = { EDEN5: 5, EDEN10: 10, WELCOME5: 5, TCG15: 15, EDEN20: 20 };
-const VALID_SHIPPING = [0, 4.90, 7.90, 14.90];
-
-async function getPayPalToken() {
-  const creds = Buffer.from(
-    `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
-  ).toString('base64');
-  const res = await fetch(`${PAYPAL_BASE}/v1/oauth2/token`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${creds}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: 'grant_type=client_credentials',
-  });
-  const data = await res.json();
-  if (!data.access_token) throw new Error('PayPal auth failed');
-  return data.access_token;
-}
-
-async function getServerPrice(id, qty) {
-  const base = BASE_PRICES[id];
-  if (!base) return null;
-
-  try {
-    const { kv } = require('@vercel/kv');
-    const prices = await kv.get('admin:prices');
-    if (prices && prices[id] != null) return prices[id];
-  } catch {}
-
-  if (base.tiers) {
-    let price = base.tiers[0].p;
-    for (const t of base.tiers) if (qty >= t.q && t.p !== null) price = t.p;
-    return price;
-  }
-  return null;
-}
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
@@ -86,9 +21,10 @@ module.exports = async (req, res) => {
     const code = (promoCode || '').toUpperCase();
     const discountPct = PROMO_CODES[code] || 0;
     const isShipFree = code === 'SHIP0';
+    const isPrizeCode = PRIZE_CODES.has(code);
 
     // Validation livraison côté serveur
-    const parsedShip = +(parseFloat(shippingCost).toFixed(2));
+    const parsedShip = +(parseFloat(shippingCost || 0).toFixed(2));
     if (!VALID_SHIPPING.some(v => Math.abs(v - parsedShip) < 0.01)) {
       return res.status(400).json({ error: 'Frais de livraison invalides' });
     }
@@ -97,15 +33,27 @@ module.exports = async (req, res) => {
     }
     const shipping = parsedShip;
 
+    // 1 seul appel KV avant la boucle (fix N+1)
+    let adminPrices = {};
+    try {
+      const { kv } = require('@vercel/kv');
+      adminPrices = await kv.get('admin:prices') || {};
+    } catch {}
+
     // Validation prix avec dégressivité
     const validatedItems = [];
     for (const item of items) {
       const qty = parseInt(item.qty);
       if (!item.id || !qty || qty < 1 || qty > 1000) continue;
-      const serverPrice = await getServerPrice(item.id, qty);
+      const serverPrice = getServerPrice(item.id, qty, adminPrices);
       if (serverPrice === null) continue;
       const unitPrice = +(serverPrice * (1 - discountPct / 100)).toFixed(2);
-      validatedItems.push({ ...item, qty, unitPrice });
+      validatedItems.push({
+        id: item.id,
+        name: String(item.name || '').slice(0, 127),  // fix C1 : String() avant slice
+        qty,
+        unitPrice,
+      });
     }
     if (!validatedItems.length) return res.status(400).json({ error: 'Aucun article valide' });
 
@@ -118,13 +66,15 @@ module.exports = async (req, res) => {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'PayPal-Request-Id': `eden-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+        'PayPal-Request-Id': `eden-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       },
       body: JSON.stringify({
         intent: 'CAPTURE',
         purchase_units: [{
           reference_id: `EDN-${Date.now()}`,
-          description: 'Eden Project TCG — Commande displays Pokémon',
+          description: isPrizeCode
+            ? `Eden Project TCG — Prix roue : ${code}`
+            : 'Eden Project TCG — Commande displays Pokémon',
           amount: {
             currency_code: 'EUR',
             value: total.toFixed(2),
@@ -134,7 +84,7 @@ module.exports = async (req, res) => {
             },
           },
           items: validatedItems.map(item => ({
-            name: item.name.slice(0, 127),
+            name: item.name,
             unit_amount: { currency_code: 'EUR', value: item.unitPrice.toFixed(2) },
             quantity: String(item.qty),
             category: 'PHYSICAL_GOODS',
