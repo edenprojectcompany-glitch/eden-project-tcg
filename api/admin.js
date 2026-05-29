@@ -33,15 +33,17 @@ module.exports = async (req, res) => {
     const { kv } = require('@vercel/kv');
 
     if (req.method === 'GET') {
-      const [prices, stocks, wheel] = await Promise.all([
+      const [prices, stocks, wheel, flashsale] = await Promise.all([
         kv.get('admin:prices'),
         kv.get('admin:stocks'),
         kv.get('admin:wheel'),
+        kv.get('admin:flashsale'),
       ]);
       return res.status(200).json({
         prices: prices || {},
         stocks: stocks || {},
         wheel: wheel || null,
+        flashsale: flashsale || {},
       });
     }
 
@@ -75,6 +77,24 @@ module.exports = async (req, res) => {
           }
         }
         await kv.set('admin:stocks', validated);
+        return res.status(200).json({ ok: true });
+      }
+
+      if (action === 'set_flashsale') {
+        if (typeof data !== 'object' || Array.isArray(data)) {
+          return res.status(400).json({ error: 'Format invalide' });
+        }
+        const validated = {};
+        for (const [k, v] of Object.entries(data)) {
+          const id = parseInt(k);
+          if (isNaN(id)) continue;
+          validated[id] = {
+            active: !!v.active,
+            salePrice: v.salePrice != null ? +parseFloat(v.salePrice).toFixed(2) : null,
+            endTime: v.endTime ? parseInt(v.endTime) : null,
+          };
+        }
+        await kv.set('admin:flashsale', validated);
         return res.status(200).json({ ok: true });
       }
 

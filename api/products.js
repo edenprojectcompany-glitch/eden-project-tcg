@@ -13,14 +13,14 @@ module.exports = async (req, res) => {
 
   try {
     const { kv } = require('@vercel/kv');
-    const [prices, stocks] = await Promise.all([
+    const [prices, stocks, flashsale] = await Promise.all([
       kv.get('admin:prices'),
       kv.get('admin:stocks'),
+      kv.get('admin:flashsale'),
     ]);
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
-    return res.status(200).json({ prices: prices || {}, stocks: stocks || {} });
+    return res.status(200).json({ prices: prices || {}, stocks: stocks || {}, flashsale: flashsale || {} });
   } catch {
-    // Graceful degradation — front uses static prices
-    return res.status(200).json({ prices: {}, stocks: {} });
+    return res.status(200).json({ prices: {}, stocks: {}, flashsale: {} });
   }
 };

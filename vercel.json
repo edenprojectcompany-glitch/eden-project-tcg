@@ -3,7 +3,7 @@
   "name": "site-premium-tcg",
   "builds": [
     { "src": "index.html", "use": "@vercel/static" },
-    { "src": "api/*.js", "use": "@vercel/node" }
+    { "src": "api/*.js", "use": "@vercel/node", "config": { "nodeVersion": "18.x" } }
   ],
   "routes": [
     { "src": "/api/stripe-webhook", "dest": "/api/stripe-webhook.js" },

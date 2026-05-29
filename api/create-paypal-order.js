@@ -33,11 +33,23 @@ module.exports = async (req, res) => {
     }
     const shipping = parsedShip;
 
-    // 1 seul appel KV avant la boucle (fix N+1)
+    // 1 seul appel KV avant la boucle (fix N+1) — inclut flash sale prices
     let adminPrices = {};
     try {
       const { kv } = require('@vercel/kv');
-      adminPrices = await kv.get('admin:prices') || {};
+      const [prices, flashsale] = await Promise.all([
+        kv.get('admin:prices'),
+        kv.get('admin:flashsale'),
+      ]);
+      adminPrices = prices || {};
+      if (flashsale) {
+        const now = Date.now();
+        for (const [id, fs] of Object.entries(flashsale)) {
+          if (fs.active && fs.salePrice != null && (!fs.endTime || fs.endTime > now)) {
+            adminPrices[id] = +parseFloat(fs.salePrice).toFixed(2);
+          }
+        }
+      }
     } catch {}
 
     // Passe 1 : sous-total brut pour auto-promo
@@ -45,7 +57,7 @@ module.exports = async (req, res) => {
     const rawItems = [];
     for (const item of items) {
       const qty = parseInt(item.qty);
-      if (!item.id || !qty || qty < 1 || qty > 1000) continue;
+      if (item.id == null || !qty || qty < 1 || qty > 1000) continue;
       const serverPrice = getServerPrice(item.id, qty, adminPrices);
       if (serverPrice === null) continue;
       rawSubtotal += serverPrice * qty;
