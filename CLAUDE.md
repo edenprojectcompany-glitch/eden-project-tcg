@@ -1,130 +1,171 @@
-# Eden Project TCG — Site Premium · Contexte Claude
+# Eden Project TCG — Documentation Claude (mise à jour mai 2026)
 
-## Repos & URLs
-| | |
-|---|---|
-| **Repo nouveau site** | https://github.com/edenprojectcompany-glitch/site-premium-tcg-style-apple |
-| **Repo ancien site (images)** | https://github.com/edenprojectcompany-glitch/catalogue-pokemon |
-| **Ancien site prod** | https://catalogue-pokemon.vercel.app |
-| **Nouveau site** | à déployer sur Vercel (voir ci-dessous) |
-| **Domaine cible** | edenprojecttcg.com |
-
-## Vercel
-- **Team slug :** `eden-tcg`
-- **Team ID :** `team_U7KyovUFmafdL1RRf0qC7JDO`
-- **Projet ancien :** `catalogue-pokemon` / `prj_9UJyxMNiNwPeBUu2dPTCQ25AJvik`
-- **Nouveau projet :** à importer depuis vercel.com/new → repo `site-premium-tcg-style-apple`
-
-### Variables d'env à configurer dans Vercel (nouveau projet)
-```
-STRIPE_SECRET_KEY       sk_live_...
-PAYPAL_CLIENT_ID        ...
-PAYPAL_CLIENT_SECRET    ...
-PAYPAL_ENV              live   (ou sandbox pour tests)
-EBAY_APP_ID             ...
-EBAY_CERT_ID            ...
-```
-
-## Stack
-HTML/CSS/JS statique + APIs Vercel Serverless (Node.js) → GitHub → Vercel auto-deploy
-
-## Règle absolue
-> Ne jamais pusher sur GitHub sans confirmation explicite de Vincent.
+## Identité du projet
+Marketplace e-commerce spécialisée dans les **displays Pokémon japonaises et chinoises**.
+Site SPA (Single Page Application) hébergé sur Vercel avec APIs serverless Node.js.
 
 ---
 
-## Structure du projet
-```
-site-premium-tcg-style-apple/
-├── index.html          ← SPA complète (tout le front)
-├── vercel.json         ← Config déploiement
-├── package.json        ← Deps Node (stripe)
-├── CLAUDE.md           ← Ce fichier
-└── api/
-    ├── create-payment.js       ← Stripe Checkout Session
-    ├── create-paypal-order.js  ← PayPal Order
-    └── ebay-prices.js          ← Prix live eBay (avec cache 1h)
-```
+## Repos & URLs
 
-## APIs disponibles
-| Endpoint | Méthode | Description |
+| | |
+|---|---|
+| **Repo principal (ce dossier)** | https://github.com/edenprojectcompany-glitch/eden-project-tcg |
+| **Repo images catalogue** | https://github.com/edenprojectcompany-glitch/catalogue-pokemon |
+| **URL prod actuelle** | https://eden-project-tcg-hpw2.vercel.app |
+| **Domaine cible** | edenprojecttcg.com (à connecter dans Vercel) |
+| **Stripe Dashboard** | https://dashboard.stripe.com |
+| **PayPal Developer** | https://developer.paypal.com |
+
+---
+
+## Variables d'environnement requises (Vercel Dashboard)
+
+| Variable | Description | Requis par |
 |---|---|---|
-| `/api/create-payment` | POST | Crée session Stripe → retourne `{url, sessionId}` |
-| `/api/create-paypal-order` | POST | Crée ordre PayPal → retourne `{orderId, approveUrl}` |
-| `/api/ebay-prices` | POST | Prix eBay live → retourne `{prices: {id: prix}}` |
+| `STRIPE_SECRET_KEY` | Clé secrète Stripe (`sk_live_...`) | create-payment.js |
+| `PAYPAL_CLIENT_ID` | Client ID PayPal | create-paypal-order.js, capture-paypal-order.js |
+| `PAYPAL_CLIENT_SECRET` | Secret PayPal | create-paypal-order.js, capture-paypal-order.js |
+| `PAYPAL_ENV` | `live` ou `sandbox` | create-paypal-order.js, capture-paypal-order.js |
+| `EBAY_APP_ID` | App ID eBay | ebay-prices.js |
+| `EBAY_CERT_ID` | Cert ID eBay | ebay-prices.js |
+| `KV_REST_API_URL` | URL Upstash (auto-injecté si Vercel KV connecté) | tous sauf create-payment |
+| `KV_REST_API_TOKEN` | Token Upstash (auto-injecté si Vercel KV connecté) | tous sauf create-payment |
+| `JWT_SECRET` | Clé secrète JWT (chaîne aléatoire ≥ 32 chars) | login.js, register.js, spin.js |
+| `ADMIN_CODE` | Code d'accès au panneau admin | admin.js |
+| `SITE_URL` | URL du site sans slash final (`https://edenprojecttcg.com`) | CORS sur tous les endpoints |
 
-### Body create-payment
+> **Vercel KV** : créer une base dans le dashboard Vercel → Storage → KV, puis la connecter au projet. Les variables `KV_REST_API_URL` et `KV_REST_API_TOKEN` sont injectées automatiquement.
+
+---
+
+## Stack technique
+
+```
+Front-end   : HTML/CSS/JS vanilla (index.html — SPA)
+Back-end    : Node.js 18+ serverless functions (Vercel)
+Base KV     : Vercel KV (Upstash Redis)
+Paiements   : Stripe Checkout + PayPal Orders v2
+Auth        : JWT (jsonwebtoken) + bcryptjs (cost 12)
+CI/CD       : GitHub → Vercel auto-deploy sur push main
+```
+
+---
+
+## Structure des fichiers
+
+```
+/
+├── index.html                    ← SPA complète (tout le front-end)
+├── vercel.json                   ← Config routing + env vars documentées
+├── package.json                  ← Dépendances Node
+├── CLAUDE.md                     ← Ce fichier
+├── HANDOFF.md                    ← Historique des modifications et backlog
+├── lib/
+│   ├── prices.js                 ← BASE_PRICES, PROMO_CODES, PRIZE_CODES, getServerPrice
+│   └── paypal.js                 ← PAYPAL_BASE, getPayPalToken (partagés)
+└── api/
+    ├── admin.js                  ← Panel admin (prix/stocks/roue)
+    ├── capture-paypal-order.js   ← Capture PayPal après approbation
+    ├── create-payment.js         ← Stripe Checkout Session
+    ├── create-paypal-order.js    ← PayPal Order création
+    ├── ebay-prices.js            ← Prix eBay live + cache KV 1h
+    ├── login.js                  ← Auth login → JWT
+    ├── products.js               ← Prix/stocks overrides KV → front
+    ├── register.js               ← Inscription → KV + JWT
+    └── spin.js                   ← Roue de la fortune (cooldown 30j)
+```
+
+---
+
+## APIs — Référence complète
+
+### `POST /api/create-payment` — Stripe
 ```json
 {
-  "items": [{"name":"...","sub":"...","img":"...","unitPrice":85,"qty":2}],
+  "items": [{"id": 10, "name": "M2a Display", "sub": "JP", "qty": 2}],
   "shippingCost": 4.90,
   "promoCode": "EDEN10",
-  "successUrl": "https://...",
-  "cancelUrl": "https://..."
+  "customerEmail": "user@email.com",
+  "successUrl": "https://edenprojecttcg.com?payment=success",
+  "cancelUrl": "https://edenprojecttcg.com?payment=cancel"
 }
 ```
+Retourne `{ url, sessionId }`.
 
-### Body create-paypal-order
+### `POST /api/create-paypal-order` — PayPal
 ```json
 {
-  "items": [{"name":"...","unitPrice":85,"qty":2}],
+  "items": [{"id": 10, "name": "M2a Display", "qty": 2}],
   "shippingCost": 4.90,
   "promoCode": "EDEN10"
 }
 ```
+Retourne `{ orderId, approveUrl }`.
 
-### Body ebay-prices
+### `POST /api/capture-paypal-order` — PayPal capture
 ```json
-{
-  "queries": [
-    {"id": 10, "term": "Pokemon Mega Dream EX M2a display JP"},
-    {"id": 18, "term": "Pokemon Glory Team Rocket SV10 display JP"}
-  ]
-}
+{ "orderId": "5O190127TN364715T" }
 ```
+Retourne `{ ok, orderId, captureId, amount }`.
+
+### `GET /api/products` — KV overrides
+Retourne `{ prices: {id: prix}, stocks: {id: qty} }`. Cache edge 60s.
+
+### `POST /api/ebay-prices` — Prix live
+```json
+{ "queries": [{"id": 10, "term": "Pokemon Mega Dream EX display JP"}] }
+```
+Retourne `{ prices: {10: 85} }`. Max 30 requêtes. Cache KV 1h.
+
+### `POST /api/login`
+```json
+{ "email": "user@email.com", "password": "motdepasse" }
+```
+Retourne `{ token, user: {id, name, email, lastSpin, loyalty} }`. Rate limit : 10 tentatives / 15 min par IP.
+
+### `POST /api/register`
+```json
+{ "name": "Vincent", "email": "user@email.com", "password": "motdepasse8+" }
+```
+Retourne `{ token, user }` avec HTTP 201. Rate limit : 5 inscriptions / heure par IP.
+
+### `POST /api/spin` — Auth requise
+Header : `Authorization: Bearer <jwt>`
+Retourne `{ prize, winIndex, wheelConfig }`. Cooldown 30 jours par utilisateur.
+
+### `GET/POST /api/admin` — Admin protégé
+Header : `X-Admin-Code: <ADMIN_CODE>`
+- GET : retourne `{ prices, stocks, wheel }`
+- POST `set_prices` : met à jour les prix dans KV
+- POST `set_stocks` : met à jour les stocks dans KV
+- POST `set_wheel` : met à jour la roue (2–16 segments, somme probs = 100%)
 
 ---
 
-## Design system
+## Modèle de données KV (Upstash)
 
-### Typographie
-- Titres : **Fraunces** (serif, Google Fonts)
-- Corps : **Manrope** (sans-serif, Google Fonts)
-
-### Palette CSS
-```css
---obsidian: #0a0a0c      /* fond principal */
---obsidian-2: #111114    /* cartes */
---obsidian-3: #16161b
---glass: rgba(255,255,255,.04)
---glass-border: rgba(255,255,255,.09)
---foil-1: #7fd9ff   /* cyan */
---foil-2: #c9a8ff   /* violet */
---foil-3: #ffb3e6   /* rose */
---foil-4: #a8ffd4   /* vert menthe */
---success: #7fffaa
---danger: #ff7a7a
 ```
-
-### Effets signature
-- **Fond** : canvas WebGL-like — mesh de points connectés, réactif à la souris, couleurs foil
-- **Cartes** : tilt 3D hover + effet foil color-dodge
-- **Nav** : glassmorphism `backdrop-filter: blur(28px)`
-- **Animations** : `cubic-bezier(.16,1,.3,1)` (spring) partout
+user:{email}          → { id, name, email, hash, createdAt, lastSpin, orders[], loyalty }
+admin:prices          → { "10": 85, "11": 99, ... }   ← overrides prix par ID produit
+admin:stocks          → { "10": 50, "11": 20, ... }   ← stocks par ID produit
+admin:wheel           → [ { label, prob, code, color }, ... ]
+ebay:{query_key}      → prix moyen (TTL 3600s natif Upstash)
+ratelimit:login:{ip}  → compteur (TTL 900s)
+ratelimit:register:{ip} → compteur (TTL 3600s)
+```
 
 ---
 
 ## Catalogue — 22 produits
 
-### Images
-Hébergées sur le **repo ancien** (ne pas modifier ce repo) :
+Images hébergées sur le repo images :
 ```
 https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/{filename}
 ```
-Constante JS : `const IMG_BASE = 'https://raw.githubusercontent.com/...'`
 
-### Produits JP (13)
-| ID | Nom | img |
+### Produits JP (IDs 10–22)
+| ID | Nom | Fichier image |
 |---|---|---|
 | 10 | M2a — Méga Dream EX | mega-dream-ex-m2a.png |
 | 11 | M2 — Méga Inferno X | inferno-x-m2.png |
@@ -140,8 +181,8 @@ Constante JS : `const IMG_BASE = 'https://raw.githubusercontent.com/...'`
 | 21 | SV2a — Pokémon 151 | pokemon-151-sv2a.png |
 | 22 | M5 — Mega Abyss Eye | abyss-eye-m5.png |
 
-### Produits CN (9)
-| ID | Nom | img |
+### Produits CN (IDs 1–9)
+| ID | Nom | Fichier image |
 |---|---|---|
 | 1 | CN151 Vol.3 | 151c-vol3.png |
 | 2 | CN151 Vol.4 | 151c-vol4.png |
@@ -149,47 +190,114 @@ Constante JS : `const IMG_BASE = 'https://raw.githubusercontent.com/...'`
 | 4 | CN151 Vol.2 | 151c-vol2.png |
 | 5 | Gempack Vol.3 | gem-pack-vol3.png |
 | 6 | Gempack Vol.2 | gem-pack-vol2.png |
-| 7 | Gempack Vol.1 | gem-pack-vol1.png |
+| 7 | Gempack Vol.1 (désactivé — prix null) | gem-pack-vol1.png |
 | 8 | Gempack Vol.4 | gem-pack-vol4.png |
 | 9 | Gempack Vol.5 | gem-pack-vol5.png |
 
 ---
 
-## SPA — Pages
-Navigation via `go(pageName)`. Pages : `home`, `catalog`, `auth`, `dashboard`, `checkout`, `confirm`, `graded`, `news`
+## Codes promo actifs
 
-## Fonctionnalités actives (front mock)
-- ✅ Catalogue 22 produits avec images GitHub
-- ✅ Filtres JP / CN
-- ✅ Recherche live
-- ✅ Modal produit
-- ✅ Panier sidebar + prix dégressifs
-- ✅ Checkout avec Mondial Relay / Colissimo / Express
-- ✅ Codes promo (EDEN10=10%, WELCOME5=5%, TCG15=15%)
-- ✅ Bouton Stripe → `/api/create-payment`
-- ✅ Bouton PayPal → `/api/create-paypal-order`
-- ✅ Dashboard générique (pas de nom hardcodé)
-- ✅ Fond canvas holo interactif
-- ✅ Mobile nav hamburger
-- ✅ Scroll-to-top
+| Code | Réduction | Type |
+|---|---|---|
+| `EDEN5` | -5% panier | Discount |
+| `EDEN10` | -10% panier | Discount |
+| `EDEN20` | -20% panier | Discount |
+| `WELCOME5` | -5% panier | Discount |
+| `TCG15` | -15% panier | Discount |
+| `SHIP0` | Livraison gratuite | Shipping |
+| `BOOSTER` | Booster offert (fulfillment manuel) | Prix roue |
+| `FREE_DISPLAY` | Display gratuite (fulfillment manuel) | Prix roue |
 
-## Fonctionnalités à brancher (backlog)
-- [ ] Auth réelle → `/api/register` + `/api/login` (Vercel KV/Redis)
-- [ ] eBay live → `/api/ebay-prices` (remplacer les prix statiques dans `products[]`)
-- [ ] Dashboard connecté (portfolio réel post-login)
-- [ ] Roue de la fortune → `/api/record-spin` + fingerprint
-- [ ] Mondial Relay widget (sélecteur point relais)
-- [ ] Admin panel protégé
-- [ ] Domaine edenprojecttcg.com (configurer dans Vercel)
-- [ ] i18n FR/EN
+> `BOOSTER` et `FREE_DISPLAY` sont gagnés via la roue. Ils n'appliquent pas de réduction panier.
+> Ils sont tracés dans les métadonnées Stripe/description PayPal pour expédition manuelle.
 
-## Pour déployer le nouveau site
-1. Pusher ce repo sur GitHub : `git push origin main`
-2. Aller sur vercel.com → "Add New Project"
-3. Importer `edenprojectcompany-glitch/site-premium-tcg-style-apple`
-4. Framework : **Other**
-5. Ajouter les variables d'env (voir ci-dessus)
-6. Deploy → URL automatique, puis ajouter edenprojecttcg.com
+---
+
+## Prix dégressifs (lib/prices.js)
+
+Structure : `{ tiers: [{q: quantité_min, p: prix_unitaire}, ...] }`
+Logique : pour chaque tier dont `qty >= q && p !== null`, le prix est mis à jour.
+Le premier tier est le prix de base (quantité minimale).
+
+Exemples :
+- Produit 10 : 85€ (≥10), 80€ (≥20), 75€ (≥60)
+- Produit 21 : 299€ (≥1), 295€ (≥12), 280€ (≥36)
+
+Les overrides admin (KV `admin:prices`) prennent la priorité sur tous les tiers.
+
+---
+
+## Design system
+
+### Typographie
+- Titres : **Fraunces** (serif, Google Fonts)
+- Corps : **Manrope** (sans-serif, Google Fonts)
+
+### Palette CSS
+```css
+--obsidian: #0a0a0c        /* fond principal */
+--obsidian-2: #111114      /* cartes */
+--obsidian-3: #16161b
+--glass: rgba(255,255,255,.04)
+--glass-border: rgba(255,255,255,.09)
+--foil-1: #7fd9ff          /* cyan */
+--foil-2: #c9a8ff          /* violet */
+--foil-3: #ffb3e6          /* rose */
+--foil-4: #a8ffd4          /* vert menthe */
+--success: #7fffaa
+--danger: #ff7a7a
+```
+
+### Effets signature
+- **Fond** : canvas 2D — animation lucioles dorées réactives à la souris
+- **Cartes** : tilt 3D hover (GSAP) + reflet foil color-dodge
+- **Nav** : glassmorphism `backdrop-filter: blur(28px)`
+- **Animations** : `cubic-bezier(.16,1,.3,1)` (spring) partout
+- **GSAP** 3.12.5 via CDN
+
+### SPA — Navigation
+`go(pageName)` pour naviguer. Pages disponibles :
+`home`, `catalog`, `auth`, `dashboard`, `checkout`, `confirm`, `graded`, `news`
+
+---
+
+## Fonctionnalités front — état actuel
+
+### ✅ Actif
+- Catalogue 22 produits + filtres JP/CN + recherche live
+- Modal produit avec prix dégressifs affichés
+- Panier sidebar + calcul prix dégressifs client-side
+- Livraison (Mondial Relay 4.90€ / Colissimo 7.90€ / Express 14.90€)
+- Codes promo (réduction % et livraison gratuite)
+- Paiement Stripe → `/api/create-payment`
+- Paiement PayPal → `/api/create-paypal-order` + `/api/capture-paypal-order`
+- Page confirmation avec confettis
+- Auth utilisateur (inscription/connexion) → JWT stocké localStorage
+- Dashboard utilisateur (points fidélité, roue de la fortune)
+- Roue de la fortune → `/api/spin`
+- Panneau admin protégé → `/api/admin`
+- Prix eBay live → `/api/ebay-prices`
+- Animation lucioles dorées (canvas 2D, réactive souris/touch)
+- Mobile hamburger nav
+- `visibilitychange` : pause canvas quand onglet caché
+
+### ❌ Pas encore implémenté (backlog)
+- Webhook Stripe (`/api/stripe-webhook`) → persistence commandes
+- Historique commandes (`user.orders[]` jamais rempli)
+- Révocation JWT (logout serveur-side)
+- Mécanisme reset mot de passe (actuellement → mailto)
+- Sélecteur Mondial Relay (widget officiel)
+- i18n FR/EN
+- Connexion domaine `edenprojecttcg.com` dans Vercel
+
+---
+
+## Règle absolue
+> Ne jamais pusher sur GitHub sans confirmation explicite de Vincent.
+
+---
 
 ## Contact
-Email : Edenprojectcompany@gmail.com
+- **Email propriétaire** : vincent.stalin@hotmail.fr / Edenprojectcompany@gmail.com
+- **Support client site** : contact@edenprojecttcg.com
