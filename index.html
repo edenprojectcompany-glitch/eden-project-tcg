@@ -656,6 +656,60 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 .admin-msg.ok{display:block;background:rgba(127,255,170,.1);border:1px solid rgba(127,255,170,.2);color:var(--success)}
 .admin-msg.err{display:block;background:rgba(255,122,122,.1);border:1px solid rgba(255,122,122,.2);color:var(--danger)}
 
+/* ── EXIT-INTENT POPUP ── */
+.exit-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(14px);
+  z-index:600;opacity:0;pointer-events:none;transition:opacity .4s ease;
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.exit-overlay.open{opacity:1;pointer-events:auto}
+.exit-popup{background:var(--obsidian-2);border:1px solid rgba(201,168,255,.3);border-radius:28px;
+  width:min(520px,100%);padding:40px;text-align:center;position:relative;
+  transform:scale(.93) translateY(16px);transition:transform .4s var(--spring)}
+.exit-overlay.open .exit-popup{transform:scale(1) translateY(0)}
+.exit-popup-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;
+  background:var(--glass);border:1px solid var(--glass-border);display:grid;place-items:center;
+  cursor:pointer;color:var(--text-dim);transition:all .3s ease}
+.exit-popup-close:hover{color:var(--text);background:var(--glass-hover)}
+.exit-popup .emoji{font-size:48px;margin-bottom:16px;display:block;animation:bounce 1.5s ease infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.exit-popup h2{font-family:'Fraunces',serif;font-weight:400;font-size:clamp(24px,4vw,32px);
+  letter-spacing:-.02em;margin-bottom:10px}
+.exit-popup h2 em{font-style:italic;color:var(--foil-2)}
+.exit-popup p{color:var(--text-dim);font-size:13.5px;line-height:1.65;margin-bottom:22px;max-width:380px;margin-left:auto;margin-right:auto}
+.exit-code-box{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:22px;
+  padding:14px 20px;border-radius:14px;background:rgba(201,168,255,.07);border:1px solid rgba(201,168,255,.25)}
+.exit-code-box .code{font-family:monospace;font-size:22px;font-weight:700;color:var(--foil-2);letter-spacing:.1em}
+.exit-code-box .copy-btn{padding:7px 14px;border-radius:8px;background:rgba(201,168,255,.15);
+  border:1px solid rgba(201,168,255,.3);color:var(--foil-2);cursor:pointer;
+  font-size:12px;font-weight:600;font-family:inherit;transition:all .3s ease}
+.exit-code-box .copy-btn:hover{background:rgba(201,168,255,.25)}
+.exit-popup .btn-primary{min-width:200px}
+.exit-popup .skip{font-size:11.5px;color:var(--text-dimmer);margin-top:14px;cursor:pointer;
+  text-decoration:underline;display:block;transition:color .3s ease}
+.exit-popup .skip:hover{color:var(--text-dim)}
+
+/* ── PURCHASE TOAST ── */
+.purchase-toast{position:fixed;bottom:70px;left:20px;z-index:88;
+  background:rgba(13,13,17,.95);border:1px solid var(--glass-border);
+  border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;
+  max-width:300px;backdrop-filter:blur(20px);
+  transform:translateX(-120%);transition:transform .5s var(--spring);pointer-events:none}
+.purchase-toast.show{transform:translateX(0)}
+.purchase-toast .pt-img{width:44px;height:44px;border-radius:8px;flex-shrink:0;overflow:hidden;
+  background:linear-gradient(160deg,#1a1a22,#0e0e13);display:grid;place-items:center}
+.purchase-toast .pt-img img{width:100%;height:100%;object-fit:contain;padding:3px}
+.purchase-toast .pt-body{flex:1;min-width:0}
+.purchase-toast .pt-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.purchase-toast .pt-info{font-size:10.5px;color:var(--text-dim)}
+.purchase-toast .pt-dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 8px var(--success)}
+
+/* ── VIEWER COUNTER ── */
+.viewer-badge{position:absolute;bottom:12px;right:12px;font-size:9px;letter-spacing:.06em;
+  font-weight:600;padding:3px 8px;border-radius:100px;z-index:2;
+  background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.12);
+  backdrop-filter:blur(8px);color:var(--text-dim);display:flex;align-items:center;gap:4px}
+.viewer-badge .vdot{width:5px;height:5px;border-radius:50%;background:#ff6b6b;flex-shrink:0;animation:vblink 1.4s ease-in-out infinite}
+@keyframes vblink{0%,100%{opacity:1}50%{opacity:.3}}
+
 /* ── SCROLL TO TOP ── */
 .scroll-top{position:fixed;bottom:60px;right:20px;width:42px;height:42px;z-index:89;
   border-radius:50%;background:var(--glass);border:1px solid var(--glass-border);
@@ -867,7 +921,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
           <div class="field" id="f-pwd">
             <input type="password" id="i-pwd" placeholder=" " autocomplete="current-password">
             <label for="i-pwd">Mot de passe</label>
-            <div class="err">Minimum 6 caractères</div>
+            <div class="err">Minimum 8 caractères</div>
           </div>
           <button type="submit" class="btn-primary" id="authSubmitBtn">Se connecter</button>
           <div class="auth-meta"><a href="mailto:contact@edenprojecttcg.com?subject=Mot%20de%20passe%20oubli%C3%A9" id="forgotLink">Mot de passe oublié ?</a></div>
@@ -1000,6 +1054,22 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
         <div class="co-line grand"><span>Total TTC</span><span id="coTotal">0 €</span></div>
         <button class="btn-primary" id="payBtn" style="width:100%;margin-top:18px">💳 Payer par Stripe</button>
         <button class="btn-ghost" id="paypalBtn" style="width:100%;margin-top:10px">🅿 Payer avec PayPal</button>
+        <div id="payErrorMsg" style="display:none;margin-top:12px;padding:10px 13px;border-radius:9px;font-size:12px;background:rgba(255,122,122,.1);border:1px solid rgba(255,122,122,.3);color:var(--danger)"></div>
+        <!-- Trust signals -->
+        <div style="margin-top:18px;padding:14px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            Paiement 100% sécurisé — chiffrement SSL 256 bits
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--foil-4)" stroke-width="2.5"><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4Z"/></svg>
+            Produits authentifiés · Retour 14 jours · Expédition 24h
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--foil-1)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Stripe &amp; PayPal · Aucun stockage de données bancaires
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1415,6 +1485,34 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   </div>
 </footer>
 
+<!-- EXIT-INTENT POPUP -->
+<div class="exit-overlay" id="exitOverlay">
+  <div class="exit-popup">
+    <button class="exit-popup-close" id="exitClose">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <span class="emoji">🎁</span>
+    <h2>Avant de partir…<br><em>un cadeau pour vous.</em></h2>
+    <p>Profitez de <strong>-10% sur votre première commande</strong> avec le code exclusif ci-dessous. Valable 48h.</p>
+    <div class="exit-code-box">
+      <span class="code" id="exitCode">WELCOME10</span>
+      <button class="copy-btn" id="exitCopyBtn">Copier</button>
+    </div>
+    <button class="btn-primary" id="exitCtaBtn">Profiter de -10% →</button>
+    <span class="skip" id="exitSkip">Non merci, je paye plein tarif</span>
+  </div>
+</div>
+
+<!-- PURCHASE TOAST -->
+<div class="purchase-toast" id="purchaseToast">
+  <div class="pt-img"><img id="ptImg" src="" alt=""></div>
+  <div class="pt-body">
+    <div class="pt-name" id="ptName"></div>
+    <div class="pt-info" id="ptInfo"></div>
+  </div>
+  <div class="pt-dot"></div>
+</div>
+
 <script>
 /* ── INIT après chargement GSAP (defer) ── */
 window.addEventListener('load', () => {
@@ -1425,6 +1523,7 @@ window.addEventListener('load', () => {
   const IMG_BASE = 'https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/';
   const PROMO_CODES = {
     EDEN5:{pct:5,type:'discount'}, WELCOME5:{pct:5,type:'discount'},
+    WELCOME10:{pct:10,type:'discount'},
     EDEN10:{pct:10,type:'discount'}, TCG15:{pct:15,type:'discount'},
     EDEN20:{pct:20,type:'discount'}, SHIP0:{pct:0,type:'shipping'},
     BOOSTER:{pct:0,type:'info',msg:'🎁 Un booster sera joint à votre commande !'},
@@ -1694,6 +1793,8 @@ window.addEventListener('load', () => {
 
   /* ══ CATALOGUE ══ */
   function getActivePrice(p,qty){
+    // L'override admin (KV) prend la priorité absolue sur tous les tiers
+    if(p.adminPrice!=null) return p.adminPrice;
     if(!p.tiers) return p.price;
     let price=p.tiers[0].p;
     for(const t of p.tiers) if(qty>=t.q&&t.p!==null) price=t.p;
@@ -1853,7 +1954,7 @@ window.addEventListener('load', () => {
     const p=products.find(x=>x.id===id); if(!p||p.price===null) return;
     const ex=cart.find(c=>c.id===id);
     if(ex){ex.qty++;ex.unitPrice=getActivePrice(p,ex.qty);}
-    else cart.push({...p,qty:1,unitPrice:p.tiers?p.tiers[0].p:p.price});
+    else cart.push({...p,qty:1,unitPrice:getActivePrice(p,1)});
     renderCart();
     const cc=document.getElementById('cartCount');
     cc.classList.remove('pulse'); void cc.offsetWidth; cc.classList.add('pulse');
@@ -1968,7 +2069,7 @@ window.addEventListener('load', () => {
     const pwd=document.getElementById('i-pwd').value;
     const name=document.getElementById('i-name').value;
     const emailOk=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
-    const pwdOk=pwd.length>=6;
+    const pwdOk=pwd.length>=8;
     const nameOk=!isReg||name.trim().length>1;
     document.getElementById('f-email').classList.toggle('error',!emailOk);
     document.getElementById('f-pwd').classList.toggle('error',!pwdOk);
@@ -2202,7 +2303,7 @@ window.addEventListener('load', () => {
         location.href=data.url;
       } else throw new Error(data.error||'Erreur paiement');
     }catch(err){
-      alert('Erreur Stripe : '+err.message+'\n(Configurez STRIPE_SECRET_KEY dans Vercel)');
+      showPayError('Erreur paiement : '+err.message);
       btn.textContent='💳 Payer par Stripe'; btn.disabled=false;
     }
   }
@@ -2222,7 +2323,7 @@ window.addEventListener('load', () => {
       if(data.approveUrl) location.href=data.approveUrl;
       else throw new Error(data.error||'Erreur PayPal');
     }catch(err){
-      alert('Erreur PayPal : '+err.message); btn.textContent='🅿 Payer avec PayPal'; btn.disabled=false;
+      showPayError('Erreur PayPal : '+err.message); btn.textContent='🅿 Payer avec PayPal'; btn.disabled=false;
     }
   }
 
@@ -2337,7 +2438,7 @@ window.addEventListener('load', () => {
       if(!res.ok) return;
       const {prices,stocks}=await res.json();
       products.forEach(p=>{
-        if(prices[p.id]!=null) p.price=prices[p.id];
+        if(prices[p.id]!=null){ p.price=prices[p.id]; p.adminPrice=prices[p.id]; }
         if(stocks[p.id]!=null) p.stock=stocks[p.id];
       });
     }catch{}
@@ -2376,6 +2477,120 @@ window.addEventListener('load', () => {
       showConfirm(tot);
     }
   })();
+
+  /* ══ SHOW PAY ERROR ══ */
+  function showPayError(msg){
+    const el=document.getElementById('payErrorMsg');
+    if(!el) return;
+    el.textContent=msg; el.style.display='block';
+    setTimeout(()=>el.style.display='none',8000);
+  }
+
+  /* ══ EXIT-INTENT POPUP ══ */
+  (function initExitIntent(){
+    const overlay=document.getElementById('exitOverlay');
+    if(!overlay) return;
+    // Ne pas afficher si déjà vu ou code déjà utilisé
+    if(localStorage.getItem('eden_exit_seen')) return;
+    let shown=false;
+    function show(){
+      if(shown||localStorage.getItem('eden_exit_seen')) return;
+      shown=true; overlay.classList.add('open');
+    }
+    // Détection départ souris par le haut
+    document.addEventListener('mouseleave',e=>{if(e.clientY<10) show();});
+    // Fallback mobile : après 45s d'inactivité
+    let idleTimer=setTimeout(show, 45000);
+    document.addEventListener('touchstart',()=>{clearTimeout(idleTimer);idleTimer=setTimeout(show,45000);},{passive:true});
+
+    function close(){overlay.classList.remove('open');localStorage.setItem('eden_exit_seen','1');}
+    document.getElementById('exitClose')?.addEventListener('click',close);
+    document.getElementById('exitSkip')?.addEventListener('click',close);
+    overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+
+    document.getElementById('exitCopyBtn')?.addEventListener('click',()=>{
+      navigator.clipboard?.writeText('WELCOME10').catch(()=>{});
+      const btn=document.getElementById('exitCopyBtn');
+      btn.textContent='✓ Copié !'; btn.style.color='var(--success)';
+      setTimeout(()=>{btn.textContent='Copier';btn.style.color='';},2500);
+    });
+    document.getElementById('exitCtaBtn')?.addEventListener('click',()=>{
+      // Pré-remplir le champ promo et aller au checkout
+      const inp=document.getElementById('promoInput');
+      if(inp) inp.value='WELCOME10';
+      close();
+      if(cart.length) go('checkout');
+      else go('catalog');
+    });
+  })();
+
+  /* ══ PURCHASE TOAST (social proof) ══ */
+  (function initPurchaseToast(){
+    const PURCHASES=[
+      {name:'SV10 — Glory Rocket',    img:'glory-rocket-sv10.png',  city:'Lyon',     ago:3},
+      {name:'SV11b — Black Bolt',     img:'black-bolt-sv11b.png',   city:'Paris',    ago:7},
+      {name:'M2a — Méga Dream EX',    img:'mega-dream-ex-m2a.png',  city:'Bordeaux', ago:12},
+      {name:'SV2a — Pokémon 151',     img:'pokemon-151-sv2a.png',   city:'Marseille',ago:19},
+      {name:'SV11w — White Flare',    img:'white-flare-sv11w.png',  city:'Nantes',   ago:24},
+      {name:'M2 — Méga Inferno X',    img:'inferno-x-m2.png',       city:'Toulouse', ago:31},
+      {name:'SV8a — Terastal Fest',   img:'terastal-fest-sv8a.png', city:'Strasbourg',ago:38},
+      {name:'SV10 — Glory Rocket',    img:'glory-rocket-sv10.png',  city:'Lille',    ago:45},
+      {name:'M5 — Mega Abyss Eye',    img:'abyss-eye-m5.png',       city:'Rennes',   ago:52},
+      {name:'SV9a — Heat Wave Arena', img:'heat-wave-sv9a.png',     city:'Nice',     ago:58},
+    ];
+    const FIRST_NAMES=['Thomas','Marie','Lucas','Léa','Noah','Camille','Hugo','Sophie','Maxime','Julie'];
+    const toast=document.getElementById('purchaseToast');
+    const ptImg=document.getElementById('ptImg');
+    const ptName=document.getElementById('ptName');
+    const ptInfo=document.getElementById('ptInfo');
+    if(!toast) return;
+
+    let idx=0;
+    function showToast(){
+      const p=PURCHASES[idx%PURCHASES.length];
+      const fn=FIRST_NAMES[Math.floor(Math.random()*FIRST_NAMES.length)];
+      const agoText=p.ago<60?`il y a ${p.ago} min`:`il y a ${Math.round(p.ago/60)}h`;
+      ptImg.src=IMG_BASE+p.img;
+      ptName.textContent=fn+' a commandé '+p.name;
+      ptInfo.textContent=p.city+' · '+agoText;
+      toast.classList.add('show');
+      setTimeout(()=>toast.classList.remove('show'),4500);
+      idx++;
+    }
+    // Premier affichage après 12s, puis toutes les 25s
+    setTimeout(()=>{showToast();setInterval(showToast,25000);},12000);
+  })();
+
+  /* ══ VIEWER COUNTER (social proof) ══ */
+  function addViewerBadge(card, productId){
+    const existing=card.querySelector('.viewer-badge');
+    if(existing) return;
+    // Produits chauds ont plus de viewers
+    const hotIds=[10,18,19,20,21];
+    const base=hotIds.includes(productId)?Math.floor(6+Math.random()*8):Math.floor(2+Math.random()*5);
+    const badge=document.createElement('div');
+    badge.className='viewer-badge';
+    badge.innerHTML=`<span class="vdot"></span>${base} regardent`;
+    card.querySelector('.product-img')?.appendChild(badge);
+    // Fluctuation légère toutes les 30s
+    setInterval(()=>{
+      const delta=Math.random()>.5?1:-1;
+      const cur=parseInt(badge.textContent)||base;
+      const next=Math.max(1,cur+delta);
+      badge.innerHTML=`<span class="vdot"></span>${next} regardent`;
+    },30000);
+  }
+
+  /* ══ PATCH renderGrid pour viewer badges ══ */
+  const _origRenderGrid=renderGrid;
+  // On hook après le render via MutationObserver sur #grid
+  const gridObs=new MutationObserver(()=>{
+    document.querySelectorAll('#grid .product').forEach(card=>{
+      const id=+card.dataset.id;
+      if(id) addViewerBadge(card,id);
+    });
+  });
+  gridObs.observe(document.getElementById('grid')||document.body,{childList:true,subtree:false});
 
   /* ══ INIT ══ */
   loadAuth();

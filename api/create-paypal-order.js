@@ -2,7 +2,7 @@
 // Env requis : PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENV, SITE_URL, KV_REST_API_URL, KV_REST_API_TOKEN
 
 const { PAYPAL_BASE, getPayPalToken } = require('../lib/paypal');
-const { PROMO_CODES, PRIZE_CODES, VALID_SHIPPING, getServerPrice } = require('../lib/prices');
+const { PROMO_CODES, PRIZE_CODES, VALID_SHIPPING, getServerPrice, getAutoPromoPct } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 
@@ -19,7 +19,7 @@ module.exports = async (req, res) => {
     if (items.length > 50) return res.status(400).json({ error: 'Trop d\'articles' });
 
     const code = (promoCode || '').toUpperCase();
-    const discountPct = PROMO_CODES[code] || 0;
+    const promoCodePct = PROMO_CODES[code] || 0;
     const isShipFree = code === 'SHIP0';
     const isPrizeCode = PRIZE_CODES.has(code);
 
@@ -40,22 +40,29 @@ module.exports = async (req, res) => {
       adminPrices = await kv.get('admin:prices') || {};
     } catch {}
 
-    // Validation prix avec dégressivité
-    const validatedItems = [];
+    // Passe 1 : sous-total brut pour auto-promo
+    let rawSubtotal = 0;
+    const rawItems = [];
     for (const item of items) {
       const qty = parseInt(item.qty);
       if (!item.id || !qty || qty < 1 || qty > 1000) continue;
       const serverPrice = getServerPrice(item.id, qty, adminPrices);
       if (serverPrice === null) continue;
-      const unitPrice = +(serverPrice * (1 - discountPct / 100)).toFixed(2);
-      validatedItems.push({
-        id: item.id,
-        name: String(item.name || '').slice(0, 127),  // fix C1 : String() avant slice
-        qty,
-        unitPrice,
-      });
+      rawSubtotal += serverPrice * qty;
+      rawItems.push({ item, qty, serverPrice });
     }
-    if (!validatedItems.length) return res.status(400).json({ error: 'Aucun article valide' });
+    if (!rawItems.length) return res.status(400).json({ error: 'Aucun article valide' });
+
+    // Remise effective
+    const discountPct = promoCodePct || (!isPrizeCode ? getAutoPromoPct(rawSubtotal) : 0);
+
+    // Passe 2 : items validés avec remise
+    const validatedItems = rawItems.map(({ item, qty, serverPrice }) => ({
+      id: item.id,
+      name: String(item.name || '').slice(0, 127),
+      qty,
+      unitPrice: +(serverPrice * (1 - discountPct / 100)).toFixed(2),
+    }));
 
     const itemTotal = +validatedItems.reduce((s, i) => s + i.unitPrice * i.qty, 0).toFixed(2);
     const total = +(itemTotal + shipping).toFixed(2);

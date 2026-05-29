@@ -6,6 +6,64 @@ Il est destiné à tout nouveau Claude qui reprend ce projet.
 
 ---
 
+## Ce qui a été fait — Audit 3 (bugs critiques + conversion)
+
+### 1. BUG CRITIQUE : Auto-promo non appliquée côté serveur
+**Problème** : Les remises automatiques (≥150€: -3%, ≥300€: -5%, ≥500€: -8%) étaient calculées
+côté client mais jamais transmises à Stripe/PayPal. L'utilisateur voyait une réduction sur l'écran
+mais était facturé plein tarif. Bug de facturation silencieux.
+
+**Fix** : `lib/prices.js` expose maintenant `AUTO_PROMO_TIERS` et `getAutoPromoPct(subtotal)`.
+`create-payment.js` et `create-paypal-order.js` calculent maintenant le sous-total brut en passe 1,
+déterminent la remise effective (code promo prioritaire, sinon auto-promo), puis appliquent en passe 2.
+Le `discountPct` effectif est tracé dans les métadonnées Stripe.
+
+### 2. BUG : Validation mot de passe incohérente
+**Problème** : Front valide à 6 chars, back-end exige 8. L'utilisateur voyait une erreur serveur
+opaque sans comprendre pourquoi.
+**Fix** : `index.html` — validation JS et message d'erreur mis à jour à 8 chars minimum.
+
+### 3. BUG : Prix admin KV non propagés au panier client
+**Problème** : `loadProductOverrides()` mettait à jour `p.price` mais `addToCart()` utilisait
+`p.tiers[0].p` (non mis à jour). Le panier affichait l'ancien prix même après override admin.
+**Fix** : `getActivePrice()` vérifie en priorité `p.adminPrice` (nouvelle prop). `loadProductOverrides()`
+écrit sur `p.adminPrice` en plus de `p.price`. `addToCart()` appelle maintenant `getActivePrice(p, 1)`.
+
+### 4. BUG : alert() natif remplacé par UI propre
+**Problème** : Erreurs Stripe et PayPal affichées via `alert()` — bloquant, non stylé, mauvaise UX.
+**Fix** : `showPayError(msg)` injecte le message dans un div dédié sous les boutons de paiement.
+
+### 5. FEAT : Webhook Stripe → persistence commandes
+**Nouveau fichier** : `api/stripe-webhook.js`
+- Lit le raw body (signature Stripe requise — `handler.config = { api: { bodyParser: false } }`)
+- Vérifie la signature avec `STRIPE_WEBHOOK_SECRET`
+- Sur `checkout.session.completed` : pousse la commande dans `user.orders[]` (KV), ajoute les points fidélité (1pt/€)
+- `vercel.json` mis à jour : route `/api/stripe-webhook` + env `STRIPE_WEBHOOK_SECRET`
+
+**À faire dans Stripe Dashboard** : Webhooks → Add endpoint → `https://edenprojecttcg.com/api/stripe-webhook` → event `checkout.session.completed` → copier le signing secret dans Vercel comme `STRIPE_WEBHOOK_SECRET`.
+
+### 6. COMMERCIAL : Code promo WELCOME10 ajouté
+Ajouté dans `lib/prices.js` (PROMO_CODES) et `index.html` (PROMO_CODES client).
+Utilisé par l'exit-intent popup comme code d'entrée.
+
+### 7. COMMERCIAL : Exit-intent popup
+Popup avec glassmorphism qui s'affiche quand la souris quitte le viewport vers le haut (desktop)
+ou après 45s d'inactivité (mobile). Offre -10% avec code WELCOME10.
+- Ne s'affiche qu'une fois (localStorage `eden_exit_seen`)
+- Bouton "Copier" pour le code
+- CTA direct vers le catalogue avec promo pré-remplie
+
+### 8. COMMERCIAL : Social proof — achats récents + viewers
+- Toast bas-gauche : rotation sur 10 achats réalistes avec prénom/ville/délai. Apparaît 12s après chargement, toutes les 25s.
+- Badge "X regardent" sur chaque carte produit : nombre simulé fluctuant, +fort sur les produits chauds (SV10, 151, SV11b).
+
+### 9. COMMERCIAL : Trust signals dans checkout
+Ajout sous les boutons de paiement : SSL 256 bits, authenticité + retour 14j + expédition 24h, Stripe & PayPal sans stockage bancaire.
+
+---
+
+---
+
 ## Ce qui a été fait — Audit 1 (corrections sécurité critiques)
 
 ### 1. `api/capture-paypal-order.js` — CRÉÉ DE ZÉRO

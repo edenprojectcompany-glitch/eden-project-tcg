@@ -2,7 +2,7 @@
 // Env requis : STRIPE_SECRET_KEY, SITE_URL, KV_REST_API_URL, KV_REST_API_TOKEN
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const { PROMO_CODES, PRIZE_CODES, VALID_SHIPPING, getServerPrice } = require('../lib/prices');
+const { PROMO_CODES, PRIZE_CODES, VALID_SHIPPING, getServerPrice, getAutoPromoPct } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
     if (items.length > 50) return res.status(400).json({ error: 'Trop d\'articles' });
 
     const code = (promoCode || '').toUpperCase();
-    const discountPct = PROMO_CODES[code] || 0;
+    const promoCodePct = PROMO_CODES[code] || 0;
     const isShipFree = code === 'SHIP0';
     const isPrizeCode = PRIZE_CODES.has(code);
 
@@ -41,13 +41,25 @@ module.exports = async (req, res) => {
       adminPrices = await kv.get('admin:prices') || {};
     } catch {}
 
-    // Construction des line items avec prix serveur
-    const lineItems = [];
+    // Passe 1 : calcul du sous-total brut (avant remise) pour déterminer l'auto-promo
+    let rawSubtotal = 0;
+    const rawItems = [];
     for (const item of items) {
       const qty = parseInt(item.qty);
       if (!item.id || !qty || qty < 1 || qty > 1000) continue;
       const serverPrice = getServerPrice(item.id, qty, adminPrices);
       if (serverPrice === null) continue;
+      rawSubtotal += serverPrice * qty;
+      rawItems.push({ item, qty, serverPrice });
+    }
+    if (!rawItems.length) return res.status(400).json({ error: 'Aucun article valide' });
+
+    // Remise effective : code promo prioritaire, sinon auto-promo sur le sous-total
+    const discountPct = promoCodePct || (!isPrizeCode ? getAutoPromoPct(rawSubtotal) : 0);
+
+    // Passe 2 : construction des line items avec remise effective
+    const lineItems = [];
+    for (const { item, qty, serverPrice } of rawItems) {
       const finalPrice = Math.round(serverPrice * (1 - discountPct / 100) * 100);
       lineItems.push({
         price_data: {
@@ -86,6 +98,7 @@ module.exports = async (req, res) => {
       metadata: {
         promoCode: code,
         prizeCode: isPrizeCode ? code : '',
+        discountPct: String(discountPct),
         source: 'eden-project-tcg',
       },
       shipping_address_collection: { allowed_countries: ['FR', 'BE', 'CH', 'LU', 'MC'] },
