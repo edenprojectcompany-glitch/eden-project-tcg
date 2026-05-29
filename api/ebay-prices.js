@@ -1,8 +1,8 @@
-// api/ebay-prices.js — Prix eBay live avec cache Vercel KV (1h)
+// api/ebay-prices.js — Prix eBay live avec cache Vercel KV (1h TTL natif)
 // Env requis : EBAY_APP_ID, EBAY_CERT_ID, KV_REST_API_URL, KV_REST_API_TOKEN, SITE_URL
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
-const CACHE_TTL = 60 * 60 * 1000; // 1h en ms
+const CACHE_TTL_SECONDS = 3600; // 1h — TTL natif Upstash
 
 async function getEbayToken() {
   const creds = Buffer.from(`${process.env.EBAY_APP_ID}:${process.env.EBAY_CERT_ID}`).toString('base64');
@@ -17,10 +17,11 @@ async function getEbayToken() {
 }
 
 async function fetchEbayPrice(token, query, kv) {
-  const cacheKey = `ebay:${query.toLowerCase().replace(/\s+/g, '_')}`;
+  const cacheKey = `ebay:${query.toLowerCase().replace(/\s+/g, '_').slice(0, 80)}`;
+
   try {
     const cached = await kv.get(cacheKey);
-    if (cached && (Date.now() - cached.ts) < CACHE_TTL) return cached.price;
+    if (cached != null) return cached; // TTL géré nativement par Upstash
   } catch {}
 
   const url = new URL('https://api.ebay.com/buy/browse/v1/item_summary/search');
@@ -49,8 +50,10 @@ async function fetchEbayPrice(token, query, kv) {
   const avg = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
 
   try {
-    await kv.set(cacheKey, { price: avg, ts: Date.now() });
+    // TTL natif — la valeur expire automatiquement dans Upstash
+    await kv.set(cacheKey, avg, { ex: CACHE_TTL_SECONDS });
   } catch {}
+
   return avg;
 }
 
@@ -61,18 +64,22 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { queries } = req.body;
+  const { queries } = req.body || {};
   if (!queries?.length) return res.status(400).json({ error: 'queries required' });
+  if (queries.length > 30) return res.status(400).json({ error: 'Maximum 30 requêtes simultanées' });
 
   try {
     const { kv } = require('@vercel/kv');
     const token = await getEbayToken();
     const results = await Promise.all(
-      queries.map(async ({ id, term }) => ({ id, price: await fetchEbayPrice(token, term, kv) }))
+      queries.map(async ({ id, term }) => ({
+        id,
+        price: term ? await fetchEbayPrice(token, String(term).slice(0, 200), kv) : null,
+      }))
     );
     return res.status(200).json({ prices: Object.fromEntries(results.map(r => [r.id, r.price])) });
   } catch (err) {
     console.error('eBay error:', err.message);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Erreur serveur eBay' });
   }
 };

@@ -38,24 +38,50 @@ module.exports = async (req, res) => {
       const { action, data } = req.body || {};
 
       if (action === 'set_prices') {
-        // data = { [id]: price, ... }
-        await kv.set('admin:prices', data);
+        if (typeof data !== 'object' || Array.isArray(data)) {
+          return res.status(400).json({ error: 'Format invalide' });
+        }
+        const validated = {};
+        for (const [k, v] of Object.entries(data)) {
+          const price = parseFloat(v);
+          if (!isNaN(price) && price >= 0 && price <= 10000) {
+            validated[String(parseInt(k))] = +price.toFixed(2);
+          }
+        }
+        await kv.set('admin:prices', validated);
         return res.status(200).json({ ok: true });
       }
 
       if (action === 'set_stocks') {
-        // data = { [id]: stock, ... }
-        await kv.set('admin:stocks', data);
+        if (typeof data !== 'object' || Array.isArray(data)) {
+          return res.status(400).json({ error: 'Format invalide' });
+        }
+        const validated = {};
+        for (const [k, v] of Object.entries(data)) {
+          const stock = parseInt(v);
+          if (!isNaN(stock) && stock >= 0 && stock <= 100000) {
+            validated[String(parseInt(k))] = stock;
+          }
+        }
+        await kv.set('admin:stocks', validated);
         return res.status(200).json({ ok: true });
       }
 
       if (action === 'set_wheel') {
-        // data = array of { label, prob, code, color }
-        const total = data.reduce((s, p) => s + p.prob, 0);
-        if (Math.abs(total - 100) > 0.1) {
-          return res.status(400).json({ error: `Probabilités totales = ${total.toFixed(1)}% (doit être 100%)` });
+        if (!Array.isArray(data) || data.length < 2 || data.length > 16) {
+          return res.status(400).json({ error: 'Format roue invalide' });
         }
-        await kv.set('admin:wheel', data);
+        const total = data.reduce((s, p) => s + (parseFloat(p.prob) || 0), 0);
+        if (Math.abs(total - 100) > 0.1) {
+          return res.status(400).json({ error: `Probabilités = ${total.toFixed(1)}% (doit être 100%)` });
+        }
+        const validated = data.map(p => ({
+          label: String(p.label).slice(0, 50),
+          prob: +(parseFloat(p.prob).toFixed(2)),
+          code: p.code ? String(p.code).slice(0, 20) : null,
+          color: /^#[0-9a-fA-F]{6}$/.test(p.color) ? p.color : '#1a1a28',
+        }));
+        await kv.set('admin:wheel', validated);
         return res.status(200).json({ ok: true });
       }
 
