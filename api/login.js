@@ -41,13 +41,17 @@ module.exports = async (req, res) => {
     if (!ok) return res.status(401).json({ error: 'E-mail ou mot de passe incorrect' });
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name },
+      { id: user.id, email: user.email, name: user.name, tokenVersion: user.tokenVersion || 0 },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
     );
     return res.status(200).json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, lastSpin: user.lastSpin, loyalty: user.loyalty || 0 },
+      user: {
+        id: user.id, name: user.name, email: user.email,
+        lastSpin: user.lastSpin, loyalty: user.loyalty || 0,
+        orders: user.orders || [],
+      },
     });
   } catch (err) {
     console.error('Login error:', err.message);

@@ -61,17 +61,18 @@ module.exports = async (req, res) => {
       lastSpin: null,
       orders: [],
       loyalty: 0,
+      tokenVersion: 0,
     };
     await kv.set(key, user);
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name },
+      { id: user.id, email: user.email, name: user.name, tokenVersion: 0 },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
     );
     return res.status(201).json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, lastSpin: null, loyalty: 0 },
+      user: { id: user.id, name: user.name, email: user.email, lastSpin: null, loyalty: 0, orders: [] },
     });
   } catch (err) {
     console.error('Register error:', err.message);

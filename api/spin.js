@@ -40,41 +40,59 @@ module.exports = async (req, res) => {
   try {
     const { kv } = require('@vercel/kv');
     const key = `user:${decoded.email}`;
-    const user = await kv.get(key);
-    if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
+    const lockKey = `spin:lock:${decoded.email}`;
 
-    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-    const now = Date.now();
-    if (user.lastSpin) {
-      const elapsed = now - new Date(user.lastSpin).getTime();
-      if (elapsed < THIRTY_DAYS) {
-        return res.status(429).json({
-          error: 'Prochain tirage disponible le',
-          nextSpin: new Date(new Date(user.lastSpin).getTime() + THIRTY_DAYS).toISOString(),
-        });
+    // Lock atomique anti race-condition (NX = set if not exists, expire 15s)
+    const locked = await kv.set(lockKey, '1', { ex: 15, nx: true });
+    if (!locked) {
+      return res.status(429).json({ error: 'Tirage déjà en cours, réessayez dans quelques secondes.' });
+    }
+
+    try {
+      const user = await kv.get(key);
+      if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
+
+      // Vérification tokenVersion
+      if (user.tokenVersion != null && decoded.tokenVersion !== user.tokenVersion) {
+        return res.status(401).json({ error: 'Session expirée, reconnectez-vous' });
       }
+
+      const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      if (user.lastSpin) {
+        const elapsed = now - new Date(user.lastSpin).getTime();
+        if (elapsed < THIRTY_DAYS) {
+          return res.status(429).json({
+            error: 'Prochain tirage disponible le',
+            nextSpin: new Date(new Date(user.lastSpin).getTime() + THIRTY_DAYS).toISOString(),
+          });
+        }
+      }
+
+      // Wheel config (admin-overridable)
+      const wheelRaw = await kv.get('admin:wheel');
+      const wheel = wheelRaw || DEFAULT_WHEEL;
+
+      // Weighted random draw — fallback sur dernier segment si les probs < 100 par drift float
+      const rand = Math.random() * 100;
+      let cumul = 0, winIndex = wheel.length - 1;
+      for (let i = 0; i < wheel.length; i++) {
+        cumul += wheel[i].prob;
+        if (rand <= cumul) { winIndex = i; break; }
+      }
+      const prize = wheel[winIndex];
+
+      // Persist lastSpin + loyalty points
+      user.lastSpin = new Date().toISOString();
+      user.loyalty = (user.loyalty || 0) + 10;
+      if (prize.code) user.loyalty += 20;
+      await kv.set(key, user);
+
+      return res.status(200).json({ prize, winIndex, wheelConfig: wheel });
+    } finally {
+      // Libérer le lock dans tous les cas
+      await kv.del(lockKey).catch(() => {});
     }
-
-    // Wheel config (admin-overridable)
-    const wheelRaw = await kv.get('admin:wheel');
-    const wheel = wheelRaw || DEFAULT_WHEEL;
-
-    // Weighted random draw — fallback sur dernier segment si les probs < 100 par drift float
-    const rand = Math.random() * 100;
-    let cumul = 0, winIndex = wheel.length - 1;
-    for (let i = 0; i < wheel.length; i++) {
-      cumul += wheel[i].prob;
-      if (rand <= cumul) { winIndex = i; break; }
-    }
-    const prize = wheel[winIndex];
-
-    // Persist lastSpin + loyalty points
-    user.lastSpin = new Date().toISOString();
-    user.loyalty = (user.loyalty || 0) + 10;
-    if (prize.code) user.loyalty += 20;
-    await kv.set(key, user);
-
-    return res.status(200).json({ prize, winIndex, wheelConfig: wheel });
   } catch (err) {
     console.error('Spin error:', err.message);
     return res.status(500).json({ error: 'Erreur serveur' });

@@ -15,6 +15,17 @@ module.exports = async (req, res) => {
 
   const code = req.headers['x-admin-code'];
   if (!code || code !== process.env.ADMIN_CODE) {
+    // Rate limiting sur les tentatives échouées : 10 / 15 min par IP
+    try {
+      const { kv } = require('@vercel/kv');
+      const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+      const ratKey = `ratelimit:admin:${ip}`;
+      const attempts = await kv.incr(ratKey);
+      await kv.expire(ratKey, 900);
+      if (attempts > 10) {
+        return res.status(429).json({ error: 'Trop de tentatives. Réessayez dans 15 minutes.' });
+      }
+    } catch {}
     return res.status(403).json({ error: 'Accès refusé' });
   }
 

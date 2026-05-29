@@ -749,6 +749,48 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   .case-grid{grid-template-columns:1fr}
   .help-ship-grid{grid-template-columns:1fr}
 }
+
+/* ── LOYALTY NAV PILL ── */
+.loyalty-pill{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;padding:0 5px;
+  border-radius:10px;background:linear-gradient(135deg,var(--gold),#ffb347);color:#0a0a0c;
+  font-size:9px;font-weight:800;display:grid;place-items:center;pointer-events:none;white-space:nowrap}
+
+/* ── BADGE STOCK URGENCE ── */
+.badge-stock-urgent{position:absolute;bottom:12px;left:12px;font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;padding:3px 8px;border-radius:100px;
+  background:rgba(255,122,122,.2);border:1px solid rgba(255,122,122,.5);
+  color:var(--danger);backdrop-filter:blur(8px);z-index:2;animation:pulse-danger 2s infinite}
+@keyframes pulse-danger{0%,100%{box-shadow:0 0 0 0 rgba(255,122,122,.3)}50%{box-shadow:0 0 0 4px rgba(255,122,122,0)}}
+.modal-stock-line{margin:10px 0;padding:8px 14px;border-radius:10px;font-size:12.5px;font-weight:600;
+  background:rgba(255,122,122,.1);border:1px solid rgba(255,122,122,.3);color:var(--danger)}
+.modal-stock-ok{background:rgba(127,255,170,.08);border-color:rgba(127,255,170,.25);color:var(--success)}
+
+/* ── VIP TIER ── */
+.vip-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;
+  font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-left:12px}
+.vip-bronze{background:rgba(205,127,50,.15);border:1px solid rgba(205,127,50,.4);color:#cd7f32}
+.vip-silver{background:rgba(192,192,192,.15);border:1px solid rgba(192,192,192,.4);color:#c0c0c0}
+.vip-gold{background:rgba(255,217,127,.15);border:1px solid rgba(255,217,127,.5);color:var(--gold)}
+.vip-diamond{background:rgba(127,217,255,.15);border:1px solid rgba(127,217,255,.5);color:var(--foil-1)}
+.vip-perks{margin-top:12px;padding:14px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);font-size:12px;color:var(--text-dim)}
+.vip-perks strong{color:var(--text);display:block;margin-bottom:6px}
+
+/* ── ORDER HISTORY ── */
+.order-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;
+  border-bottom:1px solid var(--glass-border)}
+.order-item:last-child{border-bottom:none}
+.order-ref{font-family:'Fraunces',serif;font-size:14px;font-weight:500}
+.order-date{font-size:11px;color:var(--text-dim);margin-top:2px}
+.order-amount{font-size:15px;font-weight:600;color:var(--foil-4)}
+.order-status{font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:100px;
+  background:rgba(127,255,170,.1);border:1px solid rgba(127,255,170,.25);color:var(--success);margin-top:3px;display:inline-block}
+
+/* ── CART JOIN NUDGE ── */
+.cart-join-nudge{margin:10px 0;padding:10px 14px;border-radius:12px;
+  background:rgba(201,168,255,.08);border:1px solid rgba(201,168,255,.2);
+  font-size:12px;color:var(--text-dim);cursor:pointer;transition:background .3s}
+.cart-join-nudge:hover{background:rgba(201,168,255,.14)}
+.cart-join-nudge strong{color:var(--foil-2)}
 </style>
 </head>
 <body>
@@ -1826,7 +1868,11 @@ window.addEventListener('load', () => {
     if(!list.length){grid.innerHTML='<div class="no-results">Aucun produit trouvé.</div>';return;}
     grid.innerHTML=list.map(p=>{
       const hasPrice=p.price!==null;
-      const stockBadge=p.stock!=null?`<span class="badge-stock">Stock: ${p.stock}</span>`:'';
+      const stockBadge=p.stock!=null
+        ?(p.stock<=3?`<span class="badge-stock-urgent">⚠️ Dernières ${p.stock} boîtes !</span>`
+          :p.stock<=8?`<span class="badge-stock-urgent" style="background:rgba(255,179,51,.15);border-color:rgba(255,179,51,.4);color:#ffb333;animation:none">🔥 Plus que ${p.stock} dispo</span>`
+          :`<span class="badge-stock">Stock: ${p.stock}</span>`)
+        :'';
       return `<article class="product" data-id="${p.id}" tabindex="0" role="button" style="opacity:0;transition:opacity .35s ease,border-color .4s ease,box-shadow .4s ease,transform .25s ease">
         <div class="product-img">
           ${p.urgent?'<span class="badge-urgent">⚡ Urgent</span>':''}
@@ -1924,11 +1970,19 @@ window.addEventListener('load', () => {
     imgEl.onerror=()=>{imgEl.style.display='none';};
     imgEl.style.display='';
     const fp=p.tiers?p.tiers[0].p:p.price;
+    const stockLine = p.stock!=null
+      ? (p.stock<=3
+          ? `<div class="modal-stock-line">⚠️ Attention — Plus que ${p.stock} boîte${p.stock>1?'s':''} en stock !</div>`
+          : p.stock<=8
+            ? `<div class="modal-stock-line" style="background:rgba(255,179,51,.08);border-color:rgba(255,179,51,.3);color:#ffb333">🔥 Seulement ${p.stock} disponibles — commandez vite</div>`
+            : `<div class="modal-stock-line modal-stock-ok">✓ En stock (${p.stock} boîtes disponibles)</div>`)
+      : '';
     modalBody.innerHTML=`
       <div class="modal-tag"><span class="lang-badge ${p.lang==='cn'?'b-cn':'b-jp'}">${p.lang==='cn'?'CN':'JPN'}</span> ${p.tag}${p.rare?' · '+p.rare:''}</div>
       <div class="modal-name">${p.name}</div>
       <div class="modal-sub">${p.sub}</div>
       <div class="modal-desc">${p.desc}</div>
+      ${stockLine}
       ${buildTiersHtml(p)}${buildEbayHtml(p)}
       <div class="modal-price-row"><div class="modal-price">${fp!==null?fp+'€':'Sur demande'}<span>/boîte</span></div></div>
       <div class="modal-actions">
@@ -1980,7 +2034,8 @@ window.addEventListener('load', () => {
       document.getElementById('cartAutoPromoRow').style.display='none';
       return;
     }
-    wrap.innerHTML=cart.map(i=>`
+    const nudge=!authUser?'<div class="cart-join-nudge" onclick="closeCart();go(\'auth\')" title="Créer un compte">🎡 <strong>Membres :</strong> Roue mensuelle + livraison offerte + points fidélité</div>':'';
+    wrap.innerHTML=nudge+cart.map(i=>`
       <div class="cart-item">
         <div class="thumb"><img src="${IMG_BASE}${i.img}" alt="${i.name}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'"></div>
         <div class="info">
@@ -2046,9 +2101,11 @@ window.addEventListener('load', () => {
   function updateAuthUI(){
     const btn=document.getElementById('authBtn');
     if(authUser){
-      btn.title='Mon compte ('+authUser.name+')';
-      btn.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg><span style="position:absolute;bottom:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--success);border:2px solid var(--obsidian)"></span>';
-      document.getElementById('mobileAuthLink').textContent='Mon compte';
+      const pts=authUser.loyalty||0;
+      btn.title='Mon compte ('+authUser.name+') — '+pts+' pts';
+      btn.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>'
+        +'<span class="loyalty-pill">'+pts+'</span>';
+      document.getElementById('mobileAuthLink').textContent='Mon compte ('+pts+' pts)';
     } else {
       btn.title='Se connecter';
       btn.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>';
@@ -2093,8 +2150,39 @@ window.addEventListener('load', () => {
   });
   document.getElementById('logoutBtn')?.addEventListener('click',()=>{clearAuth();go('home');});
 
+  /* ══ VIP TIER ══ */
+  function getVipTier(totalSpent){
+    if(totalSpent>=5000) return {label:'💎 Diamond',cls:'vip-diamond',perks:'Accès prioritaire nouveautés · Remise permanente -5% · Display offerte à 10 000€'};
+    if(totalSpent>=1500) return {label:'🥇 Gold',cls:'vip-gold',perks:'Livraison offerte dès 150€ · Roue bonus mensuelle · Early access JP'};
+    if(totalSpent>=500)  return {label:'🥈 Silver',cls:'vip-silver',perks:'Remise -3% automatique · Newsletter early access'};
+    return {label:'🥉 Bronze',cls:'vip-bronze',perks:'Points fidélité × 2 sur la roue · Accès aux codes promo membres'};
+  }
+
+  function renderOrderHistory(orders){
+    const el=document.getElementById('orderList'); if(!el) return;
+    document.getElementById('dashOrderCount').textContent=(orders||[]).length;
+    if(!orders||!orders.length){
+      el.innerHTML='<div style="color:var(--text-dim);font-size:13.5px;padding:16px 0;text-align:center">Aucune commande pour le moment.</div>';
+      return;
+    }
+    el.innerHTML=orders.slice(0,10).map(o=>{
+      const date=new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+      const provider=o.provider==='paypal'?'PayPal':'Stripe';
+      return `<div class="order-item">
+        <div>
+          <div class="order-ref">${o.ref||'—'}</div>
+          <div class="order-date">${date} · ${provider}</div>
+          <span class="order-status">${o.status==='confirmed'?'Confirmé':'En cours'}</span>
+        </div>
+        <div style="text-align:right">
+          <div class="order-amount">${parseFloat(o.amount||0).toFixed(2).replace('.',',')} €</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   /* ══ DASHBOARD ══ */
-  function renderDashboard(){
+  async function renderDashboard(){
     const unauth=document.getElementById('dash-unauth');
     const auth=document.getElementById('dash-auth');
     if(!authUser){
@@ -2108,8 +2196,47 @@ window.addEventListener('load', () => {
     document.getElementById('dashEmail').textContent=authUser.email;
     document.getElementById('dashAvatar').textContent=authUser.name[0].toUpperCase();
     document.getElementById('dashPoints').textContent=(authUser.loyalty||0)+' pts';
+    renderOrderHistory(authUser.orders||[]);
+    // Afficher le tier VIP immédiatement avec données locales
+    const localSpent=(authUser.orders||[]).reduce((s,o)=>s+parseFloat(o.amount||0),0);
+    renderVipTier(localSpent);
     initWheelCanvas();
     updateWheelCooldown();
+    // Rafraîchir depuis le serveur (commandes ajoutées après login)
+    if(authToken){
+      try{
+        const res=await fetch('/api/me',{headers:{Authorization:'Bearer '+authToken}});
+        if(res.ok){
+          const data=await res.json();
+          authUser.loyalty=data.user.loyalty||0;
+          authUser.orders=data.user.orders||[];
+          authUser.lastSpin=data.user.lastSpin;
+          localStorage.setItem('edn_user',JSON.stringify(authUser));
+          document.getElementById('dashPoints').textContent=authUser.loyalty+' pts';
+          updateAuthUI();
+          renderOrderHistory(authUser.orders);
+          renderVipTier(data.user.totalSpent||0);
+          updateWheelCooldown();
+        } else if(res.status===401){ clearAuth(); go('auth'); }
+      }catch{}
+    }
+  }
+
+  function renderVipTier(totalSpent){
+    const tier=getVipTier(totalSpent);
+    let el=document.getElementById('dashVip');
+    if(!el){
+      el=document.createElement('div');el.id='dashVip';
+      const header=document.querySelector('.dash-header');
+      if(header) header.parentNode.insertBefore(el,header.nextSibling);
+    }
+    const next5k=totalSpent>=5000?'':totalSpent>=1500?`${(5000-totalSpent).toFixed(0)}€ pour Diamond`:totalSpent>=500?`${(1500-totalSpent).toFixed(0)}€ pour Gold`:`${(500-totalSpent).toFixed(0)}€ pour Silver`;
+    el.innerHTML=`<div style="margin:14px 0 18px;display:flex;align-items:center;flex-wrap:wrap;gap:10px">
+      <span class="vip-badge ${tier.cls}">${tier.label}</span>
+      ${next5k?`<span style="font-size:11.5px;color:var(--text-dim)">Encore ${next5k}</span>`:'<span style="font-size:11.5px;color:var(--gold)">✦ Niveau maximum atteint</span>'}
+      <span style="font-size:11px;color:var(--text-dimmer);margin-left:auto">${totalSpent.toFixed(0)}€ dépensés au total</span>
+    </div>
+    <div class="vip-perks"><strong>Avantages ${tier.label}</strong>${tier.perks}</div>`;
   }
 
   /* ══ FORTUNE WHEEL ══ */
@@ -2218,6 +2345,7 @@ window.addEventListener('load', () => {
       authUser.loyalty=(authUser.loyalty||0)+10+(data.prize.code?20:0);
       localStorage.setItem('edn_user',JSON.stringify(authUser));
       document.getElementById('dashPoints').textContent=authUser.loyalty+' pts';
+      updateAuthUI();
       spinWheelTo(data.winIndex);
     }catch(err){
       wheelSpinning=false;
@@ -2300,6 +2428,8 @@ window.addEventListener('load', () => {
         const _pct=promoDiscount||(_auto&&!promoDiscount?_auto.pct:0);
         const _tot=((_sub*(1-_pct/100))+(shipPromo?0:currentShip)).toFixed(2).replace('.',',')+' €';
         sessionStorage.setItem('eden_pending_total',_tot);
+        // Stocker la vraie référence commande (miroir du webhook : EDN-{6 derniers chars sessionId})
+        if(data.sessionId) sessionStorage.setItem('eden_pending_ref','EDN-'+data.sessionId.slice(-6).toUpperCase());
         location.href=data.url;
       } else throw new Error(data.error||'Erreur paiement');
     }catch(err){
@@ -2318,6 +2448,7 @@ window.addEventListener('load', () => {
           items:cart.map(i=>({id:i.id,name:i.name,unitPrice:i.unitPrice,qty:i.qty})),
           shippingCost:shipPromo?0:currentShip,
           promoCode:document.getElementById('promoInput')?.value||'',
+          customerEmail:authUser?.email||'',
         })});
       const data=await res.json();
       if(data.approveUrl) location.href=data.approveUrl;
@@ -2450,8 +2581,8 @@ window.addEventListener('load', () => {
     if(p.get('payment')!=='success') return;
     const paypalToken=p.get('token'); // PayPal ajoute ?token=ORDER_ID après approbation
     history.replaceState({},'',location.pathname);
-    function showConfirm(total){
-      document.getElementById('confRef').textContent='EDN-'+Math.floor(100000+Math.random()*900000);
+    function showConfirm(total,ref){
+      document.getElementById('confRef').textContent=ref||('EDN-'+Math.floor(100000+Math.random()*900000));
       document.getElementById('confTot').textContent=total||'—';
       go('confirm');
       const pc=document.getElementById('particles');
@@ -2463,18 +2594,22 @@ window.addEventListener('load', () => {
     }
     if(paypalToken){
       // PayPal : capturer le paiement avant d'afficher la confirmation
+      let _email='';
+      try{_email=JSON.parse(localStorage.getItem('edn_user')||'{}').email||'';}catch{}
       fetch('/api/capture-paypal-order',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({orderId:paypalToken})
+        body:JSON.stringify({orderId:paypalToken,email:_email})
       }).then(r=>r.json()).then(d=>{
         const tot=d.amount?parseFloat(d.amount).toFixed(2).replace('.',',')+' €':'—';
-        showConfirm(tot);
-      }).catch(()=>showConfirm('—'));
+        showConfirm(tot,d.ref||('EDN-'+(d.captureId||d.orderId||'').slice(-6).toUpperCase()));
+      }).catch(()=>showConfirm('—',''));
     } else {
-      // Stripe : paiement déjà traité, total stocké avant la redirection
+      // Stripe : paiement déjà traité, total et ref stockés avant la redirection
       const tot=sessionStorage.getItem('eden_pending_total')||'—';
+      const ref=sessionStorage.getItem('eden_pending_ref')||'';
       sessionStorage.removeItem('eden_pending_total');
-      showConfirm(tot);
+      sessionStorage.removeItem('eden_pending_ref');
+      showConfirm(tot,ref);
     }
   })();
 

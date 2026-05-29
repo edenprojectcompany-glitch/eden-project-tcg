@@ -1,8 +1,11 @@
-// api/capture-paypal-order.js — Capture PayPal après approbation utilisateur
+// api/capture-paypal-order.js — Capture PayPal + persistance commande + loyalty points
 // Env requis : PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENV, SITE_URL
+// Env optionnel : KV_REST_API_URL, KV_REST_API_TOKEN (pour persistance commande)
 
 const { PAYPAL_BASE, getPayPalToken } = require('../lib/paypal');
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
@@ -11,7 +14,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { orderId } = req.body || {};
+  const { orderId, email } = req.body || {};
   if (!orderId || typeof orderId !== 'string' || orderId.length > 64) {
     return res.status(400).json({ error: 'orderId invalide' });
   }
@@ -37,9 +40,48 @@ module.exports = async (req, res) => {
     const captureDetail = data.purchase_units?.[0]?.payments?.captures?.[0];
     const amount = captureDetail?.amount?.value;
     const captureId = captureDetail?.id;
+    const customId = data.purchase_units?.[0]?.custom_id || '';
 
-    console.log(`PayPal captured: order=${data.id} capture=${captureId} amount=${amount}`);
-    return res.status(200).json({ ok: true, orderId: data.id, captureId, amount });
+    // Référence commande lisible
+    const ref = `EDN-${(captureId || data.id).slice(-6).toUpperCase()}`;
+
+    console.log(`PayPal captured: order=${data.id} capture=${captureId} amount=${amount} ref=${ref}`);
+
+    // Persistance commande + loyalty points dans KV
+    // Email : priorité au body, sinon custom_id stocké lors de la création PayPal
+    const userEmail = (email && EMAIL_RE.test(email) ? email : null)
+      || (customId && EMAIL_RE.test(customId) ? customId : null);
+
+    if (userEmail) {
+      try {
+        const { kv } = require('@vercel/kv');
+        const key = `user:${userEmail.toLowerCase().trim()}`;
+        const user = await kv.get(key);
+        if (user) {
+          const order = {
+            ref,
+            captureId,
+            paypalOrderId: data.id,
+            amount: parseFloat(amount || 0).toFixed(2),
+            currency: captureDetail?.amount?.currency_code || 'EUR',
+            status: 'confirmed',
+            provider: 'paypal',
+            createdAt: new Date().toISOString(),
+          };
+          user.orders = user.orders || [];
+          user.orders.unshift(order);
+          const pts = Math.floor(parseFloat(order.amount));
+          user.loyalty = (user.loyalty || 0) + pts;
+          await kv.set(key, user);
+          console.log(`PayPal order ${ref} saved for ${userEmail} (+${pts} pts loyalty)`);
+        }
+      } catch (kvErr) {
+        // Ne pas bloquer la confirmation client pour une erreur KV
+        console.error('KV write failed (PayPal):', kvErr.message);
+      }
+    }
+
+    return res.status(200).json({ ok: true, orderId: data.id, captureId, amount, ref });
   } catch (err) {
     console.error('PayPal capture error:', err.message);
     return res.status(500).json({ error: 'Erreur lors de la capture du paiement' });

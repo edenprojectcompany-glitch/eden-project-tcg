@@ -216,24 +216,89 @@ Appliqué dans `login.js` et `register.js`.
 
 ---
 
+## Ce qui a été fait — Audit 4 (mai 2026 — bugs critiques + gamification)
+
+### BUG CRITIQUE CORRIGÉ : Commandes PayPal jamais persistées
+**`api/capture-paypal-order.js`** — Réécriture complète.
+- Après capture réussie : sauvegarde la commande dans `user.orders[]` (KV) + calcul loyalty points (1pt/€)
+- Accepte `email` dans le body (envoyé depuis le front) et `custom_id` PayPal comme fallback
+- Retourne maintenant `ref` (ex: `EDN-ABC123`) en plus de `orderId/captureId/amount`
+
+**`api/create-paypal-order.js`** — Accepte `customerEmail`, le stocke dans `custom_id` du purchase_unit PayPal pour permettre la persistance côté capture.
+
+**`index.html`** — `initiatePayPalPayment()` envoie maintenant `customerEmail: authUser?.email`. La capture PayPal reçoit `email: authUser?.email` depuis localStorage.
+
+### BUG CRITIQUE CORRIGÉ : Référence commande aléatoire (fake)
+**`index.html`** — `showConfirm()` utilisait `Math.floor(Math.random()*900000)` — une référence inventée qui ne correspondait à rien en base.
+- Stripe : on stocke `EDN-{sessionId.slice(-6)}` dans `sessionStorage` avant la redirection
+- PayPal : on utilise le `ref` retourné par `/api/capture-paypal-order`
+- La référence affichée correspond maintenant exactement à ce que le webhook a sauvegardé
+
+### BUG CORRIGÉ : Race condition roue de la fortune
+**`api/spin.js`** — Lock atomique KV anti double-spin :
+`kv.set(lockKey, '1', { ex: 15, nx: true })` — set if not exists, expire 15s.
+Si deux requêtes simultanées arrivent, la seconde reçoit 429. Lock libéré dans un `finally`.
+
+### BUG CORRIGÉ : Aucun rate limiting sur /api/admin
+**`api/admin.js`** — Rate limiting ajouté sur les tentatives échouées : 10 / 15 min par IP (même pattern que login.js).
+
+### SÉCURITÉ : tokenVersion JWT
+**`api/register.js`** — `tokenVersion: 0` ajouté à l'objet user.
+**`api/login.js`** — `tokenVersion` inclus dans le payload JWT + `orders[]` retourné dans la réponse.
+**`api/spin.js`** — Validation `decoded.tokenVersion === user.tokenVersion`.
+**`api/me.js`** ← NOUVEAU — endpoint `GET /api/me` (JWT requis) : retourne profil frais depuis KV avec `orders[]`, `loyalty`, `totalSpent`. Utilisé par le dashboard pour se synchroniser sans re-login.
+
+### FEAT : Historique commandes dans le dashboard ✅
+**`index.html`** — `renderDashboard()` est maintenant `async` :
+1. Affiche immédiatement les données en cache localStorage
+2. Appelle `/api/me` en arrière-plan pour synchroniser les commandes/points post-paiement
+3. Rend les 10 dernières commandes dans `#orderList` avec ref, date, montant, provider (Stripe/PayPal)
+4. Met à jour `#dashOrderCount`
+
+### FEAT : Système VIP tiers
+**`index.html`** — Basé sur le total dépensé (depuis `user.orders[]`) :
+- 🥉 Bronze (0–499€) · 🥈 Silver (500–1 499€) · 🥇 Gold (1 500–4 999€) · 💎 Diamond (5 000€+)
+- Badge VIP + avantages affichés dans le dashboard
+- Progression vers le tier suivant visible
+
+### FEAT : Points fidélité dans la nav
+**`index.html`** — `updateAuthUI()` affiche maintenant un pill doré avec le nombre de points fidélité sur le bouton compte. Mis à jour après chaque spin.
+
+### FEAT : Urgence stock sur les produits
+**`index.html`** — Badge stock redessiné selon le niveau :
+- ≤ 3 : badge rouge pulsant `⚠️ Dernières X boîtes !`
+- 4–8 : badge orange `🔥 Plus que X dispo`
+- 9+ : badge neutre discret
+
+### FEAT : Stock dans les modals produit
+**`index.html`** — `openModal()` affiche maintenant un bandeau coloré au-dessus des tiers prix :
+- Rouge si ≤ 3, orange si ≤ 8, vert si suffisant
+
+### FEAT : Nudge inscription dans le panier
+**`index.html`** — Si l'utilisateur n'est pas connecté, un bandeau apparaît en haut du panier :
+"🎡 Membres : Roue mensuelle + livraison offerte + points fidélité" → clique → page auth
+
+---
+
 ## Backlog — Ce qu'il reste à faire
 
 ### Priorité haute
 
 #### ~~Webhook Stripe~~ ✅ FAIT (audit 3)
-`api/stripe-webhook.js` créé, déployé, endpoint Stripe configuré (`we_1TcYDqJwQ3fowDgxPF5QEZsl`), `STRIPE_WEBHOOK_SECRET` dans Vercel env vars. `user.orders[]` est maintenant rempli à chaque paiement Stripe.
-
-#### Historique commandes front
-`user.orders[]` est maintenant rempli par le webhook. Il reste à afficher cet historique dans le dashboard utilisateur (`renderDashboard()` → lire `authUser.orders` et peupler le bloc `#orderList` déjà présent dans le HTML). ~20 lignes de JS.
-
-#### Révocation JWT
-Actuellement un token volé est valide 30 jours. Ajouter une `tokenVersion` dans l'objet user KV
-et la valider dans chaque endpoint auth. Incrémenter `tokenVersion` au logout ou changement de mot de passe.
+#### ~~Historique commandes front~~ ✅ FAIT (audit 4)
+#### ~~Race condition spin~~ ✅ FAIT (audit 4)
+#### ~~Rate limiting admin~~ ✅ FAIT (audit 4)
+#### ~~tokenVersion JWT~~ ✅ FAIT (audit 4, partiel — login/register/spin)
 
 #### Reset mot de passe
 Actuellement → mailto. Il faudrait un flow complet :
 1. `POST /api/forgot-password` → génère token reset, stocke dans KV avec TTL 1h, envoie email (Resend/SendGrid)
 2. `POST /api/reset-password` → valide token KV, met à jour hash bcrypt, supprime token
+
+#### Révocation JWT logout serveur-side
+`tokenVersion` est dans le JWT et vérifié dans spin.js et me.js. Il reste à :
+- Incrémenter `tokenVersion` lors du logout (appel `/api/logout` ou dans le flow reset-password)
+- Vérifier la version dans tous les endpoints auth-protégés (actuellement seulement spin + me)
 
 ### Priorité moyenne
 

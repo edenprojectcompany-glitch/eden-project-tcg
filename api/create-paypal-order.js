@@ -14,7 +14,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { items, shippingCost, promoCode } = req.body || {};
+    const { items, shippingCost, promoCode, customerEmail } = req.body || {};
     if (!items?.length) return res.status(400).json({ error: 'Panier vide' });
     if (items.length > 50) return res.status(400).json({ error: 'Trop d\'articles' });
 
@@ -79,6 +79,7 @@ module.exports = async (req, res) => {
         intent: 'CAPTURE',
         purchase_units: [{
           reference_id: `EDN-${Date.now()}`,
+          custom_id: customerEmail ? customerEmail.toLowerCase().trim().slice(0, 127) : '',
           description: isPrizeCode
             ? `Eden Project TCG — Prix roue : ${code}`
             : 'Eden Project TCG — Commande displays Pokémon',
