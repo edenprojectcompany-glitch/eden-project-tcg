@@ -136,6 +136,44 @@ h1 span{display:block}
 .card-face{position:absolute;inset:0;border-radius:24px;overflow:hidden;
   border:1px solid rgba(255,255,255,.14);
   background:linear-gradient(160deg,#1a1a22,#0e0e13);box-shadow:0 40px 80px rgba(0,0,0,.6)}
+
+/* ── PSA CARD (hero) ── */
+.psa-wrap{position:relative;width:340px;border-radius:20px;overflow:hidden;
+  transform-style:preserve-3d;transition:transform .15s ease-out;cursor:zoom-in;will-change:transform;
+  box-shadow:0 40px 80px rgba(0,0,0,.7)}
+.psa-img{width:100%;display:block;border-radius:20px;
+  border:1px solid rgba(255,255,255,.18)}
+.psa-wrap .card-foil{border-radius:20px;opacity:.2}
+
+/* ── PSA LIGHTBOX ── */
+.psa-lb{position:fixed;inset:0;z-index:9000;
+  background:rgba(0,0,0,.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  display:none;align-items:center;justify-content:center;cursor:zoom-out}
+.psa-lb.open{display:flex}
+.psa-lb-inner{position:relative;width:min(500px,88vw);cursor:default;
+  transform-style:preserve-3d;will-change:transform;
+  animation:lbIn .45s cubic-bezier(.16,1,.3,1) both}
+@keyframes lbIn{from{opacity:0;transform:scale(.8) translateY(30px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.psa-lb-img{width:100%;display:block;border-radius:22px;
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 60px 120px rgba(0,0,0,.8)}
+.psa-lb-foil{position:absolute;inset:0;border-radius:22px;pointer-events:none;
+  mix-blend-mode:color-dodge;opacity:.35;
+  background:linear-gradient(115deg,transparent 20%,var(--foil-1) 35%,var(--foil-2) 45%,var(--foil-3) 55%,var(--foil-4) 65%,transparent 80%);
+  background-size:200% 200%;transition:background-position .15s}
+.psa-lb-close{position:absolute;top:-14px;right:-14px;width:38px;height:38px;border-radius:50%;
+  background:var(--obsidian-2);border:1px solid var(--glass-border);
+  display:grid;place-items:center;cursor:pointer;z-index:1;
+  color:var(--text-dim);transition:all .25s ease}
+.psa-lb-close:hover{color:var(--text);background:var(--obsidian-3);border-color:var(--glass-border-strong)}
+
+/* ── BADGE "Bientôt disponible" ── */
+.soon-tag{position:absolute;top:10px;right:10px;z-index:10;
+  font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 10px;border-radius:100px;white-space:nowrap;
+  background:rgba(255,185,40,.15);border:1px solid rgba(255,185,40,.45);
+  color:#ffb828;backdrop-filter:blur(8px)}
+
 .card-foil{position:absolute;inset:0;border-radius:24px;mix-blend-mode:color-dodge;opacity:.45;
   background:linear-gradient(115deg,transparent 20%,var(--foil-1) 35%,var(--foil-2) 45%,var(--foil-3) 55%,var(--foil-4) 65%,transparent 80%);
   background-size:200% 200%;transition:background-position .15s;pointer-events:none}
@@ -799,7 +837,9 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   section{padding:60px 20px}
   .hero{flex-direction:column;text-align:center;padding:105px 20px 36px;gap:24px}
   .hero p.lede,.eyebrow,.badge-pro{margin-left:auto;margin-right:auto}
-  .hero-visual{display:none}
+  .hero-visual{display:flex;margin-top:8px}
+  .psa-wrap{width:220px}
+  .card-3d{width:200px;height:283px}
   .cta-row{justify-content:center;flex-wrap:wrap}
   .sec-head{flex-direction:column;align-items:flex-start}
   .auth-wrap,.dash-grid,.checkout-wrap{grid-template-columns:1fr}
@@ -1007,18 +1047,10 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
       </div>
     </div>
     <div class="hero-visual">
-      <div class="card-3d" id="heroCard">
-        <div class="card-face"></div>
+      <div class="psa-wrap" id="heroCard">
+        <img src="./image/graded-hero.jpg.png" alt="Mew V PSA 10 — Fusion Arts JP" class="psa-img" loading="eager"
+          onerror="this.closest('.psa-wrap').classList.add('psa-fallback')">
         <div class="card-foil" id="heroFoil"></div>
-        <div class="card-inner">
-          <span class="card-tag">Illustration Rare · 1/100</span>
-          <div class="card-emblem"></div>
-          <div class="card-meta">
-            <div class="name">Mew ex</div>
-            <div class="sub">151 · Pokémon Card 151</div>
-            <div class="card-price">189 €</div>
-          </div>
-        </div>
       </div>
     </div>
   </section>
@@ -1366,6 +1398,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
       <div class="graded-grid">
         <div class="holo-card-wrap reveal-up">
           <div class="holo-card" id="hcard1">
+            <div class="soon-tag">Bientôt disponible</div>
             <div class="hcard-face"></div><div class="hcard-foil" id="hfoil1"></div>
             <div class="hcard-inner">
               <span class="hcard-tag">Illustration Rare · Holo</span>
@@ -1377,6 +1410,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
         </div>
         <div class="holo-card-wrap reveal-up">
           <div class="holo-card" id="hcard2">
+            <div class="soon-tag">Bientôt disponible</div>
             <div class="hcard-face" style="background:linear-gradient(160deg,#1a1525,#0e0a13)"></div><div class="hcard-foil" id="hfoil2"></div>
             <div class="hcard-inner">
               <span class="hcard-tag">Special Art Rare · Holo</span>
@@ -1388,6 +1422,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
         </div>
         <div class="holo-card-wrap reveal-up">
           <div class="holo-card" id="hcard3">
+            <div class="soon-tag">Bientôt disponible</div>
             <div class="hcard-face" style="background:linear-gradient(160deg,#1a1a10,#0e0e08)"></div><div class="hcard-foil" id="hfoil3"></div>
             <div class="hcard-inner">
               <span class="hcard-tag">Rainbow Rare · PSA 10</span>
@@ -1399,6 +1434,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
         </div>
         <div class="holo-card-wrap reveal-up">
           <div class="holo-card" id="hcard4">
+            <div class="soon-tag">Bientôt disponible</div>
             <div class="hcard-face" style="background:linear-gradient(160deg,#0d1a1a,#080e0e)"></div><div class="hcard-foil" id="hfoil4"></div>
             <div class="hcard-inner">
               <span class="hcard-tag">Alt Art · Holo</span>
@@ -1658,10 +1694,12 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
         <h4 style="font-family:'Fraunces',serif;font-size:17px;font-weight:500;margin-bottom:14px;color:var(--foil-1)">Éditeur du site</h4>
         <p style="font-size:13.5px;color:var(--text-dim);line-height:1.75">
           <strong style="color:var(--text)">Eden Project TCG</strong><br>
-          Activité : Vente de produits Pokémon TCG (displays japonaises et chinoises)<br>
-          Siège social : Brest, France<br>
-          SIRET : <span style="color:var(--foil-2)">[À compléter]</span><br>
-          Responsable de publication : <span style="color:var(--foil-2)">[À compléter]</span><br>
+          Nom légal : Stalin Vincent (Eden Project)<br>
+          Forme juridique : Entrepreneur individuel — Micro-entreprise<br>
+          Activité : Vente à distance sur catalogue spécialisé (NAF 47.91B)<br>
+          SIRET : <span style="color:var(--text)">751 021 304 00025</span><br>
+          N° TVA intracommunautaire : <span style="color:var(--text)">FR13751021304</span><br>
+          Responsable de publication : <span style="color:var(--text)">Vincent Stalin</span><br>
           Contact : <a href="mailto:edenprojectcompany@gmail.com" style="color:var(--foil-1)">edenprojectcompany@gmail.com</a>
         </p>
       </div>
@@ -1680,7 +1718,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
       </div>
       <div class="dash-orders" style="padding:28px 32px">
         <h4 style="font-family:'Fraunces',serif;font-size:17px;font-weight:500;margin-bottom:14px;color:var(--foil-1)">Médiation</h4>
-        <p style="font-size:13.5px;color:var(--text-dim);line-height:1.75">Conformément à l'article L.612-1 du Code de la consommation, en cas de litige non résolu, le consommateur peut recourir gratuitement à la médiation. Coordonnées du médiateur compétent : <span style="color:var(--foil-2)">[À compléter]</span>.</p>
+        <p style="font-size:13.5px;color:var(--text-dim);line-height:1.75">Conformément à l'article L.612-1 du Code de la consommation, en cas de litige non résolu, le consommateur peut recourir gratuitement à la médiation. Médiateur compétent : <strong style="color:var(--text)">CM2C</strong> — Centre de Médiation de la Consommation de Conciliateurs de Justice — <a href="https://www.cm2c.net" target="_blank" rel="noopener" style="color:var(--foil-1)">www.cm2c.net</a></p>
       </div>
       <p style="font-size:12px;color:var(--text-dimmer);text-align:center;padding-top:8px">Dernière mise à jour : mai 2026</p>
     </div>
@@ -1873,6 +1911,12 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
         <a href="mailto:edenprojectcompany@gmail.com" class="foot-social" title="Email">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </a>
+        <a href="https://www.instagram.com/eden.destock/?hl=fr" class="foot-social" title="Instagram" target="_blank" rel="noopener noreferrer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </a>
+        <a href="https://chat.whatsapp.com/IedpRoR8f43CjH0Y4MTNR2" class="foot-social" title="Communauté WhatsApp privée" target="_blank" rel="noopener noreferrer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5" fill="currentColor"/></svg>
+        </a>
       </div>
     </div>
     <div class="foot-col">
@@ -1906,6 +1950,17 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
     </div>
   </div>
 </footer>
+
+<!-- PSA CARD LIGHTBOX -->
+<div class="psa-lb" id="psaLb" role="dialog" aria-modal="true" aria-label="Carte gradée en détail">
+  <div class="psa-lb-inner" id="psaLbInner">
+    <button class="psa-lb-close" id="psaLbClose" aria-label="Fermer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <img src="./image/graded-hero.jpg.png" alt="Mew V PSA 10 — Fusion Arts JP" class="psa-lb-img" loading="lazy">
+    <div class="psa-lb-foil" id="psaLbFoil"></div>
+  </div>
+</div>
 
 <!-- EXIT-INTENT POPUP -->
 <div class="exit-overlay" id="exitOverlay">
@@ -2287,6 +2342,36 @@ window.addEventListener('load', () => {
   /* ══ HERO TILT ══ */
   const heroVis = document.querySelector('.hero-visual');
   initTilt(heroVis, document.getElementById('heroCard'), document.getElementById('heroFoil'), 22);
+
+  /* ══ PSA LIGHTBOX ══ */
+  (function(){
+    const lb     = document.getElementById('psaLb');
+    const inner  = document.getElementById('psaLbInner');
+    const foil   = document.getElementById('psaLbFoil');
+    const hero   = document.getElementById('heroCard');
+    const closeBtn = document.getElementById('psaLbClose');
+    let tiltBound = false;
+
+    function openLb(){
+      lb.classList.add('open');
+      document.body.style.overflow='hidden';
+      // Attach tilt once the overlay is visible
+      if(!tiltBound){
+        initTilt(inner, inner, foil, 18);
+        tiltBound=true;
+      }
+    }
+    function closeLb(){
+      lb.classList.remove('open');
+      document.body.style.overflow='';
+      if(hasGSAP) gsap.to(inner,{rotateY:0,rotateX:0,duration:.5,ease:'elastic.out(1,.5)',transformPerspective:1200});
+    }
+
+    if(hero) hero.addEventListener('click', openLb);
+    closeBtn.addEventListener('click', e=>{e.stopPropagation();closeLb();});
+    lb.addEventListener('click', e=>{ if(e.target===lb) closeLb(); });
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLb(); });
+  })();
   if(heroVis) {
     window.addEventListener('scroll',()=>{
       if(document.getElementById('page-home').classList.contains('active'))
@@ -3386,6 +3471,18 @@ window.addEventListener('load', () => {
     const entry=PROMO_CODES[code];
     const wheelCfg=WHEEL_ONLY_CODES_FRONT[code];
 
+    // Codes première commande (WELCOME10, WELCOME5) : compte requis + 0 commande
+    const FIRST_ORDER_CODES_FRONT=new Set(['WELCOME10','WELCOME5']);
+    if(FIRST_ORDER_CODES_FRONT.has(code)){
+      if(!authUser){
+        msg.textContent='✗ Créez un compte pour utiliser ce code de bienvenue';msg.className='promo-msg promo-ko';
+        go('auth');return;
+      }
+      if((authUser.orders||[]).length>0){
+        msg.textContent='✗ Code réservé à votre première commande';msg.className='promo-msg promo-ko';return;
+      }
+    }
+
     // Codes roue : vérifier que l'utilisateur l'a bien gagné et ne l'a pas déjà utilisé
     if(wheelCfg){
       if(!authUser){
@@ -3417,6 +3514,7 @@ window.addEventListener('load', () => {
   /* ══ STRIPE ══ */
   async function initiateStripePayment(){
     if(!cart.length) return;
+    if(!authUser){go('auth');showNotif('Créez un compte pour finaliser votre commande 🔐','info');return;}
     const btn=document.getElementById('payBtn'); btn.textContent='Chargement…'; btn.disabled=true;
     try{
       const headers={'Content-Type':'application/json'};
@@ -3449,6 +3547,7 @@ window.addEventListener('load', () => {
   /* ══ PAYPAL ══ */
   async function initiatePayPalPayment(){
     if(!cart.length) return;
+    if(!authUser){go('auth');showNotif('Créez un compte pour finaliser votre commande 🔐','info');return;}
     const btn=document.getElementById('paypalBtn'); btn.textContent='Chargement…'; btn.disabled=true;
     try{
       const headers={'Content-Type':'application/json'};

@@ -92,6 +92,7 @@ async function handler(req, res) {
             ref: order.ref,
             name: customerName,
             amount: order.amount,
+            items: orderItems,
             provider: 'stripe',
           }),
         });

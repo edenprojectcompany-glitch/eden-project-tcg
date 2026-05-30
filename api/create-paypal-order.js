@@ -3,7 +3,7 @@
 
 const { PAYPAL_BASE, getPayPalToken } = require('../lib/paypal');
 const jwt = require('jsonwebtoken');
-const { PROMO_CODES, PRIZE_CODES, WHEEL_ONLY_CODES, VALID_SHIPPING, PRODUCT_LANG, getServerPrice, getAutoPromoPct, computeLangPools } = require('../lib/prices');
+const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, VALID_SHIPPING, PRODUCT_LANG, getServerPrice, getAutoPromoPct, computeLangPools } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 
@@ -25,17 +25,16 @@ module.exports = async (req, res) => {
     const isPrizeCode = PRIZE_CODES.has(code);
     const wheelCodeConfig = WHEEL_ONLY_CODES[code];
 
-    // Validation JWT pour codes roue
-    let verifiedUserEmail = null;
-    if (wheelCodeConfig) {
-      const authHeader = (req.headers.authorization || '').replace('Bearer ', '');
-      if (!authHeader) return res.status(401).json({ error: `Le code ${code} nécessite d'être connecté` });
-      let decoded;
-      try { decoded = jwt.verify(authHeader, process.env.JWT_SECRET); } catch {
-        return res.status(401).json({ error: 'Token invalide' });
-      }
-      verifiedUserEmail = decoded.email;
+    // ── Auth JWT obligatoire pour tout achat ──
+    const authHeader = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!authHeader) {
+      return res.status(401).json({ error: 'Connexion requise pour passer commande' });
     }
+    let decoded;
+    try { decoded = jwt.verify(authHeader, process.env.JWT_SECRET); } catch {
+      return res.status(401).json({ error: 'Session expirée — reconnectez-vous' });
+    }
+    const verifiedUserEmail = decoded.email;
 
     // Validation livraison côté serveur
     const parsedShip = +(parseFloat(shippingCost || 0).toFixed(2));
@@ -47,14 +46,16 @@ module.exports = async (req, res) => {
     }
     const shipping = parsedShip;
 
-    // 1 seul appel KV avant la boucle (fix N+1) — inclut flash sale prices
+    // 1 seul appel KV — inclut flash sale prices + user
     let adminPrices = {};
     let verifiedUser = null;
     try {
       const { kv } = require('@vercel/kv');
-      const kvCalls = [kv.get('admin:prices'), kv.get('admin:flashsale')];
-      if (verifiedUserEmail) kvCalls.push(kv.get(`user:${verifiedUserEmail}`));
-      const [prices, flashsale, userFromKv] = await Promise.all(kvCalls);
+      const [prices, flashsale, userFromKv] = await Promise.all([
+        kv.get('admin:prices'),
+        kv.get('admin:flashsale'),
+        kv.get(`user:${verifiedUserEmail}`),
+      ]);
       verifiedUser = userFromKv || null;
       adminPrices = prices || {};
       if (flashsale) {
@@ -66,6 +67,14 @@ module.exports = async (req, res) => {
         }
       }
     } catch {}
+
+    // ── Codes première commande (WELCOME10, WELCOME5) ──
+    if (FIRST_ORDER_CODES.has(code)) {
+      const existingOrders = verifiedUser?.orders?.length || 0;
+      if (existingOrders > 0) {
+        return res.status(403).json({ error: `Le code ${code} est réservé à votre première commande` });
+      }
+    }
 
     // Palier groupé par langue
     const langPools = computeLangPools(items.map(i => ({ id: i.id, qty: parseInt(i.qty) || 0 })));
