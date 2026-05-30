@@ -1878,6 +1878,14 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
         <!-- Livraison -->
         <div class="admin-section" id="atab-livraison">
           <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:20px">Modifiez les tarifs affichés au checkout. Les modifications sont validées côté serveur à chaque commande.</p>
+          <!-- Toggle livraison offerte globale -->
+          <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:rgba(168,255,212,.07);border:1px solid rgba(168,255,212,.2);margin-bottom:20px">
+            <input type="checkbox" id="shipFreeAll" style="width:18px;height:18px;cursor:pointer;accent-color:var(--foil-4)">
+            <div>
+              <div style="font-size:13.5px;font-weight:600;color:var(--foil-4)">🎁 Livraison offerte pour tous</div>
+              <div style="font-size:11.5px;color:var(--text-dim);margin-top:2px">Active la livraison gratuite pour tous les clients sans code promo. Les tarifs ci-dessous restent utilisés en interne.</div>
+            </div>
+          </div>
           <div style="display:flex;flex-direction:column;gap:14px;max-width:360px">
             <div class="field"><input type="number" id="shipAdminRelay" step="0.01" min="0" max="100" placeholder=" "><label>📦 Mondial Relay · Point relais (€)</label></div>
             <div class="field"><input type="number" id="shipAdminColissimo" step="0.01" min="0" max="100" placeholder=" "><label>📬 Colissimo domicile (€)</label></div>
@@ -3762,6 +3770,7 @@ window.addEventListener('load', () => {
     document.getElementById('shipAdminRelay').value=cfg.relay??4.90;
     document.getElementById('shipAdminColissimo').value=cfg.colissimo??7.90;
     document.getElementById('shipAdminExpress').value=cfg.express??14.90;
+    document.getElementById('shipFreeAll').checked=!!cfg.freeForAll;
   }
   document.getElementById('adminSaveShipping')?.addEventListener('click',async()=>{
     const code=document.getElementById('adminCodeInput').value;
@@ -3770,6 +3779,7 @@ window.addEventListener('load', () => {
       relay:parseFloat(document.getElementById('shipAdminRelay').value),
       colissimo:parseFloat(document.getElementById('shipAdminColissimo').value),
       express:parseFloat(document.getElementById('shipAdminExpress').value),
+      freeForAll:document.getElementById('shipFreeAll').checked,
     };
     try{
       const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':code},
@@ -3786,17 +3796,21 @@ window.addEventListener('load', () => {
   function applyShippingConfig(cfg){
     const opts=document.querySelectorAll('.ship-opt');
     const keys=['mr','dom','exp'];
-    const vals=[cfg.relay,cfg.colissimo,cfg.express];
+    const vals=cfg.freeForAll?[0,0,0]:[cfg.relay,cfg.colissimo,cfg.express];
     opts.forEach(o=>{
       const idx=keys.indexOf(o.dataset.ship);
       if(idx===-1) return;
       const v=vals[idx];
       o.dataset.price=v;
-      o.querySelector('.p').textContent=v.toFixed(2).replace('.',',')+' €';
+      o.querySelector('.p').textContent=cfg.freeForAll?'<span style="color:var(--foil-4)">Offerte 🎁</span>':v.toFixed(2).replace('.',',')+' €';
     });
-    // Recalcule currentShip si l'option sélectionnée a changé de prix
-    const sel=document.querySelector('.ship-opt.selected');
-    if(sel){ currentShip=parseFloat(sel.dataset.price); renderCheckout(); renderCart(); }
+    if(cfg.freeForAll){ shipPromo=true; currentShip=0; }
+    else {
+      shipPromo=false;
+      const sel=document.querySelector('.ship-opt.selected');
+      if(sel){ currentShip=parseFloat(sel.dataset.price); }
+    }
+    renderCheckout(); renderCart();
   }
 
   /* ══ ADMIN GRADÉES ══ */

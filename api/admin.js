@@ -131,6 +131,7 @@ module.exports = async (req, res) => {
           relay: +relay.toFixed(2),
           colissimo: +colissimo.toFixed(2),
           express: +express.toFixed(2),
+          freeForAll: !!data?.freeForAll,
         });
         return res.status(200).json({ ok: true });
       }

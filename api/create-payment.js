@@ -66,11 +66,14 @@ module.exports = async (req, res) => {
 
     // Validation livraison côté serveur (valeurs dynamiques depuis KV)
     const parsedShip = +(parseFloat(shippingCost || 0).toFixed(2));
-    const validShipping = [0, shippingCfg.relay, shippingCfg.colissimo, shippingCfg.express];
+    const isFreeForAll = !!shippingCfg.freeForAll;
+    const validShipping = isFreeForAll
+      ? [0]
+      : [0, shippingCfg.relay, shippingCfg.colissimo, shippingCfg.express];
     if (!validShipping.some(v => Math.abs(v - parsedShip) < 0.01)) {
       return res.status(400).json({ error: 'Frais de livraison invalides' });
     }
-    if (parsedShip === 0 && !isShipFree) {
+    if (parsedShip === 0 && !isShipFree && !isFreeForAll) {
       return res.status(400).json({ error: 'Code promo livraison requis' });
     }
     const ship = parsedShip;
