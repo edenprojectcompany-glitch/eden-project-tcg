@@ -38,17 +38,6 @@ module.exports = async (req, res) => {
     }
     const verifiedUserEmail = decoded.email;
 
-    // Validation livraison côté serveur (valeurs dynamiques depuis KV)
-    const parsedShip = +(parseFloat(shippingCost || 0).toFixed(2));
-    const validShipping = [0, shippingCfg.relay, shippingCfg.colissimo, shippingCfg.express];
-    if (!validShipping.some(v => Math.abs(v - parsedShip) < 0.01)) {
-      return res.status(400).json({ error: 'Frais de livraison invalides' });
-    }
-    if (parsedShip === 0 && !isShipFree) {
-      return res.status(400).json({ error: 'Code promo livraison requis' });
-    }
-    const ship = parsedShip;
-
     // 1 seul appel KV — inclut flash sale prices + user + shipping config
     let adminPrices = {};
     let verifiedUser = null;
@@ -74,6 +63,17 @@ module.exports = async (req, res) => {
         }
       }
     } catch {}
+
+    // Validation livraison côté serveur (valeurs dynamiques depuis KV)
+    const parsedShip = +(parseFloat(shippingCost || 0).toFixed(2));
+    const validShipping = [0, shippingCfg.relay, shippingCfg.colissimo, shippingCfg.express];
+    if (!validShipping.some(v => Math.abs(v - parsedShip) < 0.01)) {
+      return res.status(400).json({ error: 'Frais de livraison invalides' });
+    }
+    if (parsedShip === 0 && !isShipFree) {
+      return res.status(400).json({ error: 'Code promo livraison requis' });
+    }
+    const ship = parsedShip;
 
     // ── Codes première commande (WELCOME10, WELCOME5) ──
     if (FIRST_ORDER_CODES.has(code)) {

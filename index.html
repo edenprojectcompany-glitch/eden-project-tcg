@@ -2949,6 +2949,8 @@ window.addEventListener('load', () => {
     // Animation glow sur l'icône panier quand non vide
     const cartBtn=document.getElementById('cartBtn');
     if(cartBtn){cartBtn.classList.toggle('cart-has-items',cart.length>0);}
+    // Sync checkout si la page est active
+    if(document.getElementById('page-checkout')?.classList.contains('active')) renderCheckout();
   }
   function openCart(){document.getElementById('cartPanel').classList.add('open');document.getElementById('cartOverlay').classList.add('open');}
   function closeCart(){document.getElementById('cartPanel').classList.remove('open');document.getElementById('cartOverlay').classList.remove('open');}
