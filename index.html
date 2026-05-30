@@ -640,6 +640,22 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 .modal-price span{font-size:13px;font-weight:400;color:var(--text-dim)}
 .modal-actions{display:flex;gap:9px}.modal-actions .btn-primary{flex:1}
 
+/* ── COUPONS DASHBOARD ── */
+.coupon-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass);margin-bottom:8px;transition:border-color .2s}
+.coupon-card.used{opacity:.45;filter:grayscale(.5)}
+.coupon-card.available{border-color:rgba(168,255,212,.25)}
+.coupon-icon{font-size:22px;flex-shrink:0;width:36px;text-align:center}
+.coupon-body{flex:1;min-width:0}
+.coupon-code{font-family:'Fraunces',serif;font-size:16px;font-weight:600;letter-spacing:.05em;color:var(--foil-4);margin-bottom:2px}
+.coupon-card.used .coupon-code{color:var(--text-dim)}
+.coupon-desc{font-size:12px;color:var(--text-dim);margin-bottom:2px}
+.coupon-min{font-size:11px;color:rgba(255,200,60,.7)}
+.coupon-status{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.coupon-status.ok{background:rgba(168,255,212,.12);color:var(--foil-4);border:1px solid rgba(168,255,212,.25)}
+.coupon-status.done{background:rgba(255,255,255,.06);color:var(--text-dim);border:1px solid rgba(255,255,255,.1)}
+.coupon-copy{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid var(--glass-border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .2s;margin-left:4px}
+.coupon-copy:hover{border-color:var(--foil-4);color:var(--foil-4)}
+
 /* ── TOAST PANIER ── */
 .cart-toast{position:fixed;bottom:90px;right:20px;z-index:9999;background:var(--obsidian-2);border:1px solid var(--glass-border);border-radius:14px;padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.5);opacity:0;transform:translateY(12px);transition:opacity .3s,transform .3s;pointer-events:none;max-width:280px}
 .cart-toast.show{opacity:1;transform:translateY(0)}
@@ -1206,6 +1222,11 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
               </button>
             </div>
           </div>
+        </div>
+        <!-- Coupons actifs -->
+        <div class="dash-orders reveal-up" id="wonCodesSection" style="display:none">
+          <h4>🎟️ Mes coupons</h4>
+          <div id="wonCodesList"></div>
         </div>
         <!-- Stats -->
         <div class="dash-grid reveal-up">
@@ -2830,16 +2851,14 @@ window.addEventListener('load', () => {
       const date=new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
       const provider=o.provider==='paypal'?'PayPal':'Stripe';
       const items=o.items||[];
-      const detailHtml=items.length
-        ?`<div class="order-detail" id="odetail-${idx}">
-            ${items.map(i=>`<div class="order-detail-row"><span>${i.n||i.name} × ${i.q||i.qty}</span><span>${((i.p||i.unitPrice||0)*(i.q||i.qty)).toFixed(2).replace('.',',')} €</span></div>`).join('')}
-          </div>`
-        :'';
-      const chevron=items.length?'<span style="font-size:10px;color:var(--text-dim);margin-left:6px">▼</span>':'';
-      return `<div class="order-item" onclick="toggleOrderDetail(${idx})" style="padding:12px;border-radius:10px;margin-bottom:6px;background:var(--glass)">
+      const itemsHtml=items.length
+        ? items.map(i=>`<div class="order-detail-row"><span>${i.n||i.name||'Article'} × ${i.q||i.qty||1}</span><span>${((+(i.p||i.unitPrice||0))*(+(i.q||i.qty||1))).toFixed(2).replace('.',',')} €</span></div>`).join('')
+        : '<div style="color:var(--text-dim);font-size:11.5px;font-style:italic;padding:2px 0">Détail articles non disponible pour cette commande</div>';
+      const promoLine=o.promoCode?`<div class="order-detail-row" style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)"><span style="color:var(--text-dim)">Code promo</span><span style="color:var(--foil-4)">${o.promoCode}</span></div>`:'';
+      return `<div class="order-item" onclick="toggleOrderDetail(${idx})" style="padding:12px;border-radius:10px;margin-bottom:6px;background:var(--glass);cursor:pointer">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div>
-            <div class="order-ref">${o.ref||'—'}${chevron}</div>
+            <div class="order-ref">${o.ref||'—'} <span style="font-size:10px;color:var(--text-dim)">▼</span></div>
             <div class="order-date">${date} · ${provider}</div>
             <span class="order-status">${o.status==='confirmed'?'Confirmé':'En cours'}</span>
           </div>
@@ -2847,7 +2866,9 @@ window.addEventListener('load', () => {
             <div class="order-amount">${parseFloat(o.amount||0).toFixed(2).replace('.',',')} €</div>
           </div>
         </div>
-        ${detailHtml}
+        <div class="order-detail" id="odetail-${idx}">
+          ${itemsHtml}${promoLine}
+        </div>
       </div>`;
     }).join('');
   }
@@ -2855,6 +2876,59 @@ window.addEventListener('load', () => {
     const el=document.getElementById('odetail-'+idx);
     if(!el) return;
     el.classList.toggle('open');
+    // Rotation du chevron
+    const ref=el.previousElementSibling?.querySelector('.order-ref span');
+    if(ref) ref.textContent=el.classList.contains('open')?'▲':'▼';
+  };
+
+  /* ══ COUPONS WON ══ */
+  const COUPON_INFO = {
+    SHIP0:       { icon:'🚚', label:'Livraison gratuite',  desc:'Frais de port offerts sur votre commande', minAmount:50,  type:'shipping' },
+    BOOSTER:     { icon:'🎴', label:'Booster offert',      desc:'Un booster sera joint à votre colis',      minAmount:0,   type:'prize'    },
+    FREE_DISPLAY:{ icon:'🎁', label:'Display gratuite',    desc:'Contactez-nous pour récupérer votre display', minAmount:0, type:'prize' },
+    EDEN5:       { icon:'🏷️', label:'-5% sur votre commande',  desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
+    EDEN10:      { icon:'🏷️', label:'-10% sur votre commande', desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
+    TCG15:       { icon:'🏷️', label:'-15% sur votre commande', desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
+    EDEN20:      { icon:'🏷️', label:'-20% sur votre commande', desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
+    WELCOME5:    { icon:'🏷️', label:'-5% bienvenue',          desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
+    WELCOME10:   { icon:'🏷️', label:'-10% bienvenue',         desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
+  };
+
+  function renderWonCodes(wonCodes){
+    const section=document.getElementById('wonCodesSection');
+    const list=document.getElementById('wonCodesList');
+    if(!section||!list) return;
+    const all=(wonCodes||[]).slice().reverse(); // plus récent en premier
+    if(!all.length){ section.style.display='none'; return; }
+    section.style.display='';
+    list.innerHTML=all.map((w,i)=>{
+      const info=COUPON_INFO[w.code]||{icon:'🎟️',label:w.code,desc:'Code promo',minAmount:0,type:'discount'};
+      const isUsed=!!w.used;
+      const usedDate=w.usedAt?new Date(w.usedAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'';
+      const wonDate=w.wonAt?new Date(w.wonAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'';
+      const minTxt=info.minAmount>0?`Utilisable dès ${info.minAmount}€ d'achat`:'Sans minimum d\'achat';
+      return `<div class="coupon-card ${isUsed?'used':'available'}">
+        <div class="coupon-icon">${info.icon}</div>
+        <div class="coupon-body">
+          <div class="coupon-code">${w.code}</div>
+          <div class="coupon-desc">${info.label} — ${info.desc}</div>
+          <div class="coupon-min">${minTxt}${wonDate?' · Gagné le '+wonDate:''}</div>
+        </div>
+        ${isUsed
+          ?`<span class="coupon-status done">✓ Utilisé${usedDate?' le '+usedDate:''}</span>`
+          :`<button class="coupon-copy" onclick="copyCoupon('${w.code}',this)">Copier</button>
+            <span class="coupon-status ok">Disponible</span>`
+        }
+      </div>`;
+    }).join('');
+  }
+  window.copyCoupon=function(code,btn){
+    navigator.clipboard?.writeText(code).catch(()=>{});
+    btn.textContent='✓ Copié !'; btn.style.color='var(--foil-4)';
+    setTimeout(()=>{btn.textContent='Copier';btn.style.color='';},2000);
+    // Pré-remplir le champ promo au checkout
+    const inp=document.getElementById('promoInput');
+    if(inp) inp.value=code;
   };
 
   /* ══ DASHBOARD ══ */
@@ -2873,6 +2947,7 @@ window.addEventListener('load', () => {
     document.getElementById('dashAvatar').textContent=authUser.name[0].toUpperCase();
     document.getElementById('dashPoints').textContent=(authUser.loyalty||0)+' pts';
     renderOrderHistory(authUser.orders||[]);
+    renderWonCodes(authUser.wonCodes||[]);
     // Afficher le tier VIP immédiatement avec données locales
     const localSpent=(authUser.orders||[]).reduce((s,o)=>s+parseFloat(o.amount||0),0);
     renderVipTier(localSpent);
@@ -2893,6 +2968,7 @@ window.addEventListener('load', () => {
           document.getElementById('dashPoints').textContent=authUser.loyalty+' pts';
           updateAuthUI();
           renderOrderHistory(authUser.orders);
+          renderWonCodes(authUser.wonCodes||[]);
           renderVipTier(data.user.totalSpent||0);
           updateWheelDesc(data.user.totalSpent||0);
           updateWheelCooldown();
@@ -2968,15 +3044,27 @@ window.addEventListener('load', () => {
       // Colored arc
       ctx.beginPath();ctx.arc(cx,cy,R,start,end);
       ctx.strokeStyle=prize.color;ctx.lineWidth=2.5;ctx.stroke();
-      // Text
+      // Text multi-ligne pour lisibilité
       ctx.save();ctx.translate(cx,cy);ctx.rotate(offset+i*slice+slice/2);
       ctx.textAlign='right';
-      ctx.shadowColor=prize.color;ctx.shadowBlur=6;
+      ctx.shadowColor=prize.color;ctx.shadowBlur=8;
       ctx.fillStyle=prize.color;
       const lbl=prize.label;
-      const fs=lbl.length>16?6.5:lbl.length>10?8:9.5;
+      // Couper au premier espace après le milieu du label
+      const mid=Math.floor(lbl.length/2)-2;
+      const split=lbl.indexOf(' ',mid>0?mid:0);
+      const hasWrap=lbl.length>9&&split>0;
+      const line1=hasWrap?lbl.slice(0,split):lbl;
+      const line2=hasWrap?lbl.slice(split+1):'';
+      const fs=lbl.length>14?11:lbl.length>9?13:15;
       ctx.font=`700 ${fs}px Manrope,sans-serif`;
-      ctx.fillText(lbl,R-10,3.5);
+      if(hasWrap){
+        ctx.fillText(line1,R-12,-6);
+        ctx.font=`600 ${Math.max(fs-1,10)}px Manrope,sans-serif`;
+        ctx.fillText(line2,R-12,8);
+      } else {
+        ctx.fillText(line1,R-12,4);
+      }
       ctx.restore();
     });
 
@@ -3084,10 +3172,11 @@ window.addEventListener('load', () => {
       wheelPrizes=data.wheelConfig||DEFAULT_WHEEL;
       authUser.lastSpin=new Date().toISOString();
       authUser.loyalty=(authUser.loyalty||0)+10+(data.prize.code?20:0);
-      // Stocker le code gagné localement pour validation checkout
-      if(data.prize.code&&WHEEL_ONLY_CODES_FRONT[data.prize.code]){
+      // Stocker tous les codes gagnés localement (dashboard + validation checkout)
+      if(data.prize.code){
         authUser.wonCodes=authUser.wonCodes||[];
-        authUser.wonCodes.push({code:data.prize.code,wonAt:new Date().toISOString(),used:false});
+        authUser.wonCodes.unshift({code:data.prize.code,wonAt:new Date().toISOString(),used:false});
+        renderWonCodes(authUser.wonCodes);
       }
       localStorage.setItem('edn_user',JSON.stringify(authUser));
       document.getElementById('dashPoints').textContent=authUser.loyalty+' pts';

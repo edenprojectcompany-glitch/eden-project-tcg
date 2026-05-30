@@ -73,10 +73,9 @@ async function handler(req, res) {
           const pts = Math.floor(parseFloat(order.amount));
           user.loyalty = (user.loyalty || 0) + pts;
 
-          // Marquer le code roue comme utilisé définitivement
+          // Marquer le code comme utilisé (tous types : wheel-only, discount, etc.)
           const promoCode = session.metadata?.promoCode || '';
-          const { WHEEL_ONLY_CODES } = require('../lib/prices');
-          if (WHEEL_ONLY_CODES[promoCode] && user.wonCodes) {
+          if (promoCode && user.wonCodes) {
             const idx = user.wonCodes.findIndex(w => w.code === promoCode && !w.used);
             if (idx !== -1) { user.wonCodes[idx].used = true; user.wonCodes[idx].usedAt = new Date().toISOString(); }
           }

@@ -93,13 +93,11 @@ module.exports = async (req, res) => {
       user.loyalty = (user.loyalty || 0) + 10;
       if (prize.code) user.loyalty += 20;
 
-      // Stocker les codes roue gagnés pour validation au checkout
-      const { WHEEL_ONLY_CODES } = require('../lib/prices');
-      if (prize.code && WHEEL_ONLY_CODES[prize.code]) {
+      // Stocker tous les codes gagnés (pour affichage dashboard + validation WHEEL_ONLY)
+      if (prize.code) {
         user.wonCodes = user.wonCodes || [];
         user.wonCodes.push({ code: prize.code, wonAt: new Date().toISOString(), used: false, reserved: false });
-        // Garder max 20 codes (évite accumulation infinie)
-        if (user.wonCodes.length > 20) user.wonCodes = user.wonCodes.slice(-20);
+        if (user.wonCodes.length > 30) user.wonCodes = user.wonCodes.slice(-30);
       }
 
       await kv.set(key, user);

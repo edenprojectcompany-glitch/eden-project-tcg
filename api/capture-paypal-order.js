@@ -84,12 +84,14 @@ module.exports = async (req, res) => {
           const pts = Math.floor(parseFloat(order.amount));
           user.loyalty = (user.loyalty || 0) + pts;
 
-          // Marquer le code roue comme utilisé définitivement
-          const { WHEEL_ONLY_CODES } = require('../lib/prices');
-          if (WHEEL_ONLY_CODES[pendingPromoCode] && user.wonCodes && pendingWonCodeIndex !== -1) {
-            if (user.wonCodes[pendingWonCodeIndex]) {
-              user.wonCodes[pendingWonCodeIndex].used = true;
-              user.wonCodes[pendingWonCodeIndex].usedAt = new Date().toISOString();
+          // Marquer le code comme utilisé (tous types)
+          if (pendingPromoCode && user.wonCodes) {
+            const idx = pendingWonCodeIndex !== -1
+              ? pendingWonCodeIndex
+              : user.wonCodes.findIndex(w => w.code === pendingPromoCode && !w.used);
+            if (idx !== -1 && user.wonCodes[idx]) {
+              user.wonCodes[idx].used = true;
+              user.wonCodes[idx].usedAt = new Date().toISOString();
             }
           }
 

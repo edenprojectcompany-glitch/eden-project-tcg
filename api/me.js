@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
         loyalty: user.loyalty || 0,
         orders: user.orders || [],
         totalSpent: (user.orders || []).reduce((s, o) => s + parseFloat(o.amount || 0), 0),
-        wonCodes: (user.wonCodes || []).filter(w => !w.used),
+        wonCodes: (user.wonCodes || []).slice(-30).reverse(), // tous, du plus récent au plus ancien
       },
     });
   } catch (err) {
