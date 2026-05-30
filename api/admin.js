@@ -33,17 +33,21 @@ module.exports = async (req, res) => {
     const { kv } = require('@vercel/kv');
 
     if (req.method === 'GET') {
-      const [prices, stocks, wheel, flashsale] = await Promise.all([
+      const [prices, stocks, wheel, flashsale, shipping, graded] = await Promise.all([
         kv.get('admin:prices'),
         kv.get('admin:stocks'),
         kv.get('admin:wheel'),
         kv.get('admin:flashsale'),
+        kv.get('admin:shipping'),
+        kv.get('admin:graded'),
       ]);
       return res.status(200).json({
         prices: prices || {},
         stocks: stocks || {},
         wheel: wheel || null,
         flashsale: flashsale || {},
+        shipping: shipping || { relay: 4.90, colissimo: 7.90, express: 14.90 },
+        graded: graded || null,
       });
     }
 
@@ -113,6 +117,37 @@ module.exports = async (req, res) => {
           color: /^#[0-9a-fA-F]{6}$/.test(p.color) ? p.color : '#1a1a28',
         }));
         await kv.set('admin:wheel', validated);
+        return res.status(200).json({ ok: true });
+      }
+
+      if (action === 'set_shipping') {
+        const relay = parseFloat(data?.relay);
+        const colissimo = parseFloat(data?.colissimo);
+        const express = parseFloat(data?.express);
+        if ([relay, colissimo, express].some(v => isNaN(v) || v < 0 || v > 100)) {
+          return res.status(400).json({ error: 'Tarifs invalides (0–100€)' });
+        }
+        await kv.set('admin:shipping', {
+          relay: +relay.toFixed(2),
+          colissimo: +colissimo.toFixed(2),
+          express: +express.toFixed(2),
+        });
+        return res.status(200).json({ ok: true });
+      }
+
+      if (action === 'set_graded') {
+        if (!Array.isArray(data) || data.length !== 4) {
+          return res.status(400).json({ error: '4 cartes requises' });
+        }
+        const validated = data.map(c => ({
+          name: String(c.name || '').slice(0, 60),
+          sub: String(c.sub || '').slice(0, 80),
+          tag: String(c.tag || '').slice(0, 60),
+          price: c.price != null && !isNaN(parseFloat(c.price)) ? +parseFloat(c.price).toFixed(2) : null,
+          badge: String(c.badge || '').slice(0, 30),
+          available: !!c.available,
+        }));
+        await kv.set('admin:graded', validated);
         return res.status(200).json({ ok: true });
       }
 

@@ -36,9 +36,10 @@ module.exports = async (req, res) => {
     }
     const verifiedUserEmail = decoded.email;
 
-    // Validation livraison côté serveur
+    // Validation livraison côté serveur (valeurs dynamiques depuis KV)
     const parsedShip = +(parseFloat(shippingCost || 0).toFixed(2));
-    if (!VALID_SHIPPING.some(v => Math.abs(v - parsedShip) < 0.01)) {
+    const validShipping = [0, shippingCfg.relay, shippingCfg.colissimo, shippingCfg.express];
+    if (!validShipping.some(v => Math.abs(v - parsedShip) < 0.01)) {
       return res.status(400).json({ error: 'Frais de livraison invalides' });
     }
     if (parsedShip === 0 && !isShipFree) {
@@ -46,16 +47,19 @@ module.exports = async (req, res) => {
     }
     const shipping = parsedShip;
 
-    // 1 seul appel KV — inclut flash sale prices + user
+    // 1 seul appel KV — inclut flash sale prices + user + shipping config
     let adminPrices = {};
     let verifiedUser = null;
+    let shippingCfg = { relay: 4.90, colissimo: 7.90, express: 14.90 };
     try {
       const { kv } = require('@vercel/kv');
-      const [prices, flashsale, userFromKv] = await Promise.all([
+      const [prices, flashsale, userFromKv, shippingFromKv] = await Promise.all([
         kv.get('admin:prices'),
         kv.get('admin:flashsale'),
         kv.get(`user:${verifiedUserEmail}`),
+        kv.get('admin:shipping'),
       ]);
+      if (shippingFromKv) shippingCfg = shippingFromKv;
       verifiedUser = userFromKv || null;
       adminPrices = prices || {};
       if (flashsale) {

@@ -1849,6 +1849,8 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
           <button class="admin-tab active" data-atab="produits">Produits</button>
           <button class="admin-tab" data-atab="flash">⚡ Flash Sale</button>
           <button class="admin-tab" data-atab="roue">Roue</button>
+          <button class="admin-tab" data-atab="livraison">🚚 Livraison</button>
+          <button class="admin-tab" data-atab="gradees">🏅 Gradées</button>
         </div>
         <!-- Produits -->
         <div class="admin-section active" id="atab-produits">
@@ -1872,6 +1874,24 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
           <div id="adminWheelRows"></div>
           <button class="btn-primary admin-save" id="adminSaveWheel">💾 Enregistrer la roue</button>
           <div class="admin-msg" id="adminWheelMsg"></div>
+        </div>
+        <!-- Livraison -->
+        <div class="admin-section" id="atab-livraison">
+          <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:20px">Modifiez les tarifs affichés au checkout. Les modifications sont validées côté serveur à chaque commande.</p>
+          <div style="display:flex;flex-direction:column;gap:14px;max-width:360px">
+            <div class="field"><input type="number" id="shipAdminRelay" step="0.01" min="0" max="100" placeholder=" "><label>📦 Mondial Relay · Point relais (€)</label></div>
+            <div class="field"><input type="number" id="shipAdminColissimo" step="0.01" min="0" max="100" placeholder=" "><label>📬 Colissimo domicile (€)</label></div>
+            <div class="field"><input type="number" id="shipAdminExpress" step="0.01" min="0" max="100" placeholder=" "><label>⚡ Express sécurisé (€)</label></div>
+          </div>
+          <button class="btn-primary admin-save" id="adminSaveShipping" style="margin-top:20px">💾 Enregistrer les tarifs</button>
+          <div class="admin-msg" id="adminShippingMsg"></div>
+        </div>
+        <!-- Gradées -->
+        <div class="admin-section" id="atab-gradees">
+          <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:20px">4 cartes affichées sur la page Gradées. Cochez "Disponible" pour retirer le badge "Bientôt disponible".</p>
+          <div id="adminGradedRows" style="display:flex;flex-direction:column;gap:20px"></div>
+          <button class="btn-primary admin-save" id="adminSaveGraded" style="margin-top:20px">💾 Enregistrer les gradées</button>
+          <div class="admin-msg" id="adminGradedMsg"></div>
         </div>
       </div>
     </div>
@@ -3605,6 +3625,8 @@ window.addEventListener('load', () => {
       buildAdminProducts(data.prices||{},data.stocks||{});
       buildAdminFlash(data.flashsale||{});
       buildAdminWheel(data.wheel||DEFAULT_WHEEL);
+      buildAdminShipping(data.shipping||{relay:4.90,colissimo:7.90,express:14.90});
+      buildAdminGraded(data.graded||null);
     }catch(err){
       msgEl.className='admin-msg err'; msgEl.textContent='Code incorrect ou serveur indisponible';
     }
@@ -3730,12 +3752,129 @@ window.addEventListener('load', () => {
     }catch(err){msg.className='admin-msg err'; msg.textContent='Erreur: '+err.message;}
   });
 
+  /* ══ ADMIN LIVRAISON ══ */
+  const DEFAULT_SHIPPING_CFG={relay:4.90,colissimo:7.90,express:14.90};
+  let shippingCfg={...DEFAULT_SHIPPING_CFG};
+
+  function buildAdminShipping(cfg){
+    document.getElementById('shipAdminRelay').value=cfg.relay??4.90;
+    document.getElementById('shipAdminColissimo').value=cfg.colissimo??7.90;
+    document.getElementById('shipAdminExpress').value=cfg.express??14.90;
+  }
+  document.getElementById('adminSaveShipping')?.addEventListener('click',async()=>{
+    const code=document.getElementById('adminCodeInput').value;
+    const msg=document.getElementById('adminShippingMsg');
+    const data={
+      relay:parseFloat(document.getElementById('shipAdminRelay').value),
+      colissimo:parseFloat(document.getElementById('shipAdminColissimo').value),
+      express:parseFloat(document.getElementById('shipAdminExpress').value),
+    };
+    try{
+      const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':code},
+        body:JSON.stringify({action:'set_shipping',data})});
+      const d=await r.json();
+      if(!r.ok) throw new Error(d.error||'Erreur');
+      shippingCfg=data;
+      applyShippingConfig(data);
+      msg.className='admin-msg ok'; msg.textContent='✓ Tarifs livraison mis à jour';
+    }catch(err){msg.className='admin-msg err'; msg.textContent='Erreur: '+err.message;}
+    setTimeout(()=>msg.textContent='',3000);
+  });
+
+  function applyShippingConfig(cfg){
+    const opts=document.querySelectorAll('.ship-opt');
+    const keys=['mr','dom','exp'];
+    const vals=[cfg.relay,cfg.colissimo,cfg.express];
+    opts.forEach(o=>{
+      const idx=keys.indexOf(o.dataset.ship);
+      if(idx===-1) return;
+      const v=vals[idx];
+      o.dataset.price=v;
+      o.querySelector('.p').textContent=v.toFixed(2).replace('.',',')+' €';
+    });
+    // Recalcule currentShip si l'option sélectionnée a changé de prix
+    const sel=document.querySelector('.ship-opt.selected');
+    if(sel){ currentShip=parseFloat(sel.dataset.price); renderCheckout(); renderCart(); }
+  }
+
+  /* ══ ADMIN GRADÉES ══ */
+  const DEFAULT_GRADED_CFG=[
+    {name:'Mew ex',sub:'151 · Pokémon Card 151',tag:'Illustration Rare · Holo',price:189,badge:'Sur commande',available:false},
+    {name:'Charizard ex',sub:'151 · Special Art Rare',tag:'Special Art Rare · Holo',price:259,badge:'Sur commande',available:false},
+    {name:'Pikachu VMAX',sub:'Vivid Voltage · Rainbow',tag:'Rainbow Rare · PSA 10',price:489,badge:'PSA 10',available:false},
+    {name:'Lugia V',sub:'Silver Tempest · Alt Art',tag:'Alt Art · Holo',price:118,badge:'Sur commande',available:false},
+  ];
+
+  function buildAdminGraded(graded){
+    const cfg=graded||DEFAULT_GRADED_CFG;
+    const wrap=document.getElementById('adminGradedRows'); if(!wrap) return;
+    wrap.innerHTML=cfg.map((c,i)=>`
+      <div style="padding:16px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border)">
+        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-2);margin-bottom:12px">Carte ${i+1}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field"><input type="text" id="gc-name-${i}" value="${c.name||''}" placeholder=" "><label>Nom</label></div>
+          <div class="field"><input type="text" id="gc-sub-${i}" value="${c.sub||''}" placeholder=" "><label>Sous-titre (set)</label></div>
+          <div class="field"><input type="text" id="gc-tag-${i}" value="${c.tag||''}" placeholder=" "><label>Tag (rareté)</label></div>
+          <div class="field"><input type="number" id="gc-price-${i}" value="${c.price??''}" placeholder=" " step="0.01"><label>Prix (€)</label></div>
+          <div class="field"><input type="text" id="gc-badge-${i}" value="${c.badge||''}" placeholder=" "><label>Badge</label></div>
+          <div style="display:flex;align-items:center;gap:8px;padding-top:8px">
+            <input type="checkbox" id="gc-avail-${i}" ${c.available?'checked':''} style="width:16px;height:16px">
+            <label for="gc-avail-${i}" style="font-size:12.5px;cursor:pointer">Disponible (retire "Bientôt dispo")</label>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('adminSaveGraded')?.addEventListener('click',async()=>{
+    const code=document.getElementById('adminCodeInput').value;
+    const msg=document.getElementById('adminGradedMsg');
+    const data=[0,1,2,3].map(i=>({
+      name:document.getElementById('gc-name-'+i)?.value||'',
+      sub:document.getElementById('gc-sub-'+i)?.value||'',
+      tag:document.getElementById('gc-tag-'+i)?.value||'',
+      price:parseFloat(document.getElementById('gc-price-'+i)?.value)||null,
+      badge:document.getElementById('gc-badge-'+i)?.value||'',
+      available:document.getElementById('gc-avail-'+i)?.checked||false,
+    }));
+    try{
+      const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':code},
+        body:JSON.stringify({action:'set_graded',data})});
+      const d=await r.json();
+      if(!r.ok) throw new Error(d.error||'Erreur');
+      applyGradedConfig(data);
+      msg.className='admin-msg ok'; msg.textContent='✓ Cartes gradées mises à jour';
+    }catch(err){msg.className='admin-msg err'; msg.textContent='Erreur: '+err.message;}
+    setTimeout(()=>msg.textContent='',3000);
+  });
+
+  function applyGradedConfig(graded){
+    graded.forEach((c,i)=>{
+      const n=i+1;
+      const card=document.getElementById('hcard'+n); if(!card) return;
+      // Tag rareté
+      const tag=card.querySelector('.hcard-tag'); if(tag) tag.textContent=c.tag||'';
+      // Meta
+      const name=card.querySelector('.hcard-name'); if(name) name.textContent=c.name||'';
+      const sub=card.querySelector('.hcard-sub'); if(sub) sub.textContent=c.sub||'';
+      const price=card.querySelector('.hcard-price'); if(price) price.textContent=c.price!=null?c.price.toFixed(0)+' €':'—';
+      // Badge "bientôt disponible"
+      const soon=card.querySelector('.soon-tag');
+      if(soon) soon.style.display=c.available?'none':'';
+      // Badge bas de carte
+      const wrap=card.closest('.holo-card-wrap');
+      if(wrap){
+        const lbl=wrap.querySelector('.hcard-label'); if(lbl) lbl.textContent=c.name+(c.badge?' · '+c.badge:'');
+        const bdg=wrap.querySelector('.hcard-badge');
+        if(bdg){bdg.textContent=c.badge||'';bdg.className='hcard-badge'+(c.badge==='PSA 10'?' graded-badge':'');}
+      }
+    });
+  }
+
   /* ══ OVERRIDES PRODUITS DEPUIS API ══ */
   async function loadProductOverrides(){
     try{
       const res=await fetch('/api/products');
       if(!res.ok) return;
-      const {prices,stocks,flashsale}=await res.json();
+      const {prices,stocks,flashsale,shipping,graded}=await res.json();
       const now=Date.now();
       products.forEach(p=>{
         if(prices[p.id]!=null){ p.price=prices[p.id]; p.adminPrice=prices[p.id]; }
@@ -3751,6 +3890,9 @@ window.addEventListener('load', () => {
           p._flashEndTime=null;
         }
       });
+      // Appliquer config livraison et gradées depuis KV
+      if(shipping){ shippingCfg=shipping; applyShippingConfig(shipping); }
+      if(graded) applyGradedConfig(graded);
     }catch{}
   }
 

@@ -13,14 +13,26 @@ module.exports = async (req, res) => {
 
   try {
     const { kv } = require('@vercel/kv');
-    const [prices, stocks, flashsale] = await Promise.all([
+    const [prices, stocks, flashsale, shipping, graded] = await Promise.all([
       kv.get('admin:prices'),
       kv.get('admin:stocks'),
       kv.get('admin:flashsale'),
+      kv.get('admin:shipping'),
+      kv.get('admin:graded'),
     ]);
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
-    return res.status(200).json({ prices: prices || {}, stocks: stocks || {}, flashsale: flashsale || {} });
+    return res.status(200).json({
+      prices: prices || {},
+      stocks: stocks || {},
+      flashsale: flashsale || {},
+      shipping: shipping || { relay: 4.90, colissimo: 7.90, express: 14.90 },
+      graded: graded || null,
+    });
   } catch {
-    return res.status(200).json({ prices: {}, stocks: {}, flashsale: {} });
+    return res.status(200).json({
+      prices: {}, stocks: {}, flashsale: {},
+      shipping: { relay: 4.90, colissimo: 7.90, express: 14.90 },
+      graded: null,
+    });
   }
 };
