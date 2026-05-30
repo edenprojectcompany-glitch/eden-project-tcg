@@ -2,14 +2,15 @@
 // Env requis : PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENV, SITE_URL, KV_REST_API_URL, KV_REST_API_TOKEN
 
 const { PAYPAL_BASE, getPayPalToken } = require('../lib/paypal');
-const { PROMO_CODES, PRIZE_CODES, VALID_SHIPPING, getServerPrice, getAutoPromoPct } = require('../lib/prices');
+const jwt = require('jsonwebtoken');
+const { PROMO_CODES, PRIZE_CODES, WHEEL_ONLY_CODES, VALID_SHIPPING, PRODUCT_LANG, getServerPrice, getAutoPromoPct, computeLangPools } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -22,6 +23,19 @@ module.exports = async (req, res) => {
     const promoCodePct = PROMO_CODES[code] || 0;
     const isShipFree = code === 'SHIP0';
     const isPrizeCode = PRIZE_CODES.has(code);
+    const wheelCodeConfig = WHEEL_ONLY_CODES[code];
+
+    // Validation JWT pour codes roue
+    let verifiedUserEmail = null;
+    if (wheelCodeConfig) {
+      const authHeader = (req.headers.authorization || '').replace('Bearer ', '');
+      if (!authHeader) return res.status(401).json({ error: `Le code ${code} nécessite d'être connecté` });
+      let decoded;
+      try { decoded = jwt.verify(authHeader, process.env.JWT_SECRET); } catch {
+        return res.status(401).json({ error: 'Token invalide' });
+      }
+      verifiedUserEmail = decoded.email;
+    }
 
     // Validation livraison côté serveur
     const parsedShip = +(parseFloat(shippingCost || 0).toFixed(2));
@@ -35,12 +49,13 @@ module.exports = async (req, res) => {
 
     // 1 seul appel KV avant la boucle (fix N+1) — inclut flash sale prices
     let adminPrices = {};
+    let verifiedUser = null;
     try {
       const { kv } = require('@vercel/kv');
-      const [prices, flashsale] = await Promise.all([
-        kv.get('admin:prices'),
-        kv.get('admin:flashsale'),
-      ]);
+      const kvCalls = [kv.get('admin:prices'), kv.get('admin:flashsale')];
+      if (verifiedUserEmail) kvCalls.push(kv.get(`user:${verifiedUserEmail}`));
+      const [prices, flashsale, userFromKv] = await Promise.all(kvCalls);
+      verifiedUser = userFromKv || null;
       adminPrices = prices || {};
       if (flashsale) {
         const now = Date.now();
@@ -52,18 +67,40 @@ module.exports = async (req, res) => {
       }
     } catch {}
 
+    // Palier groupé par langue
+    const langPools = computeLangPools(items.map(i => ({ id: i.id, qty: parseInt(i.qty) || 0 })));
+
     // Passe 1 : sous-total brut pour auto-promo
     let rawSubtotal = 0;
     const rawItems = [];
     for (const item of items) {
       const qty = parseInt(item.qty);
       if (item.id == null || !qty || qty < 1 || qty > 1000) continue;
-      const serverPrice = getServerPrice(item.id, qty, adminPrices);
+      const lang = PRODUCT_LANG[item.id];
+      const pooledQty = lang && langPools[lang] ? langPools[lang] : qty;
+      const serverPrice = getServerPrice(item.id, qty, adminPrices, pooledQty);
       if (serverPrice === null) continue;
       rawSubtotal += serverPrice * qty;
       rawItems.push({ item, qty, serverPrice });
     }
     if (!rawItems.length) return res.status(400).json({ error: 'Aucun article valide' });
+
+    // Validation code roue
+    let wonCodeIndex = -1;
+    if (wheelCodeConfig) {
+      if (!verifiedUser) return res.status(401).json({ error: 'Utilisateur introuvable' });
+      const now = Date.now();
+      wonCodeIndex = (verifiedUser.wonCodes || []).findIndex(w =>
+        w.code === code && !w.used &&
+        (!w.reserved || now - new Date(w.reservedAt || 0).getTime() > 2 * 60 * 60 * 1000)
+      );
+      if (wonCodeIndex === -1) {
+        return res.status(403).json({ error: `Code ${code} invalide — gagné via la roue uniquement et utilisable une seule fois` });
+      }
+      if (wheelCodeConfig.minAmount > 0 && rawSubtotal < wheelCodeConfig.minAmount) {
+        return res.status(400).json({ error: `Code ${code} utilisable à partir de ${wheelCodeConfig.minAmount}€ d'achat` });
+      }
+    }
 
     // Remise effective
     const discountPct = promoCodePct || (!isPrizeCode ? getAutoPromoPct(rawSubtotal) : 0);
@@ -80,12 +117,13 @@ module.exports = async (req, res) => {
     const total = +(itemTotal + shipping).toFixed(2);
 
     const token = await getPayPalToken();
+    const paypalRequestId = `eden-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const order = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'PayPal-Request-Id': `eden-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        'PayPal-Request-Id': paypalRequestId,
       },
       body: JSON.stringify({
         intent: 'CAPTURE',
@@ -127,6 +165,29 @@ module.exports = async (req, res) => {
       const reason = orderData.details?.[0]?.description || orderData.message || 'PayPal order failed';
       throw new Error(reason);
     }
+
+    // Stocker les items + infos dans KV pour récupération à la capture (TTL 24h)
+    try {
+      const { kv } = require('@vercel/kv');
+      const pending = {
+        items: validatedItems.map(i => ({ n: i.name, q: i.qty, p: i.unitPrice })),
+        email: customerEmail || '',
+        promoCode: code,
+        userEmail: verifiedUserEmail || '',
+        wonCodeIndex,
+      };
+      await kv.set(`paypal:order:${orderData.id}`, pending, { ex: 86400 });
+
+      // Réserver le code roue
+      if (wheelCodeConfig && wonCodeIndex !== -1 && verifiedUserEmail) {
+        const freshUser = await kv.get(`user:${verifiedUserEmail}`);
+        if (freshUser && freshUser.wonCodes && freshUser.wonCodes[wonCodeIndex]) {
+          freshUser.wonCodes[wonCodeIndex].reserved = true;
+          freshUser.wonCodes[wonCodeIndex].reservedAt = new Date().toISOString();
+          await kv.set(`user:${verifiedUserEmail}`, freshUser);
+        }
+      }
+    } catch {}
 
     const approveUrl = orderData.links?.find(l => l.rel === 'approve')?.href;
     return res.status(200).json({ orderId: orderData.id, approveUrl });

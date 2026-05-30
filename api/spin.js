@@ -6,14 +6,13 @@ const jwt = require('jsonwebtoken');
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 
 const DEFAULT_WHEEL = [
-  { label: 'Tentez encore',       prob: 44,  code: null,           color: '#1a1a28' },
-  { label: '-5% CODE: EDEN5',     prob: 21,  code: 'EDEN5',        color: '#7fd9ff' },
-  { label: '-10% CODE: EDEN10',   prob: 14,  code: 'EDEN10',       color: '#c9a8ff' },
-  { label: 'Livraison offerte',   prob: 9,   code: 'SHIP0',        color: '#a8ffd4' },
-  { label: '-15% CODE: TCG15',    prob: 6,   code: 'TCG15',        color: '#ffb3e6' },
-  { label: 'Booster offert',      prob: 3.5, code: 'BOOSTER',      color: '#ffd97f' },
-  { label: '-20% CODE: EDEN20',   prob: 2,   code: 'EDEN20',       color: '#ff9fa8' },
-  { label: '🎁 Display gratuite', prob: 0.5, code: 'FREE_DISPLAY', color: '#ff7a7a' },
+  { label: '-5% CODE: EDEN5',     prob: 35,  code: 'EDEN5',        color: '#7fd9ff' },
+  { label: '-10% CODE: EDEN10',   prob: 28,  code: 'EDEN10',       color: '#c9a8ff' },
+  { label: 'Livraison offerte',   prob: 15,  code: 'SHIP0',        color: '#a8ffd4' },
+  { label: '-15% CODE: TCG15',    prob: 10,  code: 'TCG15',        color: '#ffb3e6' },
+  { label: 'Booster offert',      prob: 7,   code: 'BOOSTER',      color: '#ffd97f' },
+  { label: '-20% CODE: EDEN20',   prob: 4,   code: 'EDEN20',       color: '#ff9fa8' },
+  { label: '🎁 Display gratuite', prob: 1,   code: 'FREE_DISPLAY', color: '#ff7a7a' },
 ];
 
 function cors(res) {
@@ -93,6 +92,16 @@ module.exports = async (req, res) => {
       user.lastSpin = new Date().toISOString();
       user.loyalty = (user.loyalty || 0) + 10;
       if (prize.code) user.loyalty += 20;
+
+      // Stocker les codes roue gagnés pour validation au checkout
+      const { WHEEL_ONLY_CODES } = require('../lib/prices');
+      if (prize.code && WHEEL_ONLY_CODES[prize.code]) {
+        user.wonCodes = user.wonCodes || [];
+        user.wonCodes.push({ code: prize.code, wonAt: new Date().toISOString(), used: false, reserved: false });
+        // Garder max 20 codes (évite accumulation infinie)
+        if (user.wonCodes.length > 20) user.wonCodes = user.wonCodes.slice(-20);
+      }
+
       await kv.set(key, user);
 
       return res.status(200).json({ prize, winIndex, wheelConfig: wheel });

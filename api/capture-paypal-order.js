@@ -57,7 +57,14 @@ module.exports = async (req, res) => {
       try {
         const { kv } = require('@vercel/kv');
         const key = `user:${userEmail.toLowerCase().trim()}`;
-        const user = await kv.get(key);
+
+        // Récupérer les données stockées à la création de l'ordre PayPal
+        const pendingKey = `paypal:order:${orderId}`;
+        const [user, pendingData] = await Promise.all([kv.get(key), kv.get(pendingKey)]);
+        const orderItems = pendingData?.items || [];
+        const pendingUserEmail = pendingData?.userEmail || '';
+        const pendingPromoCode = pendingData?.promoCode || '';
+        const pendingWonCodeIndex = pendingData?.wonCodeIndex ?? -1;
 
         const order = {
           ref,
@@ -68,6 +75,7 @@ module.exports = async (req, res) => {
           status: 'confirmed',
           provider: 'paypal',
           createdAt: new Date().toISOString(),
+          items: orderItems,
         };
 
         if (user) {
@@ -75,9 +83,22 @@ module.exports = async (req, res) => {
           user.orders.unshift(order);
           const pts = Math.floor(parseFloat(order.amount));
           user.loyalty = (user.loyalty || 0) + pts;
+
+          // Marquer le code roue comme utilisé définitivement
+          const { WHEEL_ONLY_CODES } = require('../lib/prices');
+          if (WHEEL_ONLY_CODES[pendingPromoCode] && user.wonCodes && pendingWonCodeIndex !== -1) {
+            if (user.wonCodes[pendingWonCodeIndex]) {
+              user.wonCodes[pendingWonCodeIndex].used = true;
+              user.wonCodes[pendingWonCodeIndex].usedAt = new Date().toISOString();
+            }
+          }
+
           await kv.set(key, user);
           console.log(`PayPal order ${ref} saved for ${userEmail} (+${pts} pts loyalty)`);
         }
+
+        // Nettoyer les données pending PayPal
+        await kv.del(pendingKey).catch(() => {});
 
         // Jackpot progressif : 1€ par commande
         try {

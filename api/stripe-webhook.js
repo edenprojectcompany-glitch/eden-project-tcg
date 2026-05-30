@@ -36,6 +36,13 @@ async function handler(req, res) {
       const email = session.customer_email || session.customer_details?.email;
       const customerName = session.customer_details?.name || '';
 
+      // Récupérer les items depuis les metadata (stockés à la création de session)
+      let orderItems = [];
+      try {
+        const rawItems = session.metadata?.items_json;
+        if (rawItems) orderItems = JSON.parse(rawItems);
+      } catch {}
+
       const order = {
         ref: `EDN-${session.id.slice(-6).toUpperCase()}`,
         sessionId: session.id,
@@ -47,6 +54,7 @@ async function handler(req, res) {
         status: 'confirmed',
         provider: 'stripe',
         createdAt: new Date().toISOString(),
+        items: orderItems,
       };
 
       // Jackpot progressif : 1€ par commande alimente le pool
@@ -64,6 +72,15 @@ async function handler(req, res) {
           user.orders.unshift(order);
           const pts = Math.floor(parseFloat(order.amount));
           user.loyalty = (user.loyalty || 0) + pts;
+
+          // Marquer le code roue comme utilisé définitivement
+          const promoCode = session.metadata?.promoCode || '';
+          const { WHEEL_ONLY_CODES } = require('../lib/prices');
+          if (WHEEL_ONLY_CODES[promoCode] && user.wonCodes) {
+            const idx = user.wonCodes.findIndex(w => w.code === promoCode && !w.used);
+            if (idx !== -1) { user.wonCodes[idx].used = true; user.wonCodes[idx].usedAt = new Date().toISOString(); }
+          }
+
           await kv.set(key, user);
           console.log(`Order ${order.ref} saved for ${email} (+${pts} pts loyalty)`);
         }
