@@ -38,7 +38,7 @@ module.exports = async (req, res) => {
     const { kv } = require('@vercel/kv');
 
     // Rate limiting : max 5 inscriptions / heure par IP
-    const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+    const ip = req.headers['x-vercel-forwarded-for'] || (req.headers['x-forwarded-for'] || '').split(',').pop().trim() || 'unknown';
     const ratKey = `ratelimit:register:${ip}`;
     try {
       const attempts = await kv.incr(ratKey);

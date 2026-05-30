@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
     // Rate limiting sur les tentatives échouées : 10 / 15 min par IP
     try {
       const { kv } = require('@vercel/kv');
-      const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+      const ip = req.headers['x-vercel-forwarded-for'] || (req.headers['x-forwarded-for'] || '').split(',').pop().trim() || 'unknown';
       const ratKey = `ratelimit:admin:${ip}`;
       const attempts = await kv.incr(ratKey);
       await kv.expire(ratKey, 900);

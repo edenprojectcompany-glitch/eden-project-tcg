@@ -168,7 +168,7 @@ module.exports = async (req, res) => {
         prizeCode: isPrizeCode ? code : '',
         discountPct: String(discountPct),
         source: 'eden-project-tcg',
-        items_json: JSON.stringify(itemsSummary).slice(0, 490),
+        items_json: JSON.stringify(itemsSummary.slice(0, 8).map(i => ({ n: i.n.slice(0, 20), q: i.q, p: i.p }))),
         userEmail: verifiedUserEmail || '',
       },
       shipping_address_collection: { allowed_countries: ['FR', 'BE', 'CH', 'LU', 'MC'] },
