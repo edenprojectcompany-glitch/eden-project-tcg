@@ -2633,6 +2633,9 @@ window.addEventListener('load', () => {
       document.getElementById('cartTotal').textContent='0 €';
       document.getElementById('promoAutoBar').innerHTML='';
       document.getElementById('cartAutoPromoRow').style.display='none';
+      saveCart(); // Important : vide aussi le localStorage
+      updateCardQtys();
+      const cb=document.getElementById('cartBtn');if(cb)cb.classList.remove('cart-has-items');
       return;
     }
     const nudge=!authUser?'<div class="cart-join-nudge" onclick="closeCart();go(\'auth\')" title="Créer un compte">🎡 <strong>Membres :</strong> Roue mensuelle + livraison offerte + points fidélité</div>':'';
