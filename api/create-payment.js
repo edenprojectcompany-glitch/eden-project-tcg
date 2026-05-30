@@ -3,7 +3,7 @@
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const jwt = require('jsonwebtoken');
-const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, VALID_SHIPPING, getServerPrice, getAutoPromoPct, computeLangPools } = require('../lib/prices');
+const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, getServerPrice, getAutoPromoPct, computeLangPools } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -135,6 +135,9 @@ module.exports = async (req, res) => {
 
     // Réserver le code roue avant de créer la session (anti double-usage)
     if (wheelCodeConfig && wonCodeIndex !== -1 && verifiedUserEmail) {
+      if (kvFailed) {
+        return res.status(503).json({ error: 'Service temporairement indisponible, réessayez dans quelques secondes' });
+      }
       try {
         const { kv } = require('@vercel/kv');
         const freshUser = await kv.get(`user:${verifiedUserEmail}`);
@@ -143,7 +146,9 @@ module.exports = async (req, res) => {
           freshUser.wonCodes[wonCodeIndex].reservedAt = new Date().toISOString();
           await kv.set(`user:${verifiedUserEmail}`, freshUser);
         }
-      } catch {}
+      } catch (e) {
+        console.error('[create-payment] wheel reservation failed:', e.message);
+      }
     }
 
     // Passe 2 : construction des line items avec remise effective

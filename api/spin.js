@@ -35,6 +35,7 @@ module.exports = async (req, res) => {
   } catch {
     return res.status(401).json({ error: 'Token invalide' });
   }
+  if (!decoded?.email) return res.status(401).json({ error: 'Token invalide' });
 
   try {
     const { kv } = require('@vercel/kv');

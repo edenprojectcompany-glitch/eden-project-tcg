@@ -3,7 +3,7 @@
 
 const { PAYPAL_BASE, getPayPalToken } = require('../lib/paypal');
 const jwt = require('jsonwebtoken');
-const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, VALID_SHIPPING, PRODUCT_LANG, getServerPrice, getAutoPromoPct, computeLangPools } = require('../lib/prices');
+const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, PRODUCT_LANG, getServerPrice, getAutoPromoPct, computeLangPools } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 
@@ -184,7 +184,7 @@ module.exports = async (req, res) => {
     });
 
     const orderData = await order.json();
-    if (!orderData.id || orderData.name) {
+    if (!orderData.id) {
       const reason = orderData.details?.[0]?.description || orderData.message || 'PayPal order failed';
       throw new Error(reason);
     }
@@ -194,7 +194,6 @@ module.exports = async (req, res) => {
       const { kv } = require('@vercel/kv');
       const pending = {
         items: validatedItems.map(i => ({ n: i.name, q: i.qty, p: i.unitPrice })),
-        email: customerEmail || '',
         promoCode: code,
         userEmail: verifiedUserEmail || '',
         wonCodeIndex,

@@ -102,17 +102,17 @@ module.exports = async (req, res) => {
             }
           }
 
+          // Jackpot progressif uniquement si commande bien enregistrée (évite rejeu)
+          try {
+            await kv.incrbyfloat('jackpot:pool', 1);
+          } catch {}
+
           await kv.set(key, user);
           console.log(`PayPal order ${ref} saved for ${userEmail} (+${pts} pts loyalty)`);
         }
 
         // Nettoyer les données pending PayPal
         await kv.del(pendingKey).catch(() => {});
-
-        // Jackpot progressif : 1€ par commande (incrbyfloat = atomique)
-        try {
-          await kv.incrbyfloat('jackpot:pool', 1);
-        } catch {}
 
         // Email confirmation client
         await sendEmail({
@@ -122,6 +122,7 @@ module.exports = async (req, res) => {
             ref,
             name: user?.name || '',
             amount: order.amount,
+            items: orderItems,
             provider: 'paypal',
           }),
         });

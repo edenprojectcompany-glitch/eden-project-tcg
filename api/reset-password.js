@@ -23,6 +23,14 @@ module.exports = async (req, res) => {
   try {
     const { kv } = require('@vercel/kv');
 
+    // Rate limiting : 10 tentatives / 15 min par IP
+    const ip = (req.headers['x-vercel-forwarded-for'] || '').trim() || (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+    try {
+      const attempts = await kv.incr(`ratelimit:reset:${ip}`);
+      await kv.expire(`ratelimit:reset:${ip}`, 900);
+      if (attempts > 10) return res.status(429).json({ error: 'Trop de tentatives. Réessayez dans 15 minutes.' });
+    } catch {}
+
     // Récupérer l'email lié au token (TTL 1h géré par KV)
     const email = await kv.get(`reset:${token}`);
     if (!email) {
