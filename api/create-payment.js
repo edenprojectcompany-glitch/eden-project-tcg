@@ -1,7 +1,10 @@
 // api/create-payment.js — Stripe Checkout Session avec validation prix serveur
 // Env requis : STRIPE_SECRET_KEY, SITE_URL, KV_REST_API_URL, KV_REST_API_TOKEN
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('[create-payment] STRIPE_SECRET_KEY manquant — paiements Stripe impossibles');
+}
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_missing');
 const { PROMO_CODES, PRIZE_CODES, VALID_SHIPPING, getServerPrice, getAutoPromoPct } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
@@ -120,7 +123,7 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({ url: session.url, sessionId: session.id });
   } catch (err) {
-    console.error('Stripe error:', err.message);
-    return res.status(500).json({ error: 'Erreur lors de la création du paiement' });
+    console.error('Stripe error:', err.message, err.type, err.code);
+    return res.status(500).json({ error: `Stripe: ${err.message || 'Erreur inconnue'}` });
   }
 };
