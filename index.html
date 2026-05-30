@@ -3267,6 +3267,9 @@ window.addEventListener('load', () => {
   async function initiateStripePayment(){
     if(!cart.length) return;
     const btn=document.getElementById('payBtn'); btn.textContent='Ouverture…'; btn.disabled=true;
+    // Ouvrir la fenêtre IMMÉDIATEMENT (synchrone) — sinon le bloqueur de popups bloque
+    const payWin=window.open('','_blank');
+    if(payWin) payWin.document.write('<html><body style="background:#0a0a0c;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><p>Connexion à Stripe…</p></body></html>');
     try{
       const headers={'Content-Type':'application/json'};
       if(authToken) headers['Authorization']='Bearer '+authToken;
@@ -3286,11 +3289,15 @@ window.addEventListener('load', () => {
         const _tot=((_sub*(1-_pct/100))+(shipPromo?0:currentShip)).toFixed(2).replace('.',',')+' €';
         sessionStorage.setItem('eden_pending_total',_tot);
         if(data.sessionId) sessionStorage.setItem('eden_pending_ref','EDN-'+data.sessionId.slice(-6).toUpperCase());
-        // Ouvrir Stripe dans un nouvel onglet — le client reste sur le site
-        window.open(data.url,'_blank');
+        if(payWin&&!payWin.closed) payWin.location.href=data.url;
+        else window.open(data.url,'_blank');
         btn.textContent='💳 Payer par Stripe'; btn.disabled=false;
-      } else throw new Error(data.error||'Erreur paiement');
+      } else {
+        if(payWin) payWin.close();
+        throw new Error(data.error||'Erreur paiement');
+      }
     }catch(err){
+      if(payWin) payWin.close();
       showPayError('Erreur paiement : '+err.message);
       btn.textContent='💳 Payer par Stripe'; btn.disabled=false;
     }
@@ -3300,6 +3307,9 @@ window.addEventListener('load', () => {
   async function initiatePayPalPayment(){
     if(!cart.length) return;
     const btn=document.getElementById('paypalBtn'); btn.textContent='Ouverture PayPal…'; btn.disabled=true;
+    // Même technique : ouvrir immédiatement, naviguer après
+    const payWin=window.open('','_blank');
+    if(payWin) payWin.document.write('<html><body style="background:#0a0a0c;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><p>Connexion à PayPal…</p></body></html>');
     try{
       const headers={'Content-Type':'application/json'};
       if(authToken) headers['Authorization']='Bearer '+authToken;
@@ -3311,10 +3321,16 @@ window.addEventListener('load', () => {
           customerEmail:authUser?.email||'',
         })});
       const data=await res.json();
-      if(data.approveUrl) window.open(data.approveUrl,'_blank');
-      else throw new Error(data.error||'Erreur PayPal');
+      if(data.approveUrl){
+        if(payWin&&!payWin.closed) payWin.location.href=data.approveUrl;
+        else window.open(data.approveUrl,'_blank');
+      } else {
+        if(payWin) payWin.close();
+        throw new Error(data.error||'Erreur PayPal');
+      }
       btn.textContent='🅿 Payer avec PayPal'; btn.disabled=false;
     }catch(err){
+      if(payWin) payWin.close();
       showPayError('Erreur PayPal : '+err.message); btn.textContent='🅿 Payer avec PayPal'; btn.disabled=false;
     }
   }
