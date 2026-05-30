@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
     // Rate limiting sur les tentatives échouées : 10 / 15 min par IP
     try {
       const { kv } = require('@vercel/kv');
-      const ip = req.headers['x-vercel-forwarded-for'] || (req.headers['x-forwarded-for'] || '').split(',').pop().trim() || 'unknown';
+      const ip = (req.headers['x-vercel-forwarded-for'] || '').trim() || (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
       const ratKey = `ratelimit:admin:${ip}`;
       const attempts = await kv.incr(ratKey);
       await kv.expire(ratKey, 900);
@@ -46,7 +46,7 @@ module.exports = async (req, res) => {
         stocks: stocks || {},
         wheel: wheel || null,
         flashsale: flashsale || {},
-        shipping: shipping || { relay: 4.90, colissimo: 7.90, express: 14.90 },
+        shipping: shipping || { relay: 4.90, colissimo: 7.90, express: 14.90, freeForAll: false },
         graded: graded || null,
       });
     }
@@ -131,7 +131,7 @@ module.exports = async (req, res) => {
           relay: +relay.toFixed(2),
           colissimo: +colissimo.toFixed(2),
           express: +express.toFixed(2),
-          freeForAll: !!data?.freeForAll,
+          freeForAll: data?.freeForAll === true,
         });
         return res.status(200).json({ ok: true });
       }

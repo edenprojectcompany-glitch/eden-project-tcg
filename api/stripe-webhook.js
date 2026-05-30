@@ -57,11 +57,9 @@ async function handler(req, res) {
         items: orderItems,
       };
 
-      // Jackpot progressif : 1€ par commande alimente le pool
+      // Jackpot progressif : 1€ par commande alimente le pool (incrbyfloat = atomique)
       try {
-        const jackpotKey = 'jackpot:pool';
-        const current = (await kv.get(jackpotKey)) || 0;
-        await kv.set(jackpotKey, +(current + 1).toFixed(2));
+        await kv.incrbyfloat('jackpot:pool', 1);
       } catch {}
 
       if (email) {

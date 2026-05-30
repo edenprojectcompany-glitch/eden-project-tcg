@@ -25,13 +25,13 @@ module.exports = async (req, res) => {
       prices: prices || {},
       stocks: stocks || {},
       flashsale: flashsale || {},
-      shipping: shipping || { relay: 4.90, colissimo: 7.90, express: 14.90 },
+      shipping: shipping || { relay: 4.90, colissimo: 7.90, express: 14.90, freeForAll: false },
       graded: graded || null,
     });
   } catch {
     return res.status(200).json({
       prices: {}, stocks: {}, flashsale: {},
-      shipping: { relay: 4.90, colissimo: 7.90, express: 14.90 },
+      shipping: { relay: 4.90, colissimo: 7.90, express: 14.90, freeForAll: false },
       graded: null,
     });
   }

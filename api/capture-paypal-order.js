@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { orderId, email } = req.body || {};
+  const { orderId } = req.body || {};
   if (!orderId || typeof orderId !== 'string' || orderId.length > 64) {
     return res.status(400).json({ error: 'orderId invalide' });
   }
@@ -49,22 +49,27 @@ module.exports = async (req, res) => {
     console.log(`PayPal captured: order=${data.id} capture=${captureId} amount=${amount} ref=${ref}`);
 
     // Persistance commande + loyalty points dans KV
-    // Email : priorité au body, sinon custom_id stocké lors de la création PayPal
-    const userEmail = (email && EMAIL_RE.test(email) ? email : null)
-      || (customId && EMAIL_RE.test(customId) ? customId : null);
-
-    if (userEmail) {
-      try {
+    // Email : uniquement depuis les données KV stockées à la création (JWT-vérifié), jamais depuis le body
+    try {
         const { kv } = require('@vercel/kv');
-        const key = `user:${userEmail.toLowerCase().trim()}`;
 
         // Récupérer les données stockées à la création de l'ordre PayPal
         const pendingKey = `paypal:order:${orderId}`;
-        const [user, pendingData] = await Promise.all([kv.get(key), kv.get(pendingKey)]);
+        const pendingData = await kv.get(pendingKey);
         const orderItems = pendingData?.items || [];
         const pendingUserEmail = pendingData?.userEmail || '';
         const pendingPromoCode = pendingData?.promoCode || '';
         const pendingWonCodeIndex = pendingData?.wonCodeIndex ?? -1;
+
+        // Source de confiance : email JWT stocké à la création, fallback custom_id PayPal (lui aussi from JWT)
+        const userEmail = pendingUserEmail || (customId && EMAIL_RE.test(customId) ? customId : null);
+        if (!userEmail) {
+          console.warn(`PayPal capture ${orderId}: aucun email vérifié trouvé, commande non enregistrée`);
+          return res.status(200).json({ ok: true, orderId: data.id, captureId, amount, ref });
+        }
+
+        const key = `user:${userEmail.toLowerCase().trim()}`;
+        const user = await kv.get(key);
 
         const order = {
           ref,
@@ -86,8 +91,10 @@ module.exports = async (req, res) => {
 
           // Marquer le code comme utilisé (tous types)
           if (pendingPromoCode && user.wonCodes) {
-            const idx = pendingWonCodeIndex !== -1
-              ? pendingWonCodeIndex
+            const validIdx = pendingWonCodeIndex >= 0 && pendingWonCodeIndex < user.wonCodes.length
+              ? pendingWonCodeIndex : -1;
+            const idx = validIdx !== -1
+              ? validIdx
               : user.wonCodes.findIndex(w => w.code === pendingPromoCode && !w.used);
             if (idx !== -1 && user.wonCodes[idx]) {
               user.wonCodes[idx].used = true;
@@ -102,11 +109,9 @@ module.exports = async (req, res) => {
         // Nettoyer les données pending PayPal
         await kv.del(pendingKey).catch(() => {});
 
-        // Jackpot progressif : 1€ par commande
+        // Jackpot progressif : 1€ par commande (incrbyfloat = atomique)
         try {
-          const jackpotKey = 'jackpot:pool';
-          const current = (await kv.get(jackpotKey)) || 0;
-          await kv.set(jackpotKey, +(current + 1).toFixed(2));
+          await kv.incrbyfloat('jackpot:pool', 1);
         } catch {}
 
         // Email confirmation client
@@ -134,9 +139,8 @@ module.exports = async (req, res) => {
           }),
         });
 
-      } catch (kvErr) {
-        console.error('KV/email failed (PayPal):', kvErr.message);
-      }
+    } catch (kvErr) {
+      console.error('KV/email failed (PayPal):', kvErr.message);
     }
 
     return res.status(200).json({ ok: true, orderId: data.id, captureId, amount, ref });

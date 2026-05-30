@@ -38,8 +38,8 @@ module.exports = async (req, res) => {
 
   try {
     const { kv } = require('@vercel/kv');
-    const key = `user:${decoded.email}`;
-    const lockKey = `spin:lock:${decoded.email}`;
+    const key = `user:${decoded.email.toLowerCase().trim()}`;
+    const lockKey = `spin:lock:${decoded.email.toLowerCase().trim()}`;
 
     // Lock atomique anti race-condition (NX = set if not exists, expire 15s)
     const locked = await kv.set(lockKey, '1', { ex: 15, nx: true });

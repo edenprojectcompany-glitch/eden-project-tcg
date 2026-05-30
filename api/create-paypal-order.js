@@ -39,7 +39,8 @@ module.exports = async (req, res) => {
     // 1 seul appel KV — inclut flash sale prices + user + shipping config
     let adminPrices = {};
     let verifiedUser = null;
-    let shippingCfg = { relay: 4.90, colissimo: 7.90, express: 14.90 };
+    let shippingCfg = { relay: 4.90, colissimo: 7.90, express: 14.90, freeForAll: false };
+    let kvFailed = false;
     try {
       const { kv } = require('@vercel/kv');
       const [prices, flashsale, userFromKv, shippingFromKv] = await Promise.all([
@@ -59,7 +60,10 @@ module.exports = async (req, res) => {
           }
         }
       }
-    } catch {}
+    } catch (e) {
+      kvFailed = true;
+      console.error('[create-paypal-order] KV load failed:', e.message);
+    }
 
     // Validation livraison côté serveur (valeurs dynamiques depuis KV)
     const parsedShip = +(parseFloat(shippingCost || 0).toFixed(2));
@@ -77,7 +81,10 @@ module.exports = async (req, res) => {
 
     // ── Codes première commande (WELCOME10, WELCOME5) ──
     if (FIRST_ORDER_CODES.has(code)) {
-      const existingOrders = verifiedUser?.orders?.length || 0;
+      if (kvFailed) {
+        return res.status(503).json({ error: 'Service temporairement indisponible, réessayez dans quelques secondes' });
+      }
+      const existingOrders = Array.isArray(verifiedUser?.orders) ? verifiedUser.orders.length : 0;
       if (existingOrders > 0) {
         return res.status(403).json({ error: `Le code ${code} est réservé à votre première commande` });
       }
@@ -145,7 +152,7 @@ module.exports = async (req, res) => {
         intent: 'CAPTURE',
         purchase_units: [{
           reference_id: `EDN-${Date.now()}`,
-          custom_id: customerEmail ? customerEmail.toLowerCase().trim().slice(0, 127) : '',
+          custom_id: verifiedUserEmail.slice(0, 127),
           description: isPrizeCode
             ? `Eden Project TCG — Prix roue : ${code}`
             : 'Eden Project TCG — Commande displays Pokémon',
