@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { items, shippingCost, promoCode, customerEmail, successUrl, cancelUrl } = req.body || {};
+    const { items, shippingCost, promoCode, customerEmail, successUrl, cancelUrl, mondialRelayPoint, shippingMode } = req.body || {};
     if (!items?.length) return res.status(400).json({ error: 'Panier vide' });
     if (items.length > 50) return res.status(400).json({ error: 'Trop d\'articles' });
 
@@ -198,6 +198,8 @@ module.exports = async (req, res) => {
         source: 'eden-project-tcg',
         items_json: JSON.stringify(itemsSummary.slice(0, 8).map(i => ({ n: i.n.slice(0, 20), q: i.q, p: i.p }))).slice(0, 490),
         userEmail: verifiedUserEmail || '',
+        shippingMode: String(shippingMode || '').slice(0, 10),
+        mrPoint: mondialRelayPoint ? JSON.stringify(mondialRelayPoint).slice(0, 490) : '',
       },
       shipping_address_collection: { allowed_countries: ['FR', 'BE', 'CH', 'LU', 'MC'] },
       locale: 'fr',

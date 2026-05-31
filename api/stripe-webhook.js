@@ -82,6 +82,29 @@ async function handler(req, res) {
           await kv.set(key, user); // ← si ça lève, le catch externe retourne 500
           console.log(`Order ${order.ref} saved for ${email} (+${pts} pts loyalty)`);
         }
+
+        // ── Push dans la liste globale des commandes (dashboard admin) ──
+        try {
+          let mrPoint = null;
+          try { if (session.metadata?.mrPoint) mrPoint = JSON.parse(session.metadata.mrPoint); } catch {}
+          const globalOrders = await kv.get('orders:global') || [];
+          globalOrders.unshift({
+            ref: order.ref,
+            customerEmail: email || '',
+            customerName: customerName,
+            amount: order.amount,
+            provider: 'stripe',
+            items: orderItems,
+            shippingMode: session.metadata?.shippingMode || '',
+            mrPoint,
+            status: 'pending',
+            createdAt: order.createdAt,
+          });
+          if (globalOrders.length > 300) globalOrders.splice(300);
+          await kv.set('orders:global', globalOrders);
+        } catch (e) {
+          console.error('orders:global push failed (non-critical):', e.message);
+        }
       }
 
     } catch (err) {

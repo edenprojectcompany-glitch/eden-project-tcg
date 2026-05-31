@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { items, shippingCost, promoCode, customerEmail } = req.body || {};
+    const { items, shippingCost, promoCode, customerEmail, mondialRelayPoint, shippingMode } = req.body || {};
     if (!items?.length) return res.status(400).json({ error: 'Panier vide' });
     if (items.length > 50) return res.status(400).json({ error: 'Trop d\'articles' });
 
@@ -201,6 +201,8 @@ module.exports = async (req, res) => {
         promoCode: code,
         userEmail: verifiedUserEmail || '',
         wonCodeIndex,
+        mrPoint: mondialRelayPoint || null,
+        shippingMode: String(shippingMode || '').slice(0, 10),
       };
       await kv.set(`paypal:order:${orderData.id}`, pending, { ex: 86400 });
 

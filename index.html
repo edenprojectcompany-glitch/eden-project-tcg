@@ -837,6 +837,23 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 .admin-tab.active{background:var(--text);color:var(--obsidian)}
 .admin-content{padding:22px 28px;overflow-y:auto;flex:1}
 .admin-section{display:none}.admin-section.active{display:block}
+/* ── Admin dashboard extras ── */
+.admin-stat-card{background:var(--obsidian-3);border:1px solid var(--glass-border);border-radius:14px;padding:16px 18px}
+.asc-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px}
+.asc-val{font-size:22px;font-weight:700;color:var(--foil-4)}
+.order-status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.osb-pending{background:rgba(255,179,0,.12);color:#ffb300;border:1px solid rgba(255,179,0,.3)}
+.osb-label{background:rgba(201,168,255,.12);color:var(--foil-2);border:1px solid rgba(201,168,255,.3)}
+.osb-shipped{background:rgba(127,255,170,.12);color:var(--success);border:1px solid rgba(127,255,170,.3)}
+.order-action-btn{padding:4px 10px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);
+  color:var(--text-dim);font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s}
+.order-action-btn:hover{border-color:var(--foil-1);color:var(--foil-1)}
+.order-action-btn.active{border-color:var(--foil-4);color:var(--foil-4)}
+.admin-top-product{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:10px;background:var(--glass)}
+.atp-bar{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}
+.atp-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--foil-1),var(--foil-2))}
+.live-page-row{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;
+  border-radius:10px;background:var(--glass);font-size:13px}
 .admin-table{width:100%;border-collapse:collapse}
 .admin-table th{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);
   padding:8px 12px;border-bottom:1px solid var(--glass-border);text-align:left;font-weight:600}
@@ -1949,14 +1966,64 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
     <div id="adminContent" style="display:none;flex:1;overflow:hidden;flex-direction:column">
       <div class="admin-content">
         <div class="admin-tabs-row">
-          <button class="admin-tab active" data-atab="produits">Produits</button>
-          <button class="admin-tab" data-atab="flash">⚡ Flash Sale</button>
+          <button class="admin-tab active" data-atab="commandes">🛒 Commandes</button>
+          <button class="admin-tab" data-atab="stats">📊 Stats</button>
+          <button class="admin-tab" data-atab="live">👁️ Live</button>
+          <button class="admin-tab" data-atab="produits">Produits</button>
+          <button class="admin-tab" data-atab="flash">⚡ Flash</button>
           <button class="admin-tab" data-atab="roue">Roue</button>
           <button class="admin-tab" data-atab="livraison">🚚 Livraison</button>
           <button class="admin-tab" data-atab="gradees">🏅 Gradées</button>
         </div>
+        <!-- ══ COMMANDES ══ -->
+        <div class="admin-section active" id="atab-commandes">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-size:13px;color:var(--text-dim)">Dernières commandes · <span id="adminOrderCount">—</span></div>
+            <button class="btn-ghost" id="adminOrderRefresh" style="font-size:12px;padding:7px 14px">↻ Actualiser</button>
+          </div>
+          <div id="adminOrdersWrap" style="overflow-x:auto">
+            <table class="admin-table" id="adminOrdersTable" style="min-width:700px">
+              <thead><tr>
+                <th>Réf</th><th>Date</th><th>Client</th><th>Montant</th><th>Articles</th><th>Livraison</th><th>Statut</th>
+              </tr></thead>
+              <tbody id="adminOrdersBody">
+                <tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:20px">Chargement…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══ STATS ══ -->
+        <div class="admin-section" id="atab-stats">
+          <div id="adminStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px">
+            <div class="admin-stat-card"><div class="asc-label">CA total</div><div class="asc-val" id="statTotal">—</div></div>
+            <div class="admin-stat-card"><div class="asc-label">Aujourd'hui</div><div class="asc-val" id="statToday">—</div></div>
+            <div class="admin-stat-card"><div class="asc-label">Ce mois</div><div class="asc-val" id="statMonth">—</div></div>
+            <div class="admin-stat-card"><div class="asc-label">Commandes</div><div class="asc-val" id="statCount">—</div></div>
+            <div class="admin-stat-card"><div class="asc-label">Panier moyen</div><div class="asc-val" id="statAvg">—</div></div>
+            <div class="admin-stat-card"><div class="asc-label">En attente</div><div class="asc-val" id="statPending" style="color:var(--foil-3)">—</div></div>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">🏆 Produits les plus vendus</div>
+          <div id="adminTopProducts" style="display:flex;flex-direction:column;gap:7px"></div>
+        </div>
+
+        <!-- ══ LIVE ══ -->
+        <div class="admin-section" id="atab-live">
+          <div style="text-align:center;padding:30px 0 20px">
+            <div style="font-size:56px;font-weight:700;color:var(--foil-1);line-height:1" id="liveCount">—</div>
+            <div style="font-size:14px;color:var(--text-dim);margin-top:8px">visiteurs actifs en ce moment</div>
+            <div style="font-size:11.5px;color:var(--text-dim);margin-top:4px">(actif = vue dans les 90 dernières secondes)</div>
+          </div>
+          <div id="livePagesWrap" style="margin-top:10px;display:flex;flex-direction:column;gap:8px"></div>
+          <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
+            <button class="btn-ghost" id="liveRefreshBtn" style="font-size:12px;padding:7px 16px">↻ Actualiser</button>
+            <button class="btn-ghost" id="liveAutoRefreshBtn" style="font-size:12px;padding:7px 16px">▶ Auto (30s)</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-top:10px" id="liveLastUpdate"></div>
+        </div>
+
         <!-- Produits -->
-        <div class="admin-section active" id="atab-produits">
+        <div class="admin-section" id="atab-produits">
           <table class="admin-table" id="adminProductTable">
             <thead><tr><th>Produit</th><th>Prix base</th><th>Nouveau prix</th><th>Stock</th></tr></thead>
             <tbody id="adminProductBody"></tbody>
@@ -2443,8 +2510,19 @@ window.addEventListener('load', () => {
   function updateNavLinks(page) {
     document.querySelectorAll('.navlinks a,.mobile-menu a').forEach(a=>a.classList.toggle('active',a.dataset.page===page));
   }
+  // ── Visiteur ping (session unique par onglet) ──
+  const _visitorId=(()=>{let id=sessionStorage.getItem('eden_vid');if(!id){id=Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem('eden_vid',id);}return id;})();
+  let _currentPage='home';
+  function pingVisitor(page){
+    fetch('/api/ping',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({sessionId:_visitorId,page:page||_currentPage})}).catch(()=>{});
+  }
+  pingVisitor('home');
+  setInterval(()=>pingVisitor(_currentPage),30000);
+
   function go(page) {
     if(!PAGES.includes(page)) return;
+    _currentPage=page; pingVisitor(page);
     const cur = document.querySelector('.page.active');
     const nxt = document.getElementById('page-'+page);
     if(!nxt||cur===nxt) return;
@@ -3722,6 +3800,7 @@ window.addEventListener('load', () => {
       const headers={'Content-Type':'application/json'};
       if(authToken) headers['Authorization']='Bearer '+authToken;
       const mrPoint=selectedMRPoint?{id:selectedMRPoint.ID,nom:selectedMRPoint.Nom,adresse:selectedMRPoint.Adresse1,cp:selectedMRPoint.CP,ville:selectedMRPoint.Ville}:null;
+      const shipMode=document.querySelector('.ship-opt.selected')?.dataset.ship||'';
       const res=await fetch('/api/create-payment',{method:'POST',headers,
         body:JSON.stringify({
           items:cart.map(i=>({id:i.id,name:i.name,sub:i.sub,img:i.img,unitPrice:i.unitPrice,qty:i.qty})),
@@ -3729,6 +3808,7 @@ window.addEventListener('load', () => {
           promoCode:document.getElementById('promoInput')?.value||'',
           customerEmail:authUser?.email,
           mondialRelayPoint:mrPoint,
+          shippingMode:shipMode,
           successUrl:location.origin+'?payment=success',cancelUrl:location.origin+'?payment=cancel',
         })});
       const data=await res.json();
@@ -3763,6 +3843,7 @@ window.addEventListener('load', () => {
       const headers={'Content-Type':'application/json'};
       if(authToken) headers['Authorization']='Bearer '+authToken;
       const mrPointP=selectedMRPoint?{id:selectedMRPoint.ID,nom:selectedMRPoint.Nom,adresse:selectedMRPoint.Adresse1,cp:selectedMRPoint.CP,ville:selectedMRPoint.Ville}:null;
+      const shipModeP=document.querySelector('.ship-opt.selected')?.dataset.ship||'';
       const res=await fetch('/api/create-paypal-order',{method:'POST',headers,
         body:JSON.stringify({
           items:cart.map(i=>({id:i.id,name:i.name,unitPrice:i.unitPrice,qty:i.qty})),
@@ -3770,6 +3851,7 @@ window.addEventListener('load', () => {
           promoCode:document.getElementById('promoInput')?.value||'',
           customerEmail:authUser?.email||'',
           mondialRelayPoint:mrPointP,
+          shippingMode:shipModeP,
         })});
       const data=await res.json();
       if(data.approveUrl) location.href=data.approveUrl;
@@ -3819,6 +3901,8 @@ window.addEventListener('load', () => {
       buildAdminWheel(data.wheel||DEFAULT_WHEEL);
       buildAdminShipping(data.shipping||{relay:4.90,colissimo:7.90,express:14.90});
       buildAdminGraded(data.graded||null);
+      // Charger les commandes au déverrouillage (onglet actif par défaut)
+      setTimeout(loadAdminOrders, 200);
     }catch(err){
       msgEl.className='admin-msg err'; msgEl.textContent='Code incorrect ou serveur indisponible';
     }
@@ -3828,7 +3912,132 @@ window.addEventListener('load', () => {
     document.querySelectorAll('.admin-section').forEach(x=>x.classList.remove('active'));
     t.classList.add('active');
     document.getElementById('atab-'+t.dataset.atab)?.classList.add('active');
+    const tab=t.dataset.atab;
+    if(tab==='commandes') loadAdminOrders();
+    if(tab==='stats') loadAdminStats();
+    if(tab==='live') loadLiveVisitors();
   }));
+
+  /* ══ COMMANDES ══ */
+  let _adminOrders=[];
+  async function loadAdminOrders(){
+    const code=document.getElementById('adminCodeInput').value;
+    const tbody=document.getElementById('adminOrdersBody');
+    if(tbody) tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:20px">Chargement…</td></tr>';
+    try{
+      const res=await fetch('/api/orders',{headers:{'X-Admin-Code':code}});
+      const data=await res.json();
+      _adminOrders=data.orders||[];
+      document.getElementById('adminOrderCount').textContent=_adminOrders.length+' commande(s)';
+      renderAdminOrders();
+    }catch(e){
+      if(tbody) tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--danger);padding:20px">Erreur de chargement</td></tr>';
+    }
+  }
+  function renderAdminOrders(){
+    const tbody=document.getElementById('adminOrdersBody'); if(!tbody) return;
+    if(!_adminOrders.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:20px">Aucune commande</td></tr>';return;}
+    tbody.innerHTML=_adminOrders.map(o=>{
+      const date=new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      const items=(o.items||[]).map(i=>`${i.n||i.name||'?'} ×${i.q||i.qty||1}`).join(', ').slice(0,60)||'—';
+      const ship=o.shippingMode==='mr'?'📦 MR'+(o.mrPoint?` <span style="font-size:10px;color:var(--foil-1)">${o.mrPoint.ville||''}</span>`:''):o.shippingMode==='colissimo'?'🏠 Colissimo':o.shippingMode==='exp'?'⚡ Express':'—';
+      const badge=o.status==='shipped'?'<span class="order-status-badge osb-shipped">📦 Expédié</span>':o.status==='label_printed'?'<span class="order-status-badge osb-label">🖨️ Étiquette</span>':'<span class="order-status-badge osb-pending">⏳ En attente</span>';
+      const prov=o.provider==='paypal'?'🅿 PayPal':'💳 CB';
+      return `<tr>
+        <td><span style="font-family:monospace;font-size:12px;color:var(--foil-1)">${o.ref||'—'}</span></td>
+        <td style="font-size:11.5px;color:var(--text-dim)">${date}</td>
+        <td style="font-size:12px">${o.customerName||''}<br><span style="color:var(--text-dim);font-size:11px">${o.customerEmail||'—'}</span></td>
+        <td style="font-weight:700;color:var(--foil-4)">${parseFloat(o.amount||0).toFixed(2)} €<br><span style="font-size:10.5px;font-weight:400;color:var(--text-dim)">${prov}</span></td>
+        <td style="font-size:11.5px;color:var(--text-dim);max-width:180px;overflow:hidden;text-overflow:ellipsis">${items}</td>
+        <td style="font-size:11.5px">${ship}</td>
+        <td>
+          ${badge}
+          <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
+            <button class="order-action-btn${o.status==='pending'?' active':''}" onclick="setOrderStatus('${o.ref}','pending')">⏳</button>
+            <button class="order-action-btn${o.status==='label_printed'?' active':''}" onclick="setOrderStatus('${o.ref}','label_printed')">🖨️</button>
+            <button class="order-action-btn${o.status==='shipped'?' active':''}" onclick="setOrderStatus('${o.ref}','shipped')">📦</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  async function setOrderStatus(ref,status){
+    const code=document.getElementById('adminCodeInput').value;
+    try{
+      await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':code},
+        body:JSON.stringify({action:'update_status',ref,status})});
+      const idx=_adminOrders.findIndex(o=>o.ref===ref);
+      if(idx!==-1){_adminOrders[idx].status=status;renderAdminOrders();}
+    }catch(e){showNotif('Erreur mise à jour statut','info');}
+  }
+  document.getElementById('adminOrderRefresh')?.addEventListener('click',loadAdminOrders);
+
+  /* ══ STATS ══ */
+  function loadAdminStats(){
+    if(!_adminOrders.length){loadAdminOrders().then(computeStats);return;}
+    computeStats();
+  }
+  function computeStats(){
+    const orders=_adminOrders;
+    const now=new Date(); const todayStr=now.toISOString().slice(0,10);
+    const monthStr=now.toISOString().slice(0,7);
+    const total=orders.reduce((s,o)=>s+parseFloat(o.amount||0),0);
+    const todayCA=orders.filter(o=>o.createdAt?.slice(0,10)===todayStr).reduce((s,o)=>s+parseFloat(o.amount||0),0);
+    const monthCA=orders.filter(o=>o.createdAt?.slice(0,7)===monthStr).reduce((s,o)=>s+parseFloat(o.amount||0),0);
+    const count=orders.length;
+    const avg=count?total/count:0;
+    const pending=orders.filter(o=>o.status==='pending').length;
+    document.getElementById('statTotal').textContent=total.toFixed(2)+' €';
+    document.getElementById('statToday').textContent=todayCA.toFixed(2)+' €';
+    document.getElementById('statMonth').textContent=monthCA.toFixed(2)+' €';
+    document.getElementById('statCount').textContent=count;
+    document.getElementById('statAvg').textContent=avg.toFixed(2)+' €';
+    document.getElementById('statPending').textContent=pending;
+    // Top produits
+    const productQtys={};
+    orders.forEach(o=>(o.items||[]).forEach(i=>{const n=i.n||i.name||'?';productQtys[n]=(productQtys[n]||0)+(i.q||i.qty||1);}));
+    const sorted=Object.entries(productQtys).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    const maxQ=sorted[0]?.[1]||1;
+    const wrap=document.getElementById('adminTopProducts'); if(!wrap) return;
+    wrap.innerHTML=sorted.map(([n,q])=>`
+      <div class="admin-top-product">
+        <div style="font-size:13px;min-width:130px;color:var(--text)">${n}</div>
+        <div class="atp-bar"><div class="atp-fill" style="width:${Math.round(q/maxQ*100)}%"></div></div>
+        <div style="font-size:13px;font-weight:700;color:var(--foil-1);min-width:30px;text-align:right">${q}</div>
+      </div>`).join('');
+  }
+
+  /* ══ VISITEURS LIVE ══ */
+  let _liveAutoRefresh=null;
+  async function loadLiveVisitors(){
+    const code=document.getElementById('adminCodeInput').value;
+    try{
+      const res=await fetch('/api/ping',{headers:{'X-Admin-Code':code}});
+      const data=await res.json();
+      document.getElementById('liveCount').textContent=data.count||0;
+      const pages=data.pages||{};
+      const wrap=document.getElementById('livePagesWrap');
+      const PAGE_LABELS={home:'🏠 Accueil',catalog:'🛍️ Catalogue',case:'📦 Case',checkout:'🛒 Checkout',dashboard:'👤 Mon compte',graded:'🏅 Gradées',news:'📰 News'};
+      wrap.innerHTML=Object.entries(pages).sort((a,b)=>b[1]-a[1]).map(([p,n])=>`
+        <div class="live-page-row">
+          <span>${PAGE_LABELS[p]||p}</span>
+          <span style="font-weight:700;color:var(--foil-1)">${n} visiteur${n>1?'s':''}</span>
+        </div>`).join('');
+      document.getElementById('liveLastUpdate').textContent='Dernière maj : '+new Date().toLocaleTimeString('fr-FR');
+    }catch(e){}
+  }
+  document.getElementById('liveRefreshBtn')?.addEventListener('click',loadLiveVisitors);
+  document.getElementById('liveAutoRefreshBtn')?.addEventListener('click',function(){
+    if(_liveAutoRefresh){clearInterval(_liveAutoRefresh);_liveAutoRefresh=null;this.textContent='▶ Auto (30s)';}
+    else{_liveAutoRefresh=setInterval(loadLiveVisitors,30000);this.textContent='⏸ Stop auto';loadLiveVisitors();}
+  });
+
+  /* ══ CHARGEMENT AUTO AU DÉVERROUILLAGE ══ */
+  // Charger les commandes dès que l'admin se déverrouille
+  const _origAdminUnlock=document.getElementById('adminUnlockBtn').onclick;
+  document.getElementById('adminUnlockBtn').addEventListener('click',()=>{
+    setTimeout(()=>{if(document.getElementById('atab-commandes')?.classList.contains('active')) loadAdminOrders();},600);
+  });
   function buildAdminProducts(prices,stocks){
     const tbody=document.getElementById('adminProductBody'); if(!tbody) return;
     tbody.innerHTML=products.map(p=>`

@@ -81,6 +81,8 @@ module.exports = async (req, res) => {
       const pendingUserEmail = pendingData?.userEmail || '';
       const pendingPromoCode = pendingData?.promoCode || '';
       const pendingWonCodeIndex = pendingData?.wonCodeIndex ?? -1;
+      const pendingMrPoint = pendingData?.mrPoint || null;
+      const pendingShippingMode = pendingData?.shippingMode || '';
 
       // Source de confiance : email JWT stocké à la création, fallback custom_id PayPal (lui aussi from JWT)
       const userEmail = pendingUserEmail || (customId && EMAIL_RE.test(customId) ? customId : null);
@@ -135,6 +137,27 @@ module.exports = async (req, res) => {
 
         await kv.set(key, user);
         console.log(`PayPal order ${ref} saved for ${userEmail} (+${pts} pts loyalty)`);
+
+        // ── Push dans la liste globale des commandes (dashboard admin) ──
+        try {
+          const globalOrders = await kv.get('orders:global') || [];
+          globalOrders.unshift({
+            ref,
+            customerEmail: userEmail,
+            customerName: user?.name || '',
+            amount: order.amount,
+            provider: 'paypal',
+            items: orderItems,
+            shippingMode: pendingShippingMode,
+            mrPoint: pendingMrPoint,
+            status: 'pending',
+            createdAt: order.createdAt,
+          });
+          if (globalOrders.length > 300) globalOrders.splice(300);
+          await kv.set('orders:global', globalOrders);
+        } catch (e) {
+          console.error('orders:global push failed (non-critical):', e.message);
+        }
       }
 
       // Nettoyer les données pending PayPal
