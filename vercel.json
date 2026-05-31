@@ -3,6 +3,7 @@
   "name": "site-premium-tcg",
   "builds": [
     { "src": "index.html", "use": "@vercel/static" },
+    { "src": "admin.html", "use": "@vercel/static" },
     { "src": "image/**", "use": "@vercel/static" },
     { "src": "api/*.js", "use": "@vercel/node", "config": { "nodeVersion": "18.x" } }
   ],
@@ -10,6 +11,7 @@
     { "src": "/api/stripe-webhook", "dest": "/api/stripe-webhook.js" },
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
     { "src": "/image/(.*)", "dest": "/image/$1" },
+    { "src": "/admin", "dest": "/admin.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
