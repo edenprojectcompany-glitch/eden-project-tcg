@@ -49,14 +49,39 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:cent
   justify-content:space-between;padding:14px 36px;
   background:rgba(10,10,12,.72);backdrop-filter:blur(28px) saturate(160%);
   -webkit-backdrop-filter:blur(28px) saturate(160%);border-bottom:1px solid var(--glass-border)}
-.brand{font-family:'Fraunces',serif;font-weight:500;font-size:20px;letter-spacing:-.02em;
-  display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
-.brand .mark{width:24px;height:24px;border-radius:7px;flex-shrink:0;
+.brand{font-family:'Fraunces',serif;font-weight:600;font-size:26px;letter-spacing:-.02em;
+  display:flex;align-items:center;gap:11px;cursor:pointer;user-select:none}
+.brand .mark{width:30px;height:30px;border-radius:9px;flex-shrink:0;
   background:conic-gradient(from 180deg,var(--foil-1),var(--foil-2),var(--foil-3),var(--foil-4),var(--foil-1));
-  box-shadow:0 0 16px rgba(201,168,255,.4)}
-@keyframes glow-t{0%,78%,100%{color:var(--foil-1);text-shadow:none}84%{color:#5bc8ff;text-shadow:0 0 10px rgba(0,140,255,.9),0 0 22px rgba(0,140,255,.4)}93%{color:var(--foil-1);text-shadow:none}}
-@keyframes glow-c{0%,80%,100%{color:var(--text);text-shadow:none}86%{color:#fff;text-shadow:0 0 10px rgba(255,255,255,.95),0 0 22px rgba(255,255,255,.5)}95%{color:var(--text);text-shadow:none}}
-@keyframes glow-g{0%,82%,100%{color:var(--danger);text-shadow:none}88%{color:#ff3344;text-shadow:0 0 10px rgba(255,40,60,.9),0 0 22px rgba(255,40,60,.4)}97%{color:var(--danger);text-shadow:none}}
+  box-shadow:0 0 20px rgba(201,168,255,.5),0 0 8px rgba(127,217,255,.3);
+  animation:markSpin 12s linear infinite}
+@keyframes markSpin{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}
+
+/* "Eden Project" — sweep brillant */
+.brand-eden{
+  background:linear-gradient(90deg,
+    rgba(255,255,255,.72) 0%,
+    #fff 22%,
+    rgba(127,217,255,.95) 35%,
+    #fff 48%,
+    rgba(255,179,230,.9) 62%,
+    #fff 75%,
+    rgba(255,255,255,.72) 100%
+  );
+  background-size:250% auto;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:edenShimmer 7s ease-in-out infinite}
+@keyframes edenShimmer{
+  0%{background-position:200% center}
+  50%{background-position:-100% center}
+  100%{background-position:200% center}}
+
+/* T-C-G glow (légèrement intensifié) */
+@keyframes glow-t{0%,78%,100%{color:var(--foil-1);text-shadow:none}84%{color:#5bc8ff;text-shadow:0 0 14px rgba(0,140,255,1),0 0 30px rgba(0,140,255,.5)}93%{color:var(--foil-1);text-shadow:none}}
+@keyframes glow-c{0%,80%,100%{color:var(--text);text-shadow:none}86%{color:#fff;text-shadow:0 0 14px rgba(255,255,255,1),0 0 30px rgba(255,255,255,.6)}95%{color:var(--text);text-shadow:none}}
+@keyframes glow-g{0%,82%,100%{color:var(--danger);text-shadow:none}88%{color:#ff3344;text-shadow:0 0 14px rgba(255,40,60,1),0 0 30px rgba(255,40,60,.5)}97%{color:var(--danger);text-shadow:none}}
 .brand-tcg .t{animation:glow-t 8s ease-in-out infinite}
 .brand-tcg .c{animation:glow-c 8s ease-in-out infinite .28s}
 .brand-tcg .g{animation:glow-g 8s ease-in-out infinite .56s}
@@ -1010,7 +1035,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 <nav>
   <div class="brand" id="navBrand">
     <span class="mark"></span>
-    <span>Eden Project <span class="brand-tcg"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span></span>
+    <span><span class="brand-eden">Eden Project</span> <span class="brand-tcg"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span></span>
   </div>
   <div class="navlinks">
     <a data-page="catalog">Marketplace</a>
@@ -1933,13 +1958,13 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 <footer>
   <div class="foot-ticker">
     <div class="foot-tick-track">
-      <span>Eden Project <span class="brand-tcg"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span></span>
+      <span><span class="brand-eden">Eden Project</span> <span class="brand-tcg"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span></span>
       <span>Revendeur Pro &amp; Fournisseur</span>
       <span class="hi">Authenticité certifiée sur chaque produit</span>
       <span>Expédition depuis Brest · France</span>
       <span>22 displays en stock · Prix fournisseur</span>
       <span>Roue de la fortune · Codes promo membres</span>
-      <span>Eden Project <span class="brand-tcg"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span></span>
+      <span><span class="brand-eden">Eden Project</span> <span class="brand-tcg"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span></span>
       <span>Revendeur Pro &amp; Fournisseur</span>
       <span class="hi">Authenticité certifiée sur chaque produit</span>
       <span>Expédition depuis Brest · France</span>
@@ -1951,7 +1976,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
     <div>
       <div class="foot-brand-name">
         <span class="mark"></span>
-        Eden Project <span class="brand-tcg" style="margin-left:4px"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span>
+        <span class="brand-eden">Eden Project</span> <span class="brand-tcg" style="margin-left:4px"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span>
       </div>
       <p class="foot-desc">Marketplace dédiée aux cartes Pokémon japonaises et chinoises. Revendeur Pro &amp; Fournisseur officiel. Sélection rigoureuse, authentification garantie, expédition depuis Brest.</p>
       <div class="foot-socials">
