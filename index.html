@@ -1210,6 +1210,9 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
         onmouseover="this.style.borderColor='var(--foil-1)'" onmouseout="this.style.borderColor='var(--glass-border)'">
         Voir tous les avis →
       </a>
+      <button id="writeReviewBtn" onclick="openReviewModal()" style="display:none;padding:7px 16px;background:var(--foil-1);color:#0a0a0c;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">
+        ✏️ Laisser un avis
+      </button>
     </div>
   </div>
   <style>
@@ -1223,12 +1226,103 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   <div id="reviewsGrid"></div>
 </div>
 <script>
-(function(){
-var rv=["Parfait merci, mini tin très bien protégé merci","Au top comme toujours 🙏🏼","Très bien, envoi rapide, je recommande.","Parfait ! 👍😀","Très bien 👍🏼","Merci beaucoup pour les cartes.","Sympa, offre des cadeaux, colis bien protéger et envois rapide, nickel","Au top 👌","Un vendeur au top. Des prix corrects et un envoi rapide, c'est parfait 👍👍👍","super merci.","Topppp 👍🏻👍🏻👍🏻","Toujours de beaux items chez losttraveler, et en plus les gives sont excellents ! Merci pour le chocolat de Dubaï 😋 Suivez-le, vous serez pas déçus !","Quoi dire de plus que ce monsieur est généreux, réactif ! Envoi soigné, je recommande.","au top merci tout bien reçu 🙂👍","100% perfect !!","Merci encore pour le petit cadeau ☺️","le meilleur vendeur sur cette plate-forme clairement","Au top 👌","Parfait comme d'habitude 👍","bien reçu, au top 👍","Parfait comme d'habitude 💪","Envoi rapide et protégé c'est nickel !","Très bon vendeur arriver bien emballé","toujours au top que dire de plus bro 😈🔥","que dire du live... vendeur super sympa, envoi au top bien emballé sans risque et le petit plus cadeaux dans le colis. Merci encore, ça fait plaisir d'avoir des vendeurs avec un envoi de qualité.","Parfait comme d'habitude, emballage impeccable 👌","Je recommande 👌🏾🔥","Toujours parfait","bien reçu 😉👍 et merci encore haha 😈🔥😍","Encore parfait","réception rapide, top 👌","Parfait comme d'habitude 💪","Parfait 👍🏽","Bien emballé arrivé en très bonne état","Bien arrivé, conforme à l'achat et au give. Et encore merci pour le give !","bien emballé 👌","Parfait et bien emballé 💪","Envoi soigné, vendeur sérieux et très sympa ! Les yeux fermés ! Je recommande","parfaitement reçu, super vendeur au passage, je vous le conseille","Très bien emballé, envoi rapide et des cadeaux en supplément. Que dire de mieux, si ce n'est de foncer lui acheter quelque chose ! 🃏🤍","Parfait super rapide bien emballer","Tout est au top ! Rien à redire ! Je recommande !","envoi rapide et tres soigné, au top !","bien arrivée","tres bien","super rapide","Très bien emballé, envoi rapide.","bien reçu le colis impeccable merci","Top vendeur !","Parfait merci beaucoup !","Top 👍","Merci, tout est arrivé en bon état dans les délais et les petits plus pour les enfants de mon immeuble ont bien été reçus. Enormément d'heureux ! À bientôt sur le live 😊","Top !","Parfait","Vendeur au top ! Livraison rapide et très soignée, merci beaucoup 🤩","envoie rapidement merci beaucoup","Livraison rapide et personne sérieuse","Parfait, vendeur sérieux","Bien reçu, rien à dire, à part merci","Super vendeur agréable, gentil et surtout rapide et efficace, je recommande fortement !!","Parfait 👍","Bien reçu","Parfait !","Parfait","au top 👍👍","très bien arrivé merci","Bien reçu impeccable","Tout parfait ! Carte en état parfait et envoi rapide.","bien reçu merci","encore un super moment et tout bien reçu níquel","bien receptionné, rapide et efficace, je recommande. merci","Colis bien réceptionné et très bien emballé.","tout bien reçu níquel super n'hésitez pas, je conseille fortement","Bien reçu Nikel comme d'habitude","Top merci 🙏","articles bien reçu vendeur très sérieux a recommander","Parfait, le boss 🏴‍☠️🫶🏼","bien emballé 👍","Bien reçu merci, le live était super même si j'ai rien drop mdr, c'était sympas, force à toi","Rapide et bien soigné je recommande"];
-var g=document.getElementById('reviewsGrid');
-if(g)g.innerHTML=rv.map(function(r){return'<div class="rv-card"><div class="rv-stars">★★★★★</div><div class="rv-text">« '+r+' »</div></div>';}).join('');
-})();
+// ══ AVIS WHATNOT (source Whatnot) ══
+var WHATNOT_REVIEWS=[
+  {n:"Soleil",t:"Parfait merci, mini tin très bien protégé merci"},{n:"Adcrypto",t:"Au top comme toujours 🙏🏼"},
+  {n:"Coxibiloute",t:"Très bien, envoi rapide, je recommande."},{n:"Tokairo",t:"Parfait ! 👍😀"},
+  {n:"Veryblue",t:"Très bien 👍🏼"},{n:"Phethsaksith",t:"Merci beaucoup pour les cartes."},
+  {n:"Dragonxdragon",t:"Sympa, offre des cadeaux, colis bien protéger et envois rapide, nickel"},
+  {n:"Jambedacier",t:"Au top 👌"},{n:"Totor18",t:"Un vendeur au top. Des prix corrects et un envoi rapide, c'est parfait 👍👍👍"},
+  {n:"Cpasdeslol97",t:"super merci."},{n:"Underc0ver",t:"Topppp 👍🏻👍🏻👍🏻"},
+  {n:"Outclazz",t:"Toujours de beaux items, et en plus les gives sont excellents ! Merci pour le chocolat de Dubaï 😋"},
+  {n:"Bozor",t:"Quoi dire de plus que ce monsieur est généreux, réactif ! Envoi soigné, je recommande."},
+  {n:"Rouxstephane",t:"au top merci tout bien reçu 🙂👍"},{n:"Legouloum",t:"100% perfect !!"},
+  {n:"Mehdidefer",t:"Merci encore pour le petit cadeau ☺️"},{n:"Shady_tcg",t:"le meilleur vendeur sur cette plate-forme clairement"},
+  {n:"Turty123",t:"Au top 👌"},{n:"Legouloum",t:"Parfait comme d'habitude 👍"},
+  {n:"Ced68",t:"bien reçu, au top 👍"},{n:"Legouloum",t:"Parfait comme d'habitude 💪"},
+  {n:"Jiian",t:"Envoi rapide et protégé c'est nickel !"},{n:"Tiago007",t:"Très bon vendeur arriver bien emballé"},
+  {n:"Ghostnoctocr7",t:"toujours au top que dire de plus bro 😈🔥"},
+  {n:"Jelsfamily",t:"Vendeur super sympa, envoi au top bien emballé sans risque et le petit plus cadeaux dans le colis. Merci encore !"},
+  {n:"Legouloum",t:"Parfait comme d'habitude, emballage impeccable 👌"},{n:"Pokejuice",t:"Je recommande 👌🏾🔥"},
+  {n:"Legouloum",t:"Toujours parfait"},{n:"Ghostnoctocr7",t:"bien reçu 😉👍 et merci encore 😈🔥😍"},
+  {n:"Legouloum",t:"Encore parfait"},{n:"Vat_",t:"réception rapide, top 👌"},
+  {n:"Mrmedave",t:"Parfait 👍🏽"},{n:"Joeyjou27366",t:"Bien emballé arrivé en très bonne état"},
+  {n:"Megaevolu",t:"Bien arrivé, conforme à l'achat. Et encore merci pour le give !"},{n:"Krocodeal",t:"bien emballé 👌"},
+  {n:"Legouloum",t:"Parfait et bien emballé 💪"},
+  {n:"Prestigeluxuryfr",t:"Envoi soigné, vendeur sérieux et très sympa ! Les yeux fermés ! Je recommande"},
+  {n:"Ghostnoctocr7",t:"Parfaitement reçu, super vendeur au passage, je vous le conseille"},
+  {n:"Rakwa",t:"Très bien emballé, envoi rapide et des cadeaux en supplément. Que dire de mieux ! 🃏🤍"},
+  {n:"Lagrey",t:"Parfait super rapide bien emballer"},{n:"Leoestunjedi",t:"Tout est au top ! Rien à redire ! Je recommande !"},
+  {n:"Totold",t:"envoi rapide et tres soigné, au top !"},{n:"Lafeetus",t:"bien arrivée"},
+  {n:"Miouss3",t:"tres bien"},{n:"Terryyxo",t:"super rapide"},
+  {n:"Shiki_hope",t:"Très bien emballé, envoi rapide."},{n:"Nico76600",t:"bien reçu le colis impeccable merci"},
+  {n:"Kampel57",t:"Top vendeur !"},{n:"Nekko234",t:"Parfait merci beaucoup !"},
+  {n:"Illuminatoss",t:"Top 👍"},
+  {n:"Denzel75",t:"Merci, tout est arrivé en bon état dans les délais et les petits plus ont bien été reçus. À bientôt ! 😊"},
+  {n:"Kirliaa",t:"Top !"},{n:"Mael35831",t:"Parfait"},
+  {n:"Boyka9",t:"Vendeur au top ! Livraison rapide et très soignée, merci beaucoup 🤩"},
+  {n:"Lionel2510",t:"envoie rapidement merci beaucoup"},{n:"Vapeurdu37",t:"Livraison rapide et personne sérieuse"},
+  {n:"Faragas13",t:"Parfait, vendeur sérieux"},{n:"Aura0302",t:"Bien reçu, rien à dire, à part merci"},
+  {n:"Looterpro",t:"Super vendeur agréable, gentil et surtout rapide et efficace, je recommande fortement !!"},
+  {n:"Spider76",t:"Parfait 👍"},{n:"Alex37ale",t:"Bien reçu"},{n:"Kikipizi",t:"Parfait !"},
+  {n:"Luzzx",t:"Parfait"},{n:"Sebfic",t:"au top 👍👍"},{n:"Beuky",t:"très bien arrivé merci"},
+  {n:"Bxst",t:"Bien reçu impeccable"},{n:"Onepiecetcglovers",t:"Tout parfait ! Carte en état parfait et envoi rapide."},
+  {n:"Beuky",t:"bien reçu merci"},{n:"Blackfridayspetial",t:"encore un super moment et tout bien reçu níquel"},
+  {n:"Kazei",t:"bien receptionné, rapide et efficace, je recommande. merci"},
+  {n:"Daileneram",t:"Colis bien réceptionné et très bien emballé."},
+  {n:"Blackfridayspetial",t:"tout bien reçu níquel super n'hésitez pas, je conseille fortement"},
+  {n:"Blavondseb",t:"Bien reçu Nikel comme d'habitude"},{n:"Kevron7",t:"Top merci 🙏"},
+  {n:"Rabouin92",t:"articles bien reçu vendeur très sérieux a recommander"},
+  {n:"Carryced",t:"Parfait, le boss 🏴‍☠️🫶🏼"},{n:"Pokemoula_",t:"bien emballé 👍"},
+  {n:"Blavondseb",t:"Bien reçu merci, le live était super, force à toi"},{n:"Laskyz94",t:"Rapide et bien soigné je recommande"}
+];
+
+function renderReviewCard(r,source){
+  var stars='★'.repeat(r.rating||5)+'☆'.repeat(5-(r.rating||5));
+  var badge=source==='site'?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(127,217,255,.15);color:var(--foil-1);margin-left:6px">✓ Achat vérifié</span>':'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.06);color:var(--dim);margin-left:6px">Whatnot</span>';
+  return '<div class="rv-card"><div class="rv-stars" style="color:#fbbf24;font-size:13px;margin-bottom:6px">'+stars+'</div>'
+    +'<div class="rv-text" style="font-size:13px;line-height:1.6;color:var(--text-dim);margin-bottom:10px">« '+(r.t||r.text)+' »</div>'
+    +'<div style="font-size:12px;font-weight:600;color:var(--text)">'+(r.n||r.name)+badge+'</div></div>';
+}
+
+async function loadAndRenderReviews(){
+  var g=document.getElementById('reviewsGrid'); if(!g) return;
+  var siteReviews=[];
+  try{var rr=await fetch('/api/review');var dd=await rr.json();siteReviews=dd.reviews||[];}catch(e){}
+  var allCards=siteReviews.map(function(r){return renderReviewCard(r,'site');})
+    .concat(WHATNOT_REVIEWS.map(function(r){return renderReviewCard(r,'whatnot');}));
+  g.innerHTML=allCards.join('');
+}
+loadAndRenderReviews();
 </script>
+
+<!-- Modal laisser un avis -->
+<div id="reviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);z-index:500;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--obsidian-2);border:1px solid var(--glass-border);border-radius:24px;padding:36px;width:100%;max-width:460px;position:relative">
+    <button onclick="document.getElementById('reviewModal').style.display='none'" style="position:absolute;top:16px;right:16px;background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:20px">✕</button>
+    <h3 style="font-family:'Fraunces',serif;font-size:22px;font-weight:500;margin-bottom:6px">Laisser un avis</h3>
+    <p style="font-size:13px;color:var(--dim);margin-bottom:24px">Votre avis sera visible après validation.</p>
+    <div style="margin-bottom:18px">
+      <div style="font-size:13px;color:var(--dim);margin-bottom:8px">Note</div>
+      <div id="starPicker" style="display:flex;gap:8px">
+        <span class="star-pick" data-v="1" style="font-size:28px;cursor:pointer;color:#fbbf24">★</span>
+        <span class="star-pick" data-v="2" style="font-size:28px;cursor:pointer;color:#fbbf24">★</span>
+        <span class="star-pick" data-v="3" style="font-size:28px;cursor:pointer;color:#fbbf24">★</span>
+        <span class="star-pick" data-v="4" style="font-size:28px;cursor:pointer;color:#fbbf24">★</span>
+        <span class="star-pick" data-v="5" style="font-size:28px;cursor:pointer;color:#fbbf24">★</span>
+      </div>
+      <input type="hidden" id="reviewRating" value="5">
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;color:var(--dim);margin-bottom:8px">Votre commentaire</div>
+      <textarea id="reviewText" placeholder="Partagez votre expérience..." maxlength="500"
+        style="width:100%;height:110px;padding:12px 14px;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;color:var(--text);font-family:inherit;font-size:13.5px;resize:none;outline:none"></textarea>
+      <div style="font-size:11px;color:var(--dim);text-align:right;margin-top:4px"><span id="reviewCharCount">0</span>/500</div>
+    </div>
+    <button id="submitReviewBtn" class="btn-primary" style="width:100%">Envoyer mon avis</button>
+    <div id="reviewFormMsg" style="margin-top:12px;font-size:13px;text-align:center;display:none"></div>
+  </div>
+</div>
 
 <!-- ══ CATALOG ══ -->
 <div class="page" id="page-catalog">
@@ -3070,16 +3164,17 @@ window.addEventListener('load', () => {
   function loadAuth(){
     try{authToken=localStorage.getItem('edn_token');authUser=JSON.parse(localStorage.getItem('edn_user')||'null');}catch{}
     if(authUser) updateAuthUI();
+    updateReviewBtn();
   }
   function saveAuth(user,token){
     authUser=user;authToken=token;
     localStorage.setItem('edn_token',token);localStorage.setItem('edn_user',JSON.stringify(user));
-    updateAuthUI();
+    updateAuthUI(); updateReviewBtn();
   }
   function clearAuth(){
     authUser=null;authToken=null;
     localStorage.removeItem('edn_token');localStorage.removeItem('edn_user');
-    updateAuthUI();
+    updateAuthUI(); updateReviewBtn();
   }
   function updateAuthUI(){
     const btn=document.getElementById('authBtn');
@@ -4409,6 +4504,50 @@ window.addEventListener('load', () => {
     if(heroCard) gsap.to(heroCard,{y:-10,repeat:-1,yoyo:true,duration:3,ease:'sine.inOut'});
   }
 }); /* end window.load */
+
+/* ══ SYSTÈME D'AVIS ══ */
+function openReviewModal(){
+  document.getElementById('reviewModal').style.display='flex';
+}
+// Afficher le bouton "Laisser un avis" si connecté + a commandé
+function updateReviewBtn(){
+  const btn=document.getElementById('writeReviewBtn'); if(!btn) return;
+  if(authUser&&(authUser.orders||[]).length>0) btn.style.display='inline-flex';
+  else btn.style.display='none';
+}
+// Sélecteur d'étoiles
+let _reviewRating=5;
+document.querySelectorAll('.star-pick').forEach(s=>s.addEventListener('click',()=>{
+  _reviewRating=parseInt(s.dataset.v);
+  document.getElementById('reviewRating').value=_reviewRating;
+  document.querySelectorAll('.star-pick').forEach(x=>{
+    x.style.color=parseInt(x.dataset.v)<=_reviewRating?'#fbbf24':'rgba(255,255,255,.2)';
+  });
+}));
+document.getElementById('reviewText')?.addEventListener('input',function(){
+  document.getElementById('reviewCharCount').textContent=this.value.length;
+});
+document.getElementById('submitReviewBtn')?.addEventListener('click',async()=>{
+  const btn=document.getElementById('submitReviewBtn');
+  const msg=document.getElementById('reviewFormMsg');
+  const text=document.getElementById('reviewText').value.trim();
+  if(text.length<5){msg.style.display='block';msg.style.color='var(--danger)';msg.textContent='Votre commentaire est trop court.';return;}
+  btn.textContent='Envoi…'; btn.disabled=true;
+  try{
+    const res=await fetch('/api/review',{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+      body:JSON.stringify({rating:_reviewRating,text})});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Erreur');
+    msg.style.display='block'; msg.style.color='var(--success)';
+    msg.textContent='✅ Avis soumis ! Il sera visible après validation.';
+    document.getElementById('reviewText').value='';
+    btn.style.display='none';
+  }catch(err){
+    msg.style.display='block'; msg.style.color='var(--danger)'; msg.textContent=err.message;
+    btn.textContent='Envoyer mon avis'; btn.disabled=false;
+  }
+});
 </script>
 <!-- ══ MONDIAL RELAY WIDGET SCRIPTS ══ -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>

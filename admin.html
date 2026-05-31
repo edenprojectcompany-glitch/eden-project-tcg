@@ -145,6 +145,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
 
   <div class="app-nav">
     <button class="nav-tab active" data-tab="commandes">🛒 Commandes</button>
+    <button class="nav-tab" data-tab="avis">⭐ Avis</button>
     <button class="nav-tab" data-tab="stats">📊 Stats</button>
     <button class="nav-tab" data-tab="live">👁️ Live</button>
     <button class="nav-tab" data-tab="produits">🏷️ Produits</button>
@@ -201,6 +202,17 @@ tr:hover td{background:rgba(255,255,255,.015)}
         <button class="btn-sm" id="autoLiveBtn">▶ Auto (30s)</button>
       </div>
       <div class="live-last" id="liveLastUpdate"></div>
+    </div>
+
+    <!-- AVIS -->
+    <div class="tab" id="tab-avis">
+      <div class="sec-head">
+        <div class="sec-title">Avis clients <span class="sec-meta" id="avisMeta"></span></div>
+        <button class="btn-sm" id="refreshAvisBtn">↻ Actualiser</button>
+      </div>
+      <div id="avisWrap" style="display:flex;flex-direction:column;gap:12px">
+        <div style="color:var(--dim);font-size:13px">Chargement…</div>
+      </div>
     </div>
 
     <!-- PRODUITS -->
@@ -326,6 +338,7 @@ document.querySelectorAll('.nav-tab').forEach(t=>t.addEventListener('click',()=>
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');
   document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+  if(t.dataset.tab==='avis') loadAvis();
   if(t.dataset.tab==='commandes') loadOrders();
   if(t.dataset.tab==='stats') computeStats();
   if(t.dataset.tab==='live') loadLive();
@@ -438,6 +451,56 @@ document.getElementById('autoLiveBtn').addEventListener('click',function(){
   if(_liveTimer){clearInterval(_liveTimer);_liveTimer=null;this.textContent='▶ Auto (30s)';}
   else{_liveTimer=setInterval(loadLive,30000);this.textContent='⏸ Stop auto';loadLive();}
 });
+
+/* ══ AVIS ══ */
+async function loadAvis(){
+  const wrap=document.getElementById('avisWrap');
+  if(wrap) wrap.innerHTML='<div style="color:var(--dim);font-size:13px">Chargement…</div>';
+  try{
+    const r=await fetch('/api/review',{headers:{'X-Admin-Code':_code}});
+    const d=await r.json();
+    const reviews=d.reviews||[];
+    const pending=reviews.filter(rv=>rv.status==='pending');
+    const approved=reviews.filter(rv=>rv.status==='approved');
+    const rejected=reviews.filter(rv=>rv.status==='rejected');
+    document.getElementById('avisMeta').textContent=`· ${pending.length} en attente · ${approved.length} approuvés`;
+    if(!reviews.length){wrap.innerHTML='<div style="color:var(--dim);font-size:13px">Aucun avis soumis pour l\'instant.</div>';return;}
+    const order=['pending','approved','rejected'];
+    const sorted=[...reviews].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status));
+    wrap.innerHTML=sorted.map(rv=>{
+      const statusColor=rv.status==='approved'?'var(--success)':rv.status==='pending'?'var(--warn)':'var(--danger)';
+      const statusLabel=rv.status==='approved'?'✅ Approuvé':rv.status==='pending'?'⏳ En attente':'❌ Rejeté';
+      const stars='★'.repeat(rv.rating)+'☆'.repeat(5-rv.rating);
+      return `<div style="background:var(--bg2);border:1px solid var(--gb);border-radius:14px;padding:16px 18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <div>
+            <span style="font-weight:700;font-size:14px">${rv.name||'?'}</span>
+            <span style="font-size:11px;color:var(--dim);margin-left:8px">${rv.email||''}</span>
+            <span style="color:#fbbf24;margin-left:8px;font-size:13px">${stars}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:${statusColor}">${statusLabel}</span>
+            <span style="font-size:11px;color:var(--dim)">${new Date(rv.createdAt).toLocaleDateString('fr-FR')}</span>
+          </div>
+        </div>
+        <div style="font-size:13.5px;color:var(--text-dim);margin-bottom:12px;line-height:1.6">« ${rv.text} »</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${rv.status!=='approved'?`<button class="abtn" onclick="modAvis('${rv.id}','approve')" style="color:var(--success);border-color:var(--success)">✅ Approuver</button>`:''}
+          ${rv.status!=='rejected'?`<button class="abtn" onclick="modAvis('${rv.id}','reject')" style="color:var(--danger);border-color:var(--danger)">❌ Rejeter</button>`:''}
+          <button class="abtn" onclick="modAvis('${rv.id}','delete')" style="color:var(--dim)">🗑 Supprimer</button>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){wrap.innerHTML='<div style="color:var(--danger);font-size:13px">Erreur chargement</div>';}
+}
+async function modAvis(id,action){
+  try{
+    await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action,id})});
+    loadAvis();
+    toast(action==='approve'?'✅ Avis approuvé':action==='reject'?'Avis rejeté':'Avis supprimé');
+  }catch(e){toast('Erreur','err');}
+}
+document.getElementById('refreshAvisBtn')?.addEventListener('click',loadAvis);
 
 /* ── Live header ── */
 function startLiveHeader(){
