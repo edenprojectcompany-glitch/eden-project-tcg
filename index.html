@@ -1984,136 +1984,6 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   </div>
 </div>
 
-<!-- ADMIN MODAL -->
-<div class="admin-overlay" id="adminOverlay">
-  <div class="admin-panel">
-    <div class="admin-head">
-      <h3>🔐 Panneau Admin</h3>
-      <button class="admin-close" id="adminClose">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <!-- Verrou -->
-    <div class="admin-lock" id="adminLock">
-      <p>Entrez le code administrateur pour accéder au panneau de gestion.</p>
-      <div class="field"><input type="password" id="adminCodeInput" placeholder=" "><label for="adminCodeInput">Code admin</label></div>
-      <button class="btn-primary" id="adminUnlockBtn" style="width:200px">Déverrouiller</button>
-      <div class="admin-msg" id="adminLockMsg"></div>
-    </div>
-    <!-- Contenu admin -->
-    <div id="adminContent" style="display:none;flex:1;overflow:hidden;flex-direction:column">
-      <div class="admin-content">
-        <div class="admin-tabs-row">
-          <button class="admin-tab active" data-atab="commandes">🛒 Commandes</button>
-          <button class="admin-tab" data-atab="stats">📊 Stats</button>
-          <button class="admin-tab" data-atab="live">👁️ Live</button>
-          <button class="admin-tab" data-atab="produits">Produits</button>
-          <button class="admin-tab" data-atab="flash">⚡ Flash</button>
-          <button class="admin-tab" data-atab="roue">Roue</button>
-          <button class="admin-tab" data-atab="livraison">🚚 Livraison</button>
-          <button class="admin-tab" data-atab="gradees">🏅 Gradées</button>
-        </div>
-        <!-- ══ COMMANDES ══ -->
-        <div class="admin-section active" id="atab-commandes">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-            <div style="font-size:13px;color:var(--text-dim)">Dernières commandes · <span id="adminOrderCount">—</span></div>
-            <button class="btn-ghost" id="adminOrderRefresh" style="font-size:12px;padding:7px 14px">↻ Actualiser</button>
-          </div>
-          <div id="adminOrdersWrap" style="overflow-x:auto">
-            <table class="admin-table" id="adminOrdersTable" style="min-width:700px">
-              <thead><tr>
-                <th>Réf</th><th>Date</th><th>Client</th><th>Montant</th><th>Articles</th><th>Livraison</th><th>Statut</th>
-              </tr></thead>
-              <tbody id="adminOrdersBody">
-                <tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:20px">Chargement…</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- ══ STATS ══ -->
-        <div class="admin-section" id="atab-stats">
-          <div id="adminStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px">
-            <div class="admin-stat-card"><div class="asc-label">CA total</div><div class="asc-val" id="statTotal">—</div></div>
-            <div class="admin-stat-card"><div class="asc-label">Aujourd'hui</div><div class="asc-val" id="statToday">—</div></div>
-            <div class="admin-stat-card"><div class="asc-label">Ce mois</div><div class="asc-val" id="statMonth">—</div></div>
-            <div class="admin-stat-card"><div class="asc-label">Commandes</div><div class="asc-val" id="statCount">—</div></div>
-            <div class="admin-stat-card"><div class="asc-label">Panier moyen</div><div class="asc-val" id="statAvg">—</div></div>
-            <div class="admin-stat-card"><div class="asc-label">En attente</div><div class="asc-val" id="statPending" style="color:var(--foil-3)">—</div></div>
-          </div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">🏆 Produits les plus vendus</div>
-          <div id="adminTopProducts" style="display:flex;flex-direction:column;gap:7px"></div>
-        </div>
-
-        <!-- ══ LIVE ══ -->
-        <div class="admin-section" id="atab-live">
-          <div style="text-align:center;padding:30px 0 20px">
-            <div style="font-size:56px;font-weight:700;color:var(--foil-1);line-height:1" id="liveCount">—</div>
-            <div style="font-size:14px;color:var(--text-dim);margin-top:8px">visiteurs actifs en ce moment</div>
-            <div style="font-size:11.5px;color:var(--text-dim);margin-top:4px">(actif = vue dans les 90 dernières secondes)</div>
-          </div>
-          <div id="livePagesWrap" style="margin-top:10px;display:flex;flex-direction:column;gap:8px"></div>
-          <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
-            <button class="btn-ghost" id="liveRefreshBtn" style="font-size:12px;padding:7px 16px">↻ Actualiser</button>
-            <button class="btn-ghost" id="liveAutoRefreshBtn" style="font-size:12px;padding:7px 16px">▶ Auto (30s)</button>
-          </div>
-          <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-top:10px" id="liveLastUpdate"></div>
-        </div>
-
-        <!-- Produits -->
-        <div class="admin-section" id="atab-produits">
-          <table class="admin-table" id="adminProductTable">
-            <thead><tr><th>Produit</th><th>Prix base</th><th>Nouveau prix</th><th>Stock</th></tr></thead>
-            <tbody id="adminProductBody"></tbody>
-          </table>
-          <button class="btn-primary admin-save" id="adminSavePrices">💾 Enregistrer les prix &amp; stocks</button>
-          <div class="admin-msg" id="adminPriceMsg"></div>
-        </div>
-        <!-- Flash Sale -->
-        <div class="admin-section" id="atab-flash">
-          <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:16px">Activez une flash sale sur un produit : badge ⚡ FLASH + timer sur la fiche. Le prix flash remplace le prix normal côté serveur pendant la durée définie.</p>
-          <div id="adminFlashRows" style="display:flex;flex-direction:column;gap:10px"></div>
-          <button class="btn-primary admin-save" id="adminSaveFlash">💾 Enregistrer les flash sales</button>
-          <div class="admin-msg" id="adminFlashMsg"></div>
-        </div>
-        <!-- Roue -->
-        <div class="admin-section" id="atab-roue">
-          <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:16px">Les probabilités doivent totaliser exactement 100%.</p>
-          <div id="adminWheelRows"></div>
-          <button class="btn-primary admin-save" id="adminSaveWheel">💾 Enregistrer la roue</button>
-          <div class="admin-msg" id="adminWheelMsg"></div>
-        </div>
-        <!-- Livraison -->
-        <div class="admin-section" id="atab-livraison">
-          <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:20px">Modifiez les tarifs affichés au checkout. Les modifications sont validées côté serveur à chaque commande.</p>
-          <!-- Toggle livraison offerte globale -->
-          <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:rgba(168,255,212,.07);border:1px solid rgba(168,255,212,.2);margin-bottom:20px">
-            <input type="checkbox" id="shipFreeAll" style="width:18px;height:18px;cursor:pointer;accent-color:var(--foil-4)">
-            <div>
-              <div style="font-size:13.5px;font-weight:600;color:var(--foil-4)">🎁 Livraison offerte pour tous</div>
-              <div style="font-size:11.5px;color:var(--text-dim);margin-top:2px">Active la livraison gratuite pour tous les clients sans code promo. Les tarifs ci-dessous restent utilisés en interne.</div>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:14px;max-width:360px">
-            <div class="field"><input type="number" id="shipAdminRelay" step="0.01" min="0" max="100" placeholder=" "><label>📦 Mondial Relay · Point relais (€)</label></div>
-            <div class="field"><input type="number" id="shipAdminColissimo" step="0.01" min="0" max="100" placeholder=" "><label>📬 Colissimo domicile (€)</label></div>
-            <div class="field"><input type="number" id="shipAdminExpress" step="0.01" min="0" max="100" placeholder=" "><label>⚡ Express sécurisé (€)</label></div>
-          </div>
-          <button class="btn-primary admin-save" id="adminSaveShipping" style="margin-top:20px">💾 Enregistrer les tarifs</button>
-          <div class="admin-msg" id="adminShippingMsg"></div>
-        </div>
-        <!-- Gradées -->
-        <div class="admin-section" id="atab-gradees">
-          <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:20px">4 cartes affichées sur la page Gradées. Cochez "Disponible" pour retirer le badge "Bientôt disponible".</p>
-          <div id="adminGradedRows" style="display:flex;flex-direction:column;gap:20px"></div>
-          <button class="btn-primary admin-save" id="adminSaveGraded" style="margin-top:20px">💾 Enregistrer les gradées</button>
-          <div class="admin-msg" id="adminGradedMsg"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- SCROLL TO TOP -->
 <button class="scroll-top" id="scrollTop" aria-label="Haut de page">
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
@@ -3912,8 +3782,8 @@ window.addEventListener('load', () => {
 
   /* ══ ADMIN PANEL ══ */
   let adminUnlocked=false;
-  function openAdmin(){document.getElementById('adminOverlay').classList.add('open');}
-  function closeAdmin(){document.getElementById('adminOverlay').classList.remove('open');}
+  function openAdmin(){window.open('/admin','_blank');}
+  function closeAdmin(){}
   document.getElementById('adminClose').onclick=closeAdmin;
   document.getElementById('adminOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('adminOverlay'))closeAdmin();});
   document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openAdmin();}});

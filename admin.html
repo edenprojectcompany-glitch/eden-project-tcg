@@ -145,8 +145,13 @@ tr:hover td{background:rgba(255,255,255,.015)}
 
   <div class="app-nav">
     <button class="nav-tab active" data-tab="commandes">🛒 Commandes</button>
-    <button class="nav-tab" data-tab="stats">📊 Statistiques</button>
+    <button class="nav-tab" data-tab="stats">📊 Stats</button>
     <button class="nav-tab" data-tab="live">👁️ Live</button>
+    <button class="nav-tab" data-tab="produits">🏷️ Produits</button>
+    <button class="nav-tab" data-tab="flash">⚡ Flash</button>
+    <button class="nav-tab" data-tab="roue">🎡 Roue</button>
+    <button class="nav-tab" data-tab="livraison">🚚 Livraison</button>
+    <button class="nav-tab" data-tab="gradees">🏅 Gradées</button>
   </div>
 
   <div class="app-body">
@@ -198,6 +203,61 @@ tr:hover td{background:rgba(255,255,255,.015)}
       <div class="live-last" id="liveLastUpdate"></div>
     </div>
 
+    <!-- PRODUITS -->
+    <div class="tab" id="tab-produits">
+      <div class="sec-head"><div class="sec-title">Prix &amp; Stocks</div></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Produit</th><th>Prix base</th><th>Nouveau prix (€)</th><th>Stock</th></tr></thead>
+        <tbody id="prodBody"></tbody></table>
+      </div>
+      <button class="btn-sm" id="savePricesBtn" style="margin-top:16px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer prix &amp; stocks</button>
+      <div id="priceMsg" style="margin-top:10px;font-size:12.5px"></div>
+    </div>
+
+    <!-- FLASH SALE -->
+    <div class="tab" id="tab-flash">
+      <div class="sec-head"><div class="sec-title">⚡ Flash Sales</div></div>
+      <p style="font-size:12.5px;color:var(--dim);margin-bottom:16px">Activez une promotion temporaire sur un produit. Le prix flash remplace le prix normal côté serveur pendant la durée définie.</p>
+      <div id="flashRows" style="display:flex;flex-direction:column;gap:10px"></div>
+      <button class="btn-sm" id="saveFlashBtn" style="margin-top:16px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer les flash sales</button>
+      <div id="flashMsg" style="margin-top:10px;font-size:12.5px"></div>
+    </div>
+
+    <!-- ROUE -->
+    <div class="tab" id="tab-roue">
+      <div class="sec-head"><div class="sec-title">🎡 Roue de la fortune</div></div>
+      <p style="font-size:12.5px;color:var(--dim);margin-bottom:16px">Les probabilités doivent totaliser exactement 100%.</p>
+      <div id="wheelRows" style="display:flex;flex-direction:column;gap:10px"></div>
+      <button class="btn-sm" id="saveWheelBtn" style="margin-top:16px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer la roue</button>
+      <div id="wheelMsg" style="margin-top:10px;font-size:12.5px"></div>
+    </div>
+
+    <!-- LIVRAISON -->
+    <div class="tab" id="tab-livraison">
+      <div class="sec-head"><div class="sec-title">🚚 Tarifs livraison</div></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:rgba(168,255,212,.07);border:1px solid rgba(168,255,212,.2);margin-bottom:20px">
+        <input type="checkbox" id="shipFreeAll" style="width:18px;height:18px;cursor:pointer;accent-color:var(--c4)">
+        <div><div style="font-size:13.5px;font-weight:600;color:var(--c4)">🎁 Livraison offerte pour tous</div>
+        <div style="font-size:11.5px;color:var(--dim);margin-top:2px">Livraison gratuite pour tous les clients sans code promo.</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;max-width:320px">
+        <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">📦 Mondial Relay · Point relais (€)</label><input type="number" id="shipRelay" step="0.01" min="0" max="100" style="width:100%;padding:10px 14px;background:var(--glass);border:1px solid var(--gb);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none"></div>
+        <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">📬 Colissimo domicile (€)</label><input type="number" id="shipColissimo" step="0.01" min="0" max="100" style="width:100%;padding:10px 14px;background:var(--glass);border:1px solid var(--gb);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none"></div>
+        <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">⚡ Express sécurisé (€)</label><input type="number" id="shipExpress" step="0.01" min="0" max="100" style="width:100%;padding:10px 14px;background:var(--glass);border:1px solid var(--gb);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none"></div>
+      </div>
+      <button class="btn-sm" id="saveShipBtn" style="margin-top:20px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer les tarifs</button>
+      <div id="shipMsg" style="margin-top:10px;font-size:12.5px"></div>
+    </div>
+
+    <!-- GRADÉES -->
+    <div class="tab" id="tab-gradees">
+      <div class="sec-head"><div class="sec-title">🏅 Cartes Gradées</div></div>
+      <p style="font-size:12.5px;color:var(--dim);margin-bottom:20px">4 cartes affichées sur la page Gradées. Cochez "Disponible" pour retirer le badge "Bientôt disponible".</p>
+      <div id="gradedRows" style="display:flex;flex-direction:column;gap:16px"></div>
+      <button class="btn-sm" id="saveGradedBtn" style="margin-top:20px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer les gradées</button>
+      <div id="gradedMsg" style="margin-top:10px;font-size:12.5px"></div>
+    </div>
+
   </div>
 </div>
 
@@ -205,7 +265,22 @@ tr:hover td{background:rgba(255,255,255,.015)}
 
 <script>
 const PAGE_LABELS={home:'🏠 Accueil',catalog:'🛍️ Catalogue',case:'📦 Case',checkout:'🛒 Checkout',dashboard:'👤 Mon compte',graded:'🏅 Gradées',news:'📰 News',help:'❓ Aide'};
-let _code='', _orders=[], _liveTimer=null;
+let _code='', _orders=[], _liveTimer=null, _adminData=null;
+
+const PRODUCTS=[
+  {id:1,name:'CN151 Vol.3',lang:'cn',price:49},{id:2,name:'CN151 Vol.4',lang:'cn',price:65},
+  {id:3,name:'CN151 Vol.1',lang:'cn',price:45},{id:4,name:'CN151 Vol.2',lang:'cn',price:49},
+  {id:5,name:'Gempack Vol.3',lang:'cn',price:39},{id:6,name:'Gempack Vol.2',lang:'cn',price:35},
+  {id:7,name:'Gempack Vol.1',lang:'cn',price:null},{id:8,name:'Gempack Vol.4',lang:'cn',price:42},
+  {id:9,name:'Gempack Vol.5',lang:'cn',price:45},
+  {id:10,name:'M2a — Méga Dream EX',lang:'jp',price:85},{id:11,name:'M2 — Méga Inferno X',lang:'jp',price:90},
+  {id:12,name:'M1L — Méga Brave',lang:'jp',price:75},{id:13,name:'M1s — Méga Symphonia',lang:'jp',price:80},
+  {id:14,name:'M3 — Nihil Zero',lang:'jp',price:95},{id:15,name:'SV8a — Terastal Festival',lang:'jp',price:85},
+  {id:16,name:'SV9 — Battle Partners',lang:'jp',price:90},{id:17,name:'SV9a — Heat Wave Arena',lang:'jp',price:88},
+  {id:18,name:'SV10 — Glory Team Rocket',lang:'jp',price:92},{id:19,name:'SV11b — Black Bolt',lang:'jp',price:95},
+  {id:20,name:'SV11w — White Flare',lang:'jp',price:95},{id:21,name:'SV2a — Pokémon 151',lang:'jp',price:299},
+  {id:22,name:'M5 — Mega Abyss Eye',lang:'jp',price:110},
+];
 
 /* ── Toast ── */
 function toast(msg,type='ok'){
@@ -227,6 +302,7 @@ async function login(){
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='flex';
     loadOrders();
+    loadAdminData();
     startLiveHeader();
   }catch{
     document.getElementById('loginErr').style.display='block';
@@ -253,6 +329,11 @@ document.querySelectorAll('.nav-tab').forEach(t=>t.addEventListener('click',()=>
   if(t.dataset.tab==='commandes') loadOrders();
   if(t.dataset.tab==='stats') computeStats();
   if(t.dataset.tab==='live') loadLive();
+  if(t.dataset.tab==='produits'&&_adminData) buildProduits(_adminData.prices||{},_adminData.stocks||{});
+  if(t.dataset.tab==='flash'&&_adminData) buildFlash(_adminData.flashsale||{});
+  if(t.dataset.tab==='roue'&&_adminData) buildRoue(_adminData.wheel||[]);
+  if(t.dataset.tab==='livraison'&&_adminData) buildLivraison(_adminData.shipping||{});
+  if(t.dataset.tab==='gradees'&&_adminData) buildGradees(_adminData.graded||[]);
 }));
 
 /* ══ COMMANDES ══ */
@@ -358,19 +439,155 @@ document.getElementById('autoLiveBtn').addEventListener('click',function(){
   else{_liveTimer=setInterval(loadLive,30000);this.textContent='⏸ Stop auto';loadLive();}
 });
 
-/* ── Live header (visiteurs) ── */
+/* ── Live header ── */
 function startLiveHeader(){
-  const updateHeader=async()=>{
-    try{
-      const r=await fetch('/api/ping',{headers:{'X-Admin-Code':_code}});
-      const d=await r.json();
-      document.getElementById('liveHeaderTxt').textContent=(d.count||0)+' visiteur'+(d.count!==1?'s':'');
-      document.getElementById('liveDot').classList.add('on');
-    }catch{}
-  };
-  updateHeader();
-  setInterval(updateHeader,30000);
+  const upd=async()=>{
+    try{const r=await fetch('/api/ping',{headers:{'X-Admin-Code':_code}});const d=await r.json();
+    document.getElementById('liveHeaderTxt').textContent=(d.count||0)+' visiteur'+(d.count!==1?'s':'');
+    document.getElementById('liveDot').classList.add('on');}catch{}
+  };upd();setInterval(upd,30000);
 }
+
+/* ══ Chargement data admin au login ══ */
+async function loadAdminData(){
+  try{
+    const r=await fetch('/api/admin',{headers:{'X-Admin-Code':_code}});
+    _adminData=await r.json();
+    buildProduits(_adminData.prices||{},_adminData.stocks||{});
+    buildFlash(_adminData.flashsale||{});
+    buildRoue(_adminData.wheel||[]);
+    buildLivraison(_adminData.shipping||{relay:4.90,colissimo:7.90,express:14.90,freeForAll:false});
+    buildGradees(_adminData.graded||[]);
+  }catch(e){toast('Erreur chargement config','err');}
+}
+
+/* ══ PRODUITS ══ */
+function buildProduits(prices,stocks){
+  const tbody=document.getElementById('prodBody'); if(!tbody) return;
+  tbody.innerHTML=PRODUCTS.map(p=>`<tr>
+    <td><span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;background:${p.lang==='cn'?'rgba(168,255,212,.15)':'rgba(127,217,255,.15)'};color:${p.lang==='cn'?'var(--c4)':'var(--c1)'}">${p.lang.toUpperCase()}</span> <span style="font-size:13px">${p.name}</span></td>
+    <td style="color:var(--dim);font-size:12px">${p.price!=null?p.price+' €':'—'}</td>
+    <td><input type="number" id="ap-${p.id}" value="${prices[p.id]??p.price??''}" placeholder="${p.price??'—'}" style="width:90px;padding:6px 10px;background:var(--glass);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none"></td>
+    <td><input type="number" id="as-${p.id}" value="${stocks[p.id]??''}" placeholder="illim." style="width:80px;padding:6px 10px;background:var(--glass);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none"></td>
+  </tr>`).join('');
+}
+document.getElementById('savePricesBtn').addEventListener('click',async()=>{
+  const prices={},stocks={};
+  PRODUCTS.forEach(p=>{
+    const pv=document.getElementById('ap-'+p.id)?.value;
+    const sv=document.getElementById('as-'+p.id)?.value;
+    if(pv!=='')prices[p.id]=parseFloat(pv);
+    if(sv!=='')stocks[p.id]=parseInt(sv);
+  });
+  const msg=document.getElementById('priceMsg');
+  try{
+    await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_prices',data:prices})});
+    await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_stocks',data:stocks})});
+    msg.style.color='var(--success)';msg.textContent='✓ Prix et stocks mis à jour';
+  }catch{msg.style.color='var(--danger)';msg.textContent='Erreur lors de la sauvegarde';}
+  setTimeout(()=>msg.textContent='',3000);
+});
+
+/* ══ FLASH SALE ══ */
+function buildFlash(flashsale){
+  const wrap=document.getElementById('flashRows'); if(!wrap) return;
+  wrap.innerHTML=PRODUCTS.filter(p=>p.price!==null).map(p=>{
+    const fs=flashsale[p.id]||{};
+    const active=!!fs.active, salePrice=fs.salePrice||p.price||'';
+    const endTs=fs.endTime?new Date(fs.endTime).toISOString().slice(0,16):'';
+    return `<div style="display:grid;grid-template-columns:1fr auto 100px 170px;gap:10px;align-items:center;padding:10px 14px;border-radius:10px;background:var(--glass);border:1px solid ${active?'rgba(255,71,87,.4)':'var(--gb)'}">
+      <div style="font-size:12.5px">${p.name}</div>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--dim);white-space:nowrap">
+        <input type="checkbox" id="afl-on-${p.id}" ${active?'checked':''} style="accent-color:var(--danger)"> ⚡ Actif
+      </label>
+      <input type="number" id="afl-price-${p.id}" value="${salePrice}" placeholder="Prix flash" style="padding:6px 8px;background:var(--bg3);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;outline:none;width:100%">
+      <input type="datetime-local" id="afl-end-${p.id}" value="${endTs}" style="padding:6px 8px;background:var(--bg3);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:11px;outline:none;width:100%">
+    </div>`;
+  }).join('');
+}
+document.getElementById('saveFlashBtn').addEventListener('click',async()=>{
+  const flashsale={};
+  PRODUCTS.filter(p=>p.price!==null).forEach(p=>{
+    const active=document.getElementById('afl-on-'+p.id)?.checked||false;
+    const pv=document.getElementById('afl-price-'+p.id)?.value;
+    const ev=document.getElementById('afl-end-'+p.id)?.value;
+    flashsale[p.id]={active,salePrice:pv?parseFloat(pv):p.price,endTime:ev?new Date(ev).getTime():null};
+  });
+  const msg=document.getElementById('flashMsg');
+  try{
+    await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_flashsale',data:flashsale})});
+    buildFlash(flashsale);msg.style.color='var(--success)';msg.textContent='✓ Flash sales enregistrées';
+  }catch{msg.style.color='var(--danger)';msg.textContent='Erreur';}
+  setTimeout(()=>msg.textContent='',3000);
+});
+
+/* ══ ROUE ══ */
+let _wheel=[];
+function buildRoue(wheel){
+  _wheel=wheel;
+  const wrap=document.getElementById('wheelRows'); if(!wrap) return;
+  wrap.innerHTML=wheel.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:var(--glass)">
+      <div style="width:16px;height:16px;border-radius:50%;background:${p.color};flex-shrink:0"></div>
+      <div style="flex:1;font-size:13px">${p.label}${p.code?` <span style="font-size:11px;color:var(--dim)">(${p.code})</span>`:''}</div>
+      <input type="number" id="aw-${i}" value="${p.prob}" step="0.5" min="0" max="100"
+        style="width:70px;padding:6px 10px;background:var(--bg3);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none">
+      <span style="font-size:11px;color:var(--dim)">%</span>
+    </div>`).join('');
+}
+document.getElementById('saveWheelBtn').addEventListener('click',async()=>{
+  const msg=document.getElementById('wheelMsg');
+  const wheel=_wheel.map((p,i)=>({...p,prob:parseFloat(document.getElementById('aw-'+i)?.value||p.prob)}));
+  const total=wheel.reduce((s,p)=>s+p.prob,0);
+  if(Math.abs(total-100)>0.5){msg.style.color='var(--danger)';msg.textContent=`Total ${total.toFixed(1)}% ≠ 100%`;return;}
+  try{
+    await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_wheel',data:wheel})});
+    _wheel=wheel;msg.style.color='var(--success)';msg.textContent='✓ Roue mise à jour';
+  }catch{msg.style.color='var(--danger)';msg.textContent='Erreur';}
+  setTimeout(()=>msg.textContent='',3000);
+});
+
+/* ══ LIVRAISON ══ */
+function buildLivraison(cfg){
+  document.getElementById('shipRelay').value=cfg.relay??4.90;
+  document.getElementById('shipColissimo').value=cfg.colissimo??7.90;
+  document.getElementById('shipExpress').value=cfg.express??14.90;
+  document.getElementById('shipFreeAll').checked=!!cfg.freeForAll;
+}
+document.getElementById('saveShipBtn').addEventListener('click',async()=>{
+  const msg=document.getElementById('shipMsg');
+  const data={relay:parseFloat(document.getElementById('shipRelay').value),colissimo:parseFloat(document.getElementById('shipColissimo').value),express:parseFloat(document.getElementById('shipExpress').value),freeForAll:document.getElementById('shipFreeAll').checked};
+  try{
+    const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_shipping',data})});
+    if(!r.ok) throw new Error();
+    msg.style.color='var(--success)';msg.textContent='✓ Tarifs mis à jour';
+  }catch{msg.style.color='var(--danger)';msg.textContent='Erreur';}
+  setTimeout(()=>msg.textContent='',3000);
+});
+
+/* ══ GRADÉES ══ */
+function buildGradees(graded){
+  const wrap=document.getElementById('gradedRows'); if(!wrap||!graded.length) return;
+  wrap.innerHTML=graded.map((c,i)=>`
+    <div style="padding:16px;border-radius:12px;background:var(--glass);border:1px solid var(--gb)">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--c2);margin-bottom:12px">Carte ${i+1}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${['name:Nom','sub:Sous-titre (set)','tag:Tag (rareté)','badge:Badge'].map(f=>{const[k,l]=f.split(':');return`<div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:4px">${l}</label><input type="text" id="gc-${k}-${i}" value="${c[k]||''}" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none"></div>`;}).join('')}
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:4px">Prix (€)</label><input type="number" id="gc-price-${i}" value="${c.price??''}" step="0.01" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none"></div>
+        <div style="display:flex;align-items:center;gap:8px;padding-top:20px"><input type="checkbox" id="gc-avail-${i}" ${c.available?'checked':''} style="width:16px;height:16px"><label for="gc-avail-${i}" style="font-size:12.5px;cursor:pointer">Disponible</label></div>
+      </div>
+    </div>`).join('');
+}
+document.getElementById('saveGradedBtn').addEventListener('click',async()=>{
+  const msg=document.getElementById('gradedMsg');
+  const data=[0,1,2,3].map(i=>({name:document.getElementById('gc-name-'+i)?.value||'',sub:document.getElementById('gc-sub-'+i)?.value||'',tag:document.getElementById('gc-tag-'+i)?.value||'',price:parseFloat(document.getElementById('gc-price-'+i)?.value)||null,badge:document.getElementById('gc-badge-'+i)?.value||'',available:document.getElementById('gc-avail-'+i)?.checked||false}));
+  try{
+    const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_graded',data})});
+    if(!r.ok) throw new Error();
+    msg.style.color='var(--success)';msg.textContent='✓ Cartes gradées mises à jour';
+  }catch{msg.style.color='var(--danger)';msg.textContent='Erreur';}
+  setTimeout(()=>msg.textContent='',3000);
+});
 </script>
 </body>
 </html>
