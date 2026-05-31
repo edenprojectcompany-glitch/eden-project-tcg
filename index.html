@@ -1196,42 +1196,39 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   </div>
 </div>
 
-<!-- ══ SOCIAL PROOF ══ -->
-<div style="padding:60px 20px;max-width:1000px;margin:0 auto">
-  <div class="reveal-up" style="text-align:center;margin-bottom:36px">
-    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.15em;color:var(--text-dim);margin-bottom:10px">Ce qu'ils en pensent</div>
+<!-- ══ AVIS ══ -->
+<div style="padding:60px 20px;max-width:1200px;margin:0 auto">
+  <div class="reveal-up" style="text-align:center;margin-bottom:40px">
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.15em;color:var(--text-dim);margin-bottom:10px">Avis clients</div>
     <h2 style="font-family:'Fraunces',serif;font-size:clamp(26px,4vw,38px);font-weight:500;line-height:1.2">Ils nous font <em>confiance.</em></h2>
-    <div style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
-      <div style="display:flex;gap:3px">
-        <span style="color:#fbbf24;font-size:18px">★★★★★</span>
-      </div>
-      <span style="font-size:15px;font-weight:600;color:var(--text)">5,0 / 5</span>
+    <div style="margin-top:16px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
+      <span style="color:#fbbf24;font-size:20px;letter-spacing:2px">★★★★★</span>
+      <span style="font-size:15px;font-weight:700;color:var(--text)">4,9 / 5</span>
       <span style="font-size:13px;color:var(--text-dim)">· 217 avis vérifiés Whatnot</span>
       <a href="https://www.whatnot.com/fr-FR/user/losttraveller/reviews" target="_blank" rel="noopener"
-        style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--glass);border:1px solid var(--glass-border);border-radius:20px;font-size:12px;color:var(--foil-1);text-decoration:none;transition:all .2s"
+        style="display:inline-flex;align-items:center;gap:5px;padding:7px 16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:20px;font-size:12px;color:var(--foil-1);text-decoration:none"
         onmouseover="this.style.borderColor='var(--foil-1)'" onmouseout="this.style.borderColor='var(--glass-border)'">
         Voir tous les avis →
       </a>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
-    <div class="reveal-up" style="background:var(--obsidian-2);border:1px solid var(--glass-border);border-radius:20px;padding:24px 26px">
-      <div style="display:flex;gap:2px;margin-bottom:14px"><span style="color:#fbbf24">★★★★★</span></div>
-      <p style="font-size:14px;line-height:1.7;color:var(--text-dim);margin-bottom:16px">« Parfait, très bien protégé. Merci pour le soin apporté à l'emballage, je recommande ! »</p>
-      <div style="font-size:13px;font-weight:600;color:var(--text)">Sand. <span style="color:var(--text-dim);font-weight:400">· Acheteur Whatnot vérifié</span></div>
-    </div>
-    <div class="reveal-up" style="background:var(--obsidian-2);border:1px solid var(--glass-border);border-radius:20px;padding:24px 26px">
-      <div style="display:flex;gap:2px;margin-bottom:14px"><span style="color:#fbbf24">★★★★★</span></div>
-      <p style="font-size:14px;line-height:1.7;color:var(--text-dim);margin-bottom:16px">« Au top comme toujours, je recommande 🙌 Rapide, sérieux, produits conformes à la description. »</p>
-      <div style="font-size:13px;font-weight:600;color:var(--text)">Adri. <span style="color:var(--text-dim);font-weight:400">· Acheteur Whatnot vérifié</span></div>
-    </div>
-    <div class="reveal-up" style="background:var(--obsidian-2);border:1px solid var(--glass-border);border-radius:20px;padding:24px 26px">
-      <div style="display:flex;gap:2px;margin-bottom:14px"><span style="color:#fbbf24">★★★★★</span></div>
-      <p style="font-size:14px;line-height:1.7;color:var(--text-dim);margin-bottom:16px">« Parfait comme d'habitude. Client régulier et toujours aussi satisfait, rien à redire. »</p>
-      <div style="font-size:13px;font-weight:600;color:var(--text)">Logo. <span style="color:var(--text-dim);font-weight:400">· Acheteur Whatnot vérifié</span></div>
-    </div>
-  </div>
+  <style>
+  #reviewsGrid{columns:3;column-gap:14px}
+  @media(max-width:900px){#reviewsGrid{columns:2}}
+  @media(max-width:560px){#reviewsGrid{columns:1}}
+  .rv-card{break-inside:avoid;background:var(--obsidian-2);border:1px solid var(--glass-border);border-radius:14px;padding:14px 16px;margin-bottom:12px;display:inline-block;width:100%}
+  .rv-stars{color:#fbbf24;font-size:12px;margin-bottom:7px;letter-spacing:1px}
+  .rv-text{font-size:13px;line-height:1.6;color:var(--text-dim)}
+  </style>
+  <div id="reviewsGrid"></div>
 </div>
+<script>
+(function(){
+var rv=["Parfait merci, mini tin très bien protégé merci","Au top comme toujours 🙏🏼","Très bien, envoi rapide, je recommande.","Parfait ! 👍","Très bien 👍🏼","Merci beaucoup pour les cartes.","Sympa, offre des cadeaux, colis bien protégé et envoi rapide, nickel !","Au top 👌","Un vendeur au top. Des prix corrects et un envoi rapide, c'est parfait 👍","Toujours de beaux items, et en plus les gives sont excellents ! Merci pour le chocolat de Dubaï 😋 Vous serez pas déçus !","Quoi dire de plus que ce monsieur est généreux, réactif ! Envoi soigné, je recommande.","Au top, merci, tout bien reçu 🙂👍","100% perfect !!","Merci encore pour le petit cadeau ☺️","Le meilleur vendeur sur cette plate-forme clairement.","Parfait comme d'habitude 👍","Bien reçu, au top 👍","Parfait comme d'habitude 💪","Envoi rapide et protégé, c'est nickel !","Très bon vendeur, arrivé bien emballé.","Toujours au top.","Envoi soigné, vendeur sérieux et très sympa ! Les yeux fermés ! Je recommande.","Parfaitement reçu. Super vendeur, je vous le conseille.","Très bien emballé, envoi rapide et des cadeaux en supplément. Que dire de mieux, si ce n'est de foncer lui acheter quelque chose ! 🃏","Parfait super rapide bien emballé.","Tout est au top ! Rien à redire ! Je recommande !","Envoi rapide et très soigné, au top !","Bien arrivée.","Très bien.","Super rapide.","Très bien emballé, envoi rapide.","Bien reçu, le colis impeccable, merci.","Top vendeur !","Parfait merci beaucoup !","Top 👍","Merci, tout est arrivé en bon état dans les délais et les petits plus ont été très appréciés. À la prochaine !","Bien reçu.","Parfait !","Au top 👍👍","Très bien arrivé, merci.","Bien reçu impeccable.","Tout parfait ! Carte en état parfait et envoi rapide.","Bien reçu, merci.","Encore un super moment et tout bien reçu nickel.","Bien réceptionné, rapide et efficace, je recommande. Merci.","Colis bien réceptionné et très bien emballé.","Tout bien reçu nickel super, n'hésitez pas, je conseille fortement.","Bien reçu nickel comme d'habitude.","Top merci 🙏","Articles bien reçus, vendeur très sérieux, à recommander.","Parfait, le boss 🏴‍☠️🫶🏼","Bien emballé, rapide, parfait !","Vendeur au top, je recommande.","Super rapide et bien protégé.","Impeccable comme toujours.","Très satisfait de ma commande.","Envoi soigné, vendeur de confiance.","Parfait, rien à redire.","Merci beaucoup, tout est parfait.","Super vendeur, très réactif."];
+var g=document.getElementById('reviewsGrid');
+if(g)g.innerHTML=rv.map(function(r){return'<div class="rv-card"><div class="rv-stars">★★★★★</div><div class="rv-text">« '+r+' »</div></div>';}).join('');
+})();
+</script>
 
 <!-- ══ CATALOG ══ -->
 <div class="page" id="page-catalog">
