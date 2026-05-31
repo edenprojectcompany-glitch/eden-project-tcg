@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eden Admin — Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0c;--bg2:#111114;--bg3:#16161b;
+  --glass:rgba(255,255,255,.04);--gb:rgba(255,255,255,.09);
+  --text:#f4f4f6;--dim:#8a8a93;
+  --c1:#7fd9ff;--c2:#c9a8ff;--c3:#ffb3e6;--c4:#a8ffd4;
+  --danger:#ff7a7a;--success:#7fffaa;
+}
+body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;min-height:100vh}
+
+/* ── LOGIN ── */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-card{background:var(--bg2);border:1px solid var(--gb);border-radius:24px;padding:48px 40px;width:100%;max-width:380px;text-align:center}
+.login-logo{font-family:'Fraunces',serif;font-size:28px;font-weight:500;margin-bottom:6px}
+.login-logo span{background:linear-gradient(135deg,var(--c1),var(--c2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-sub{font-size:13px;color:var(--dim);margin-bottom:32px}
+.login-input{width:100%;padding:14px 18px;background:var(--glass);border:1px solid var(--gb);border-radius:12px;color:var(--text);font-family:inherit;font-size:15px;outline:none;text-align:center;letter-spacing:4px;margin-bottom:16px;transition:border .2s}
+.login-input:focus{border-color:var(--c1)}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--c1),var(--c2));color:#0a0a0c;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s}
+.login-btn:hover{opacity:.9}
+
+/* ── APP ── */
+#app{display:none;min-height:100vh;flex-direction:column}
+
+/* Header */
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--bg2);border-bottom:1px solid var(--gb);position:sticky;top:0;z-index:100}
+.app-title{font-family:'Fraunces',serif;font-size:18px;font-weight:500}
+.app-title span{color:var(--c1)}
+.header-right{display:flex;align-items:center;gap:12px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(127,255,170,.4)}50%{box-shadow:0 0 0 6px rgba(127,255,170,0)}}
+.live-text{font-size:12px;color:var(--success)}
+.logout-btn{background:var(--glass);border:1px solid var(--gb);color:var(--dim);padding:7px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit}
+
+/* Nav tabs */
+.app-nav{display:flex;gap:4px;padding:16px 24px 0;background:var(--bg2);border-bottom:1px solid var(--gb);overflow-x:auto}
+.nav-tab{padding:10px 20px;border-radius:10px 10px 0 0;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--dim);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.nav-tab.active{color:var(--c1);border-bottom-color:var(--c1);background:rgba(127,217,255,.06)}
+.nav-tab:hover:not(.active){color:var(--text)}
+
+/* Content */
+.app-content{flex:1;padding:24px;max-width:1200px;margin:0 auto;width:100%}
+.tab-section{display:none}
+.tab-section.active{display:block}
+
+/* Stat cards */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:28px}
+.stat-card{background:var(--bg2);border:1px solid var(--gb);border-radius:16px;padding:20px}
+.sc-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:8px}
+.sc-val{font-size:26px;font-weight:700;color:var(--c4)}
+.sc-sub{font-size:11px;color:var(--dim);margin-top:4px}
+
+/* Orders table */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-size:16px;font-weight:600}
+.refresh-btn{background:var(--glass);border:1px solid var(--gb);color:var(--dim);padding:8px 16px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit}
+.refresh-btn:hover{color:var(--text)}
+.table-wrap{overflow-x:auto;border-radius:16px;border:1px solid var(--gb)}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);padding:12px 16px;text-align:left;background:var(--bg3);border-bottom:1px solid var(--gb)}
+td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.ref{font-family:monospace;color:var(--c1);font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.b-pending{background:rgba(255,179,0,.12);color:#ffb300;border:1px solid rgba(255,179,0,.3)}
+.b-label{background:rgba(201,168,255,.12);color:var(--c2);border:1px solid rgba(201,168,255,.3)}
+.b-shipped{background:rgba(127,255,170,.12);color:var(--success);border:1px solid rgba(127,255,170,.3)}
+.action-btns{display:flex;gap:6px;flex-wrap:wrap}
+.abtn{padding:5px 10px;border-radius:8px;border:1px solid var(--gb);background:var(--glass);color:var(--dim);font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s}
+.abtn:hover{border-color:var(--c1);color:var(--c1)}
+.abtn.label{border-color:var(--c1);color:var(--c1)}
+.abtn.pdf{border-color:var(--c4);color:var(--c4)}
+
+/* Top products */
+.top-list{display:flex;flex-direction:column;gap:8px}
+.top-item{display:flex;align-items:center;gap:14px;padding:10px 14px;background:var(--bg2);border:1px solid var(--gb);border-radius:12px}
+.top-name{font-size:13px;min-width:140px}
+.bar-wrap{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.08)}
+.bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--c1),var(--c2))}
+.top-qty{font-size:13px;font-weight:700;color:var(--c1);min-width:28px;text-align:right}
+
+/* Live */
+.live-center{text-align:center;padding:40px 0 28px}
+.live-num{font-size:72px;font-weight:700;color:var(--c1);line-height:1}
+.live-label{font-size:14px;color:var(--dim);margin-top:10px}
+.page-list{display:flex;flex-direction:column;gap:8px;max-width:400px;margin:20px auto 0}
+.page-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--bg2);border:1px solid var(--gb);border-radius:10px;font-size:13px}
+.page-count{font-weight:700;color:var(--c1)}
+.live-controls{display:flex;gap:10px;justify-content:center;margin-top:20px}
+.ctrl-btn{background:var(--glass);border:1px solid var(--gb);color:var(--text);padding:9px 20px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit}
+.ctrl-btn:hover{border-color:var(--c1)}
+.last-update{text-align:center;font-size:11.5px;color:var(--dim);margin-top:12px}
+
+/* Mobile */
+@media(max-width:600px){
+  .app-content{padding:16px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .login-card{padding:36px 24px}
+  .app-nav{padding:12px 16px 0}
+  .nav-tab{padding:8px 14px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">Eden <span>Admin</span></div>
+    <div class="login-sub">Panneau de gestion Eden Project TCG</div>
+    <input class="login-input" type="password" id="codeInput" placeholder="••••••••" maxlength="20">
+    <button class="login-btn" onclick="login()">Accéder →</button>
+    <div id="loginErr" style="margin-top:12px;font-size:12px;color:var(--danger);display:none">Code incorrect</div>
+    <div style="margin-top:20px;font-size:11px;color:var(--dim)">⚠️ Ceci est un aperçu — entrez n'importe quoi pour voir le design</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="app-header">
+    <div class="app-title">Eden <span>Admin</span></div>
+    <div class="header-right">
+      <div class="live-dot"></div>
+      <div class="live-text">3 visiteurs</div>
+      <button class="logout-btn" onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="app-nav">
+    <button class="nav-tab active" onclick="switchTab('commandes',this)">🛒 Commandes</button>
+    <button class="nav-tab" onclick="switchTab('stats',this)">📊 Statistiques</button>
+    <button class="nav-tab" onclick="switchTab('live',this)">👁️ Visiteurs live</button>
+  </div>
+
+  <div class="app-content">
+
+    <!-- COMMANDES -->
+    <div class="tab-section active" id="tab-commandes">
+      <div class="section-head">
+        <div class="section-title">Dernières commandes <span style="color:var(--dim);font-weight:400;font-size:13px">· 4 commandes</span></div>
+        <button class="refresh-btn">↻ Actualiser</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Référence</th><th>Date</th><th>Client</th><th>Montant</th><th>Articles</th><th>Livraison</th><th>Statut & Actions</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="ref">EDN-A3F9K2</span></td>
+              <td style="color:var(--dim);font-size:12px">31/05 · 14:32</td>
+              <td>Thomas M.<br><span style="color:var(--dim);font-size:11px">thomas@gmail.com</span></td>
+              <td style="font-weight:700;color:var(--c4)">134,80 €<br><span style="font-size:10.5px;font-weight:400;color:var(--dim)">💳 CB</span></td>
+              <td style="color:var(--dim);font-size:12px">CN151 Vol.4 ×2</td>
+              <td style="font-size:12px">📦 MR <span style="color:var(--c1);font-size:10px">BREST</span></td>
+              <td>
+                <span class="badge b-pending">⏳ En attente</span>
+                <div class="action-btns" style="margin-top:8px">
+                  <button class="abtn label">🖨️ Étiquette</button>
+                  <button class="abtn" onclick="this.closest('tr').querySelector('.badge').className='badge b-label';this.closest('tr').querySelector('.badge').textContent='🖨️ Étiquette imprimée'">🖨️</button>
+                  <button class="abtn" onclick="this.closest('tr').querySelector('.badge').className='badge b-shipped';this.closest('tr').querySelector('.badge').textContent='📦 Expédié'">📦</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="ref">EDN-B7M2P1</span></td>
+              <td style="color:var(--dim);font-size:12px">31/05 · 11:15</td>
+              <td>Sarah L.<br><span style="color:var(--dim);font-size:11px">sarah@hotmail.fr</span></td>
+              <td style="font-weight:700;color:var(--c4)">69,90 €<br><span style="font-size:10.5px;font-weight:400;color:var(--dim)">🅿 PayPal</span></td>
+              <td style="color:var(--dim);font-size:12px">M2a Dream EX ×1</td>
+              <td style="font-size:12px">📦 MR <span style="color:var(--c1);font-size:10px">RENNES</span></td>
+              <td>
+                <span class="badge b-label">🖨️ Étiquette imprimée</span>
+                <div class="action-btns" style="margin-top:8px">
+                  <button class="abtn pdf">📄 PDF</button>
+                  <button class="abtn">⏳</button>
+                  <button class="abtn">🖨️</button>
+                  <button class="abtn">📦</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="ref">EDN-C9X4L7</span></td>
+              <td style="color:var(--dim);font-size:12px">30/05 · 18:44</td>
+              <td>Marc D.<br><span style="color:var(--dim);font-size:11px">marc.d@free.fr</span></td>
+              <td style="font-weight:700;color:var(--c4)">207,70 €<br><span style="font-size:10.5px;font-weight:400;color:var(--dim)">💳 CB</span></td>
+              <td style="color:var(--dim);font-size:12px">SV9 Battle Partners ×3, CN151 Vol.3 ×1</td>
+              <td style="font-size:12px">🏠 Colissimo</td>
+              <td>
+                <span class="badge b-shipped">📦 Expédié</span>
+                <div class="action-btns" style="margin-top:8px">
+                  <button class="abtn">⏳</button>
+                  <button class="abtn">🖨️</button>
+                  <button class="abtn" style="border-color:var(--success);color:var(--success)">📦</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="ref">EDN-D2R8N5</span></td>
+              <td style="color:var(--dim);font-size:12px">30/05 · 09:20</td>
+              <td>Julie K.<br><span style="color:var(--dim);font-size:11px">julie.k@gmail.com</span></td>
+              <td style="font-weight:700;color:var(--c4)">79,80 €<br><span style="font-size:10.5px;font-weight:400;color:var(--dim)">💳 CB</span></td>
+              <td style="color:var(--dim);font-size:12px">Gempack Vol.4 ×2</td>
+              <td style="font-size:12px">⚡ Express</td>
+              <td>
+                <span class="badge b-shipped">📦 Expédié</span>
+                <div class="action-btns" style="margin-top:8px">
+                  <button class="abtn">⏳</button>
+                  <button class="abtn">🖨️</button>
+                  <button class="abtn" style="border-color:var(--success);color:var(--success)">📦</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="tab-section" id="tab-stats">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="sc-label">CA total</div><div class="sc-val">492,20 €</div><div class="sc-sub">Depuis le début</div></div>
+        <div class="stat-card"><div class="sc-label">Aujourd'hui</div><div class="sc-val" style="color:var(--c1)">204,70 €</div><div class="sc-sub">2 commandes</div></div>
+        <div class="stat-card"><div class="sc-label">Ce mois</div><div class="sc-val" style="color:var(--c2)">492,20 €</div><div class="sc-sub">Mai 2026</div></div>
+        <div class="stat-card"><div class="sc-label">Commandes</div><div class="sc-val" style="color:var(--c3)">4</div><div class="sc-sub">Au total</div></div>
+        <div class="stat-card"><div class="sc-label">Panier moyen</div><div class="sc-val" style="color:var(--c4)">123,05 €</div><div class="sc-sub">Par commande</div></div>
+        <div class="stat-card"><div class="sc-label">En attente</div><div class="sc-val" style="color:#ffb300">1</div><div class="sc-sub">À expédier</div></div>
+      </div>
+      <div class="section-title" style="margin-bottom:14px">🏆 Produits les plus vendus</div>
+      <div class="top-list">
+        <div class="top-item"><div class="top-name">CN151 Vol.4</div><div class="bar-wrap"><div class="bar-fill" style="width:100%"></div></div><div class="top-qty">3</div></div>
+        <div class="top-item"><div class="top-name">SV9 Battle Partners</div><div class="bar-wrap"><div class="bar-fill" style="width:75%"></div></div><div class="top-qty">3</div></div>
+        <div class="top-item"><div class="top-name">Gempack Vol.4</div><div class="bar-wrap"><div class="bar-fill" style="width:67%"></div></div><div class="top-qty">2</div></div>
+        <div class="top-item"><div class="top-name">M2a Dream EX</div><div class="bar-wrap"><div class="bar-fill" style="width:33%"></div></div><div class="top-qty">1</div></div>
+        <div class="top-item"><div class="top-name">CN151 Vol.3</div><div class="bar-wrap"><div class="bar-fill" style="width:33%"></div></div><div class="top-qty">1</div></div>
+      </div>
+    </div>
+
+    <!-- LIVE -->
+    <div class="tab-section" id="tab-live">
+      <div class="live-center">
+        <div class="live-num">3</div>
+        <div class="live-label">visiteurs actifs en ce moment</div>
+        <div style="font-size:11.5px;color:var(--dim);margin-top:6px">actif = vu dans les 90 dernières secondes</div>
+      </div>
+      <div class="page-list">
+        <div class="page-row"><span>🏠 Accueil</span><span class="page-count">1 visiteur</span></div>
+        <div class="page-row"><span>🛍️ Catalogue</span><span class="page-count">2 visiteurs</span></div>
+      </div>
+      <div class="live-controls">
+        <button class="ctrl-btn">↻ Actualiser</button>
+        <button class="ctrl-btn">▶ Auto (30s)</button>
+      </div>
+      <div class="last-update">Dernière mise à jour : 14:38:52</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function login(){
+  const v=document.getElementById('codeInput').value;
+  if(!v){document.getElementById('loginErr').style.display='block';return;}
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='flex';
+}
+document.getElementById('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+function logout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('codeInput').value='';
+}
+function switchTab(name,btn){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+</script>
+</body>
+</html>

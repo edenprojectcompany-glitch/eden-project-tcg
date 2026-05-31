@@ -13,7 +13,7 @@ const MR_SENDER     = {
   cp   : '29200',
   pays : 'FR',
   tel  : '',
-  mail : 'edenprojectcompany@gmail.com',
+  mail : 'contact@edenprojecttcg.com',
 };
 
 /* ── Calcul clé de sécurité MD5 Mondial Relay ── */

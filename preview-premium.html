@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview Premium — Eden Project TCG</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,700;1,9..144,400&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══ VARIABLES (identiques au site) ══ */
+:root {
+  --obsidian:#0a0a0c; --obsidian-2:#111114; --obsidian-3:#16161b;
+  --glass:rgba(255,255,255,.04); --glass-border:rgba(255,255,255,.09);
+  --foil-1:#7fd9ff; --foil-2:#c9a8ff; --foil-3:#ffb3e6; --foil-4:#a8ffd4;
+  --success:#7fffaa; --danger:#ff7a7a;
+  --gold:#f0c060; --gold-dim:#c8973a;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--obsidian);color:#fff;font-family:'Manrope',sans-serif;font-size:15px;line-height:1.6}
+h1,h2,h3{font-family:'Fraunces',serif}
+
+/* ══ LABEL D'ANNOTATION (pour le preview) ══ */
+.annotation{
+  position:relative;border:1px dashed rgba(127,217,255,.3);border-radius:12px;
+  padding:10px;margin-bottom:4px;
+}
+.annotation::before{
+  content:attr(data-label);position:absolute;top:-11px;left:12px;
+  background:#0a2a38;color:var(--foil-1);font-size:10px;font-weight:700;
+  letter-spacing:.08em;padding:2px 8px;border-radius:20px;border:1px solid rgba(127,217,255,.3);
+  text-transform:uppercase;
+}
+.section-title{
+  text-align:center;padding:48px 0 20px;font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;color:rgba(255,255,255,.3);font-family:'Manrope',sans-serif;
+}
+.section-title span{color:var(--foil-2)}
+hr.sep{border:none;border-top:1px solid rgba(255,255,255,.06);margin:0 24px 48px}
+
+/* ══ NOUVELLES ANIMATIONS ══ */
+
+/* 1. Fade-up on scroll (IntersectionObserver) */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(32px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.fade-up {
+  opacity:0;
+  animation: fadeUp .7s cubic-bezier(.16,1,.3,1) forwards;
+}
+.fade-up.delay-1 { animation-delay:.1s }
+.fade-up.delay-2 { animation-delay:.2s }
+.fade-up.delay-3 { animation-delay:.3s }
+.fade-up.delay-4 { animation-delay:.4s }
+
+/* 2. Shimmer SCELLÉ badge */
+@keyframes sealShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.badge-scelle-new {
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:9px;font-weight:700;letter-spacing:.12em;padding:3px 9px;
+  border-radius:20px;
+  background: linear-gradient(90deg,
+    rgba(127,217,255,.15) 0%,
+    rgba(127,217,255,.4) 40%,
+    rgba(201,168,255,.4) 60%,
+    rgba(127,217,255,.15) 100%
+  );
+  background-size:200% auto;
+  border:1px solid rgba(127,217,255,.35);
+  color:#fff;
+  animation: sealShimmer 3s linear infinite;
+}
+.badge-scelle-new::before { content:'◆'; font-size:7px; color:var(--foil-1); }
+
+/* Badge SCELLÉ actuel (pour comparaison) */
+.badge-scelle-old {
+  display:inline-block;font-size:9px;font-weight:700;letter-spacing:.12em;
+  padding:3px 9px;border-radius:20px;background:rgba(127,217,255,.12);
+  border:1px solid rgba(127,217,255,.25);color:#fff;
+}
+
+/* 3. Card entrance + hover glow amélioré */
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(20px) scale(.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+.prod-card-new {
+  background:var(--obsidian-2);border:1px solid var(--glass-border);
+  border-radius:18px;overflow:hidden;cursor:pointer;
+  animation: cardIn .5s cubic-bezier(.16,1,.3,1) both;
+  transition: border-color .3s, box-shadow .3s, transform .3s;
+}
+.prod-card-new:hover {
+  border-color:rgba(127,217,255,.3);
+  box-shadow: 0 0 0 1px rgba(127,217,255,.15), 0 16px 48px rgba(0,0,0,.5), 0 0 40px rgba(127,217,255,.08);
+  transform: translateY(-3px);
+}
+.prod-card-old {
+  background:var(--obsidian-2);border:1px solid var(--glass-border);
+  border-radius:18px;overflow:hidden;cursor:pointer;
+  transition: border-color .3s, box-shadow .3s;
+}
+.prod-card-old:hover {
+  border-color:rgba(255,255,255,.15);
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+.card-img{height:200px;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 60%,rgba(127,217,255,.06) 0%,transparent 70%);
+  font-size:64px;
+}
+.card-body{padding:16px 18px 18px}
+.card-meta{font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:6px;
+  display:flex;align-items:center;gap:6px;text-transform:uppercase;}
+.card-name{font-family:'Fraunces',serif;font-size:16px;margin-bottom:3px}
+.card-sub{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px}
+.card-price{font-size:20px;font-weight:700;font-family:'Fraunces',serif}
+.card-price span{font-size:12px;color:rgba(255,255,255,.4);font-family:'Manrope',sans-serif;font-weight:400}
+
+/* Lang badge */
+.lang-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.1em;
+  padding:2px 7px;border-radius:10px;background:rgba(168,255,212,.15);
+  border:1px solid rgba(168,255,212,.25);color:var(--foil-4);}
+.lang-badge.jp{background:rgba(127,217,255,.12);border-color:rgba(127,217,255,.25);color:var(--foil-1);}
+
+/* 4. Trust badges améliorés */
+.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:0 24px}
+.trust-card-new{
+  background:var(--obsidian-2);border:1px solid var(--glass-border);
+  border-radius:14px;padding:24px 20px;text-align:center;
+  transition:border-color .3s,box-shadow .3s;
+}
+.trust-card-new:hover{
+  border-color:rgba(127,217,255,.2);
+  box-shadow:0 0 24px rgba(127,217,255,.06);
+}
+.trust-icon-new{
+  width:48px;height:48px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin:0 auto 14px;
+  background:linear-gradient(135deg,rgba(127,217,255,.15),rgba(201,168,255,.1));
+  border:1px solid rgba(127,217,255,.2);
+  box-shadow:0 0 20px rgba(127,217,255,.1);
+}
+.trust-icon-new.green{
+  background:linear-gradient(135deg,rgba(168,255,212,.15),rgba(127,217,255,.1));
+  border-color:rgba(168,255,212,.2);box-shadow:0 0 20px rgba(168,255,212,.1);
+}
+.trust-icon-new.purple{
+  background:linear-gradient(135deg,rgba(201,168,255,.15),rgba(255,179,230,.1));
+  border-color:rgba(201,168,255,.2);box-shadow:0 0 20px rgba(201,168,255,.1);
+}
+.trust-icon-new.gold{
+  background:linear-gradient(135deg,rgba(240,192,96,.15),rgba(255,179,230,.05));
+  border-color:rgba(240,192,96,.2);box-shadow:0 0 20px rgba(240,192,96,.08);
+}
+.trust-title-new{font-family:'Fraunces',serif;font-size:15px;margin-bottom:6px}
+.trust-desc-new{font-size:12px;color:rgba(255,255,255,.45);line-height:1.5}
+
+/* Trust actuel (pour comparaison) */
+.trust-card-old{
+  background:var(--obsidian-2);border:1px solid var(--glass-border);
+  border-radius:14px;padding:24px 20px;text-align:center;
+}
+.trust-icon-old{font-size:24px;margin-bottom:12px;display:block;
+  opacity:.6;}
+.trust-title-old{font-size:14px;font-weight:600;margin-bottom:6px}
+.trust-desc-old{font-size:12px;color:rgba(255,255,255,.4)}
+
+/* 5. Hero section améliorée */
+.hero-wrap{padding:60px 40px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;
+  max-width:900px;margin:0 auto;}
+.hero-badge-new{
+  display:inline-flex;align-items:center;gap:8px;
+  border:1px solid rgba(255,255,255,.12);border-radius:20px;
+  padding:6px 14px 6px 10px;font-size:11px;letter-spacing:.1em;
+  color:rgba(255,255,255,.6);margin-bottom:18px;
+  background:rgba(255,255,255,.03);
+  backdrop-filter:blur(8px);
+}
+.hero-badge-new .diamond{color:var(--foil-2);font-size:10px}
+.eyebrow-new{
+  font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+  color:rgba(255,255,255,.4);margin-bottom:16px;display:flex;align-items:center;gap:8px;
+}
+.pulse-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--foil-4);
+  box-shadow:0 0 8px var(--foil-4);
+  animation:pulseDot 2s ease-in-out infinite;display:inline-block;flex-shrink:0;
+}
+@keyframes pulseDot{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(.7)}
+}
+.hero-h1{font-size:52px;line-height:1.05;font-weight:700;margin-bottom:10px}
+.hero-h1 .gradient-text{
+  background:linear-gradient(135deg,var(--foil-3) 0%,var(--foil-2) 50%,var(--foil-1) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-size:200% auto;
+  animation:shimmerText 4s linear infinite;
+}
+@keyframes shimmerText{
+  0%{background-position:0% 50%}100%{background-position:200% 50%}
+}
+.hero-sub-new{font-size:15px;color:rgba(255,255,255,.55);line-height:1.65;margin-bottom:28px;max-width:380px}
+.hero-sub-new strong{color:rgba(255,255,255,.8);font-weight:500}
+
+.cta-row{display:flex;gap:12px;flex-wrap:wrap}
+.btn-primary-new{
+  padding:13px 26px;border-radius:12px;font-size:14px;font-weight:600;
+  background:#fff;color:#000;border:none;cursor:pointer;
+  transition:opacity .2s,transform .2s;
+  letter-spacing:.01em;
+}
+.btn-primary-new:hover{opacity:.9;transform:translateY(-1px)}
+.btn-secondary-new{
+  padding:13px 26px;border-radius:12px;font-size:14px;font-weight:600;
+  background:transparent;color:#fff;cursor:pointer;
+  border:1px solid rgba(255,255,255,.15);
+  transition:border-color .2s,background .2s,transform .2s;
+  letter-spacing:.01em;
+  position:relative;overflow:hidden;
+}
+.btn-secondary-new::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(127,217,255,.08),rgba(201,168,255,.08));
+  opacity:0;transition:opacity .2s;
+}
+.btn-secondary-new:hover{border-color:rgba(127,217,255,.4);transform:translateY(-1px)}
+.btn-secondary-new:hover::before{opacity:1}
+
+/* Hero card avec glow animé */
+.hero-card-wrap{
+  border-radius:20px;overflow:hidden;
+  background:linear-gradient(135deg,rgba(127,217,255,.06),rgba(201,168,255,.06));
+  border:1px solid rgba(255,255,255,.08);
+  padding:32px;display:flex;align-items:center;justify-content:center;
+  position:relative;
+  animation:cardGlow 4s ease-in-out infinite;
+}
+@keyframes cardGlow{
+  0%,100%{box-shadow:0 0 40px rgba(127,217,255,.08),inset 0 0 40px rgba(127,217,255,.03)}
+  50%{box-shadow:0 0 60px rgba(201,168,255,.12),inset 0 0 40px rgba(201,168,255,.05)}
+}
+.hero-card-flag{
+  position:absolute;top:16px;right:16px;
+  width:32px;height:32px;border-radius:50%;
+  background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 2px 12px rgba(0,0,0,.4);
+}
+.hero-img-placeholder{
+  width:200px;height:300px;border-radius:12px;
+  background:linear-gradient(160deg,#1a2a3a 0%,#0d1a2a 100%);
+  border:1px solid rgba(127,217,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:80px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 40px rgba(127,217,255,.1);
+}
+
+/* 6. Ticker amélioré */
+@keyframes tickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.ticker-new{
+  background:linear-gradient(90deg,rgba(127,217,255,.04),rgba(201,168,255,.04));
+  border-top:1px solid rgba(255,255,255,.05);
+  padding:10px 0;overflow:hidden;white-space:nowrap;
+}
+.ticker-track-new{
+  display:inline-flex;gap:0;
+  animation:tickerScroll 30s linear infinite;
+}
+.ticker-item-new{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:0 40px;font-size:12px;color:rgba(255,255,255,.5);letter-spacing:.04em;
+  border-right:1px solid rgba(255,255,255,.06);
+}
+.ticker-item-new .sym{color:var(--foil-1);font-size:10px}
+.ticker-item-new strong{color:rgba(255,255,255,.75);font-weight:600}
+/* Ancien ticker pour comparaison */
+.ticker-old{background:#0d0d10;border-top:1px solid rgba(255,255,255,.04);padding:9px 0;overflow:hidden}
+.ticker-track-old{display:inline-flex;animation:tickerScroll 30s linear infinite}
+.ticker-item-old{padding:0 32px;font-size:12px;color:rgba(255,255,255,.45)}
+
+/* 7. Jackpot banner amélioré */
+.jackpot-new{
+  display:flex;align-items:center;gap:16px;
+  background:linear-gradient(135deg,rgba(240,192,96,.08) 0%,rgba(255,179,230,.05) 100%);
+  border:1px solid rgba(240,192,96,.2);border-radius:16px;padding:18px 24px;
+  margin:0 24px;
+  animation:jackpotPulse 3s ease-in-out infinite;
+  position:relative;overflow:hidden;
+}
+.jackpot-new::before{
+  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(240,192,96,.04),transparent);
+  animation:jackpotSweep 4s linear infinite;
+}
+@keyframes jackpotSweep{from{left:-60%}to{left:160%}}
+@keyframes jackpotPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(240,192,96,0)}
+  50%{box-shadow:0 0 20px rgba(240,192,96,.08)}
+}
+.jackpot-icon-new{
+  width:44px;height:44px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(240,192,96,.2),rgba(255,179,230,.1));
+  border:1px solid rgba(240,192,96,.3);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.jackpot-title-new{font-family:'Fraunces',serif;font-size:16px;margin-bottom:2px}
+.jackpot-sub-new{font-size:12px;color:rgba(255,255,255,.45)}
+.jackpot-val-new{
+  margin-left:auto;font-family:'Fraunces',serif;font-size:28px;font-weight:700;
+  background:linear-gradient(135deg,var(--gold),#fff8dc);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+/* 8. Filter chips améliorés */
+.filter-row-new{display:flex;gap:8px;padding:0 24px;margin-bottom:24px;flex-wrap:wrap}
+.chip-new{
+  padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.55);cursor:pointer;
+  transition:all .2s;letter-spacing:.01em;
+}
+.chip-new:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
+.chip-new.active{
+  background:rgba(127,217,255,.1);border-color:rgba(127,217,255,.35);
+  color:#fff;
+  box-shadow:0 0 12px rgba(127,217,255,.1);
+}
+/* Anciens chips */
+.chip-old{
+  padding:6px 14px;border-radius:20px;font-size:13px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.6);cursor:pointer;
+}
+.chip-old.active{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff}
+
+/* 9. Spin button amélioré */
+.spin-btn-new{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 28px;border-radius:14px;font-size:15px;font-weight:600;
+  cursor:pointer;border:none;
+  background:linear-gradient(135deg,rgba(201,168,255,.2),rgba(127,217,255,.15));
+  border:1px solid rgba(201,168,255,.35);color:#fff;
+  position:relative;overflow:hidden;
+  transition:transform .2s,box-shadow .2s;
+}
+.spin-btn-new:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 32px rgba(201,168,255,.2);
+}
+.spin-btn-new .spin-icon{
+  width:24px;height:24px;border-radius:50%;
+  background:rgba(201,168,255,.3);
+  border:1px solid rgba(201,168,255,.5);
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  animation:spinRotate 8s linear infinite;
+}
+@keyframes spinRotate{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+/* Anciens emojis utilisés */
+.spin-btn-old{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 26px;border-radius:14px;font-size:15px;font-weight:600;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  color:#fff;cursor:pointer;
+}
+
+/* 10. Coupon/code badge amélioré */
+.coupon-badge-new{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;
+  background:rgba(168,255,212,.1);border:1px solid rgba(168,255,212,.25);
+  color:var(--foil-4);letter-spacing:.04em;
+}
+.coupon-badge-new::before{content:'◈';font-size:10px;color:var(--foil-4)}
+.coupon-badge-old{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:20px;font-size:12px;
+  background:rgba(168,255,212,.08);border:1px solid rgba(168,255,212,.2);
+  color:var(--foil-4);
+}
+
+/* Layout utilitaires */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:0 24px}
+.col{display:flex;flex-direction:column;gap:12px}
+.label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.25);
+  margin-bottom:4px;font-weight:600;}
+.label.before{color:#ff7a7a}
+.label.after{color:var(--foil-4)}
+.side-label{font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-top:6px}
+
+/* Summary box */
+.summary-box{
+  margin:32px 24px;padding:24px;border-radius:16px;
+  background:rgba(127,217,255,.04);border:1px solid rgba(127,217,255,.12);
+}
+.summary-box h3{font-family:'Fraunces',serif;font-size:18px;margin-bottom:16px;color:var(--foil-1)}
+.summary-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.summary-list li{display:flex;align-items:flex-start;gap:12px;font-size:13px;color:rgba(255,255,255,.65)}
+.summary-list li .dot{flex-shrink:0;width:6px;height:6px;border-radius:50%;background:var(--foil-4);margin-top:6px}
+.summary-list li strong{color:#fff;font-weight:600}
+
+/* Nav preview */
+.nav-preview{
+  position:sticky;top:0;z-index:10;
+  background:rgba(10,10,12,.85);backdrop-filter:blur(28px);
+  border-bottom:1px solid rgba(255,255,255,.05);
+  padding:0 32px;height:54px;display:flex;align-items:center;justify-content:space-between;
+}
+.nav-logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.nav-logo .t{color:#7fd9ff}.nav-logo .c{color:rgba(255,255,255,.9)}.nav-logo .g{color:#ff7a7a}
+.nav-links{display:flex;gap:24px;font-size:13px;color:rgba(255,255,255,.55)}
+.nav-links span{cursor:pointer;transition:color .2s}.nav-links span:hover{color:#fff}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav-preview">
+  <div class="nav-logo">
+    <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#7fd9ff,#c9a8ff);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#000">E</div>
+    Eden Project <span style="margin-left:2px"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span>
+    <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:4px;letter-spacing:.08em">Marketplace</span>
+  </div>
+  <div class="nav-links">
+    <span>Case</span><span>Gradées</span><span>Nouveautés</span><span>Ma collection</span>
+  </div>
+</nav>
+
+<!-- RÉSUMÉ DES CHANGEMENTS -->
+<div class="summary-box">
+  <h3>✦ Ce qui change — Preview Premium</h3>
+  <ul class="summary-list">
+    <li><div class="dot"></div><div><strong>Hero :</strong> badge ✦ au lieu de ○ · dot pulsant sur l'eyebrow · glow animé sur la carte hero · gradient shimmer sur le sous-titre en italic · bouton secondaire avec reflet interne</div></li>
+    <li><div class="dot"></div><div><strong>Emojis remplacés :</strong> 📦→◼ · 🚀→↗ · ⭐→✦ · 🎁→◈ (sections premium) · 🎡→✦ · 🎰→icône roue animée</div></li>
+    <li><div class="dot"></div><div><strong>Badge SCELLÉ :</strong> gradient shimmer animé (bleu→violet→bleu) + ◆ prefix au lieu de couleur plate</div></li>
+    <li><div class="dot"></div><div><strong>Cards produit :</strong> animation d'entrée (fadeUp staggeré) · hover glow cyan + translation Y plus propre</div></li>
+    <li><div class="dot"></div><div><strong>Trust badges :</strong> icônes avec fond gradient coloré + glow matching la couleur · hover avec border glow</div></li>
+    <li><div class="dot"></div><div><strong>Jackpot banner :</strong> balayage de lumière animé · icône dans box gradient or · valeur en gradient or/blanc</div></li>
+    <li><div class="dot"></div><div><strong>Filter chips :</strong> actif = border cyan + glow léger au lieu de blanc neutre</div></li>
+    <li><div class="dot"></div><div><strong>Ticker :</strong> symboles ↗ ✦ ◼ au lieu de 🚀📦⭐ · séparateurs fins · texte légèrement plus lisible</div></li>
+    <li><div class="dot"></div><div><strong>Animations globales :</strong> IntersectionObserver fade-up sur toutes les sections au scroll · contre-animation ne se rejoue pas</div></li>
+    <li><div class="dot"></div><div><strong>Luminosité :</strong> sous-titres hero 55% → légèrement plus chauds · descriptions trust de 40% → 45%</div></li>
+  </ul>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 1. HERO SECTION -->
+<!-- ══════════════════════════════════════════════════════ -->
+<p class="section-title">① <span>HERO SECTION</span> — badge · eyebrow · sous-titre · CTA · glow carte</p>
+<hr class="sep">
+
+<div class="hero-wrap fade-up">
+  <div>
+    <!-- Badge amélioré -->
+    <div class="annotation" data-label="Avant : ○ REVENDEUR PRO · Après : ✦ + style glassmorphism">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <!-- AVANT -->
+        <div>
+          <div class="label before">avant</div>
+          <div style="display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:5px 13px;font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.1em">
+            <span style="font-size:8px;color:rgba(255,255,255,.4)">○</span> REVENDEUR PRO &amp; FOURNISSEUR
+          </div>
+        </div>
+        <!-- APRÈS -->
+        <div>
+          <div class="label after">après</div>
+          <div class="hero-badge-new">
+            <span class="diamond">✦</span> REVENDEUR PRO &amp; FOURNISSEUR
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Eyebrow amélioré -->
+    <div class="annotation" data-label="Après : dot pulsant animé (vert)" style="margin-top:16px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <div class="label before">avant</div>
+          <div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:7px">
+            <span style="color:var(--foil-4);font-size:16px">●</span> ÉDITION JAPONAISE · SCELLÉ D'ORIGINE
+          </div>
+        </div>
+        <div>
+          <div class="label after">après</div>
+          <div class="eyebrow-new">
+            <span class="pulse-dot"></span> ÉDITION JAPONAISE · SCELLÉ D'ORIGINE
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h1 class="hero-h1" style="margin-top:20px">
+      Eden Project TCG,<br>
+      <span class="gradient-text">l'investissement réinventé.</span>
+    </h1>
+
+    <!-- Sous-titre amélioré -->
+    <div class="annotation" data-label="Sous-titre : mots-clés en blanc 80% + luminosité accrue">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <div class="label before">avant (40% opacity)</div>
+          <p style="font-size:15px;color:rgba(255,255,255,.4);line-height:1.65;max-width:380px">Displays japonaises et chinoises scellées, authentifiées, livrées depuis Brest. Prix fournisseur direct, sans intermédiaire.</p>
+        </div>
+        <div>
+          <div class="label after">après (55% + emphasis)</div>
+          <p class="hero-sub-new">Displays <strong>japonaises et chinoises</strong> scellées, authentifiées, livrées depuis <strong>Brest</strong>. Prix fournisseur direct, <strong>sans intermédiaire</strong>.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA amélioré -->
+    <div class="annotation" data-label="Bouton secondaire : reflet interne gradient au hover" style="margin-top:12px">
+      <div class="label after" style="margin-bottom:8px">après</div>
+      <div class="cta-row">
+        <button class="btn-primary-new">Explorer le catalogue</button>
+        <button class="btn-secondary-new">Acheter en Case</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero card avec glow -->
+  <div class="annotation" data-label="Carte hero : glow animé cyan↔violet en boucle">
+    <div class="hero-card-wrap">
+      <div class="hero-card-flag">🇯🇵</div>
+      <div class="hero-img-placeholder">🃏</div>
+    </div>
+    <div class="side-label">Animation glow 4s cycle cyan ↔ violet</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 2. BADGE SCELLÉ -->
+<!-- ══════════════════════════════════════════════════════ -->
+<p class="section-title">② <span>BADGE SCELLÉ</span> — shimmer animé gradient</p>
+<hr class="sep">
+
+<div style="padding:0 24px;display:flex;gap:40px;align-items:center;flex-wrap:wrap" class="fade-up delay-1">
+  <div>
+    <div class="label before">avant — couleur plate</div>
+    <div style="margin-top:8px" class="badge-scelle-old">SCELLÉ</div>
+  </div>
+  <div style="font-size:20px;color:rgba(255,255,255,.2)">→</div>
+  <div>
+    <div class="label after">après — shimmer gradient animé</div>
+    <div style="margin-top:8px" class="badge-scelle-new">SCELLÉ</div>
+  </div>
+  <div style="font-size:20px;color:rgba(255,255,255,.2)">→</div>
+  <div>
+    <div class="label after">variantes</div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <div class="badge-scelle-new">HIGH CLASS</div>
+      <div class="badge-scelle-new" style="background:linear-gradient(90deg,rgba(168,255,212,.15),rgba(168,255,212,.4),rgba(127,217,255,.4),rgba(168,255,212,.15));background-size:200% auto;border-color:rgba(168,255,212,.35);animation:sealShimmer 3s linear infinite">RÉFÉRENCE</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 3. PRODUCT CARDS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<p class="section-title" style="margin-top:48px">③ <span>CARTES PRODUIT</span> — animation entrée + hover glow</p>
+<hr class="sep">
+
+<div class="two-col">
+  <div class="col">
+    <div class="label before">avant — pas d'animation d'entrée, hover discret</div>
+    <div class="prod-card-old">
+      <div class="card-img">🎴</div>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="lang-badge">CN</span>
+          <span style="color:rgba(255,255,255,.3)">DISPLAY CN</span>
+          <div class="badge-scelle-old" style="margin-left:auto">SCELLÉ</div>
+        </div>
+        <div class="card-name">CN151 Vol.3</div>
+        <div class="card-sub">Pokémon CN · Gengar Edition</div>
+        <div class="card-price">65€ <span>/ boîte</span></div>
+      </div>
+    </div>
+    <div class="side-label">Hover → border blanche neutre seulement</div>
+  </div>
+
+  <div class="col">
+    <div class="label after">après — fadeUp 0.5s + hover glow cyan</div>
+    <div class="prod-card-new">
+      <div class="card-img" style="background:radial-gradient(ellipse at 50% 60%,rgba(127,217,255,.1) 0%,transparent 70%)">🎴</div>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="lang-badge">CN</span>
+          <span style="color:rgba(255,255,255,.3)">DISPLAY CN</span>
+          <div class="badge-scelle-new" style="margin-left:auto">SCELLÉ</div>
+        </div>
+        <div class="card-name">CN151 Vol.3</div>
+        <div class="card-sub">Pokémon CN · Gengar Edition</div>
+        <div class="card-price">65€ <span>/ boîte</span></div>
+      </div>
+    </div>
+    <div class="side-label">Hover → glow cyan + translateY(-3px)</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 4. TRUST BADGES -->
+<!-- ══════════════════════════════════════════════════════ -->
+<p class="section-title" style="margin-top:48px">④ <span>TRUST BADGES</span> — icônes colorées avec glow</p>
+<hr class="sep">
+
+<div style="padding:0 24px;display:flex;flex-direction:column;gap:16px">
+  <div>
+    <div class="label before" style="padding-left:4px;margin-bottom:12px">avant — emoji avec opacity réduite</div>
+    <div class="trust-grid">
+      <div class="trust-card-old">
+        <span class="trust-icon-old">🛡️</span>
+        <div class="trust-title-old">Authenticité certifiée</div>
+        <div class="trust-desc-old">Chaque produit vérifié avant expédition.</div>
+      </div>
+      <div class="trust-card-old">
+        <span class="trust-icon-old">🚚</span>
+        <div class="trust-title-old">Logistique blindée</div>
+        <div class="trust-desc-old">Emballage sécurisé, suivi Mondial Relay.</div>
+      </div>
+      <div class="trust-card-old">
+        <span class="trust-icon-old">💬</span>
+        <div class="trust-title-old">Support privé</div>
+        <div class="trust-desc-old">Un accompagnement collectionneur dédié.</div>
+      </div>
+      <div class="trust-card-old">
+        <span class="trust-icon-old">⚡</span>
+        <div class="trust-title-old">Revendeur Pro</div>
+        <div class="trust-desc-old">Tarifs fournisseurs & accès stock direct.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:12px" class="fade-up delay-2">
+    <div class="label after" style="padding-left:4px;margin-bottom:12px">après — icônes avec fond gradient coloré + glow</div>
+    <div class="trust-grid">
+      <div class="trust-card-new">
+        <div class="trust-icon-new green">◆</div>
+        <div class="trust-title-new">Authenticité certifiée</div>
+        <div class="trust-desc-new">Chaque produit vérifié avant expédition.</div>
+      </div>
+      <div class="trust-card-new">
+        <div class="trust-icon-new" style="">↗</div>
+        <div class="trust-title-new">Logistique blindée</div>
+        <div class="trust-desc-new">Emballage sécurisé, suivi Mondial Relay.</div>
+      </div>
+      <div class="trust-card-new purple">
+        <div class="trust-icon-new purple">◈</div>
+        <div class="trust-title-new">Support privé</div>
+        <div class="trust-desc-new">Accompagnement collectionneur dédié.</div>
+      </div>
+      <div class="trust-card-new">
+        <div class="trust-icon-new gold">✦</div>
+        <div class="trust-title-new">Revendeur Pro</div>
+        <div class="trust-desc-new">Tarifs fournisseurs & accès stock direct.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 5. JACKPOT BANNER -->
+<!-- ══════════════════════════════════════════════════════ -->
+<p class="section-title" style="margin-top:48px">⑤ <span>JACKPOT BANNER</span> — sweep de lumière + valeur en or</p>
+<hr class="sep">
+
+<div style="display:flex;flex-direction:column;gap:16px" class="fade-up delay-1">
+  <div style="padding:0 24px">
+    <div class="label before" style="margin-bottom:12px">avant</div>
+    <div style="display:flex;align-items:center;gap:16px;background:rgba(240,192,96,.06);border:1px solid rgba(240,192,96,.15);border-radius:14px;padding:16px 20px;margin:0">
+      <span style="font-size:24px">🏆</span>
+      <div>
+        <div style="font-weight:600;margin-bottom:2px">Jackpot progressif — Display offerte</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4)">Chaque commande contribue au jackpot.</div>
+      </div>
+      <div style="margin-left:auto;font-size:26px;font-weight:700;color:var(--gold)">2 €</div>
+    </div>
+  </div>
+
+  <div style="padding:0 24px">
+    <div class="label after" style="margin-bottom:12px">après — sweep lumineux + icône box + valeur gradient</div>
+    <div class="jackpot-new">
+      <div class="jackpot-icon-new">◆</div>
+      <div>
+        <div class="jackpot-title-new">Jackpot progressif — Display offerte</div>
+        <div class="jackpot-sub-new">Chaque commande alimente le jackpot · Le prochain gagnant remporte une display JP de son choix</div>
+      </div>
+      <div class="jackpot-val-new">2 €</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 6. FILTER CHIPS + TICKER -->
+<!-- ══════════════════════════════════════════════════════ -->
+<p class="section-title" style="margin-top:48px">⑥ <span>CHIPS DE FILTRE</span> + <span>TICKER</span></p>
+<hr class="sep">
+
+<div style="padding:0 24px;display:flex;flex-direction:column;gap:20px" class="fade-up delay-2">
+  <div>
+    <div class="label before" style="margin-bottom:8px">chips — avant</div>
+    <div style="display:flex;gap:8px">
+      <div class="chip-old active">Tous (22)</div>
+      <div class="chip-old">🇯🇵 Japonais (13)</div>
+      <div class="chip-old">🇨🇳 Chinois.(9)</div>
+    </div>
+    <div style="font-size:11px;color:#ff7a7a;margin-top:6px;padding-left:2px">⚠ typo : "Chinois.(9)" avec un point avant la parenthèse</div>
+  </div>
+
+  <div>
+    <div class="label after" style="margin-bottom:8px">chips — après (actif cyan, typo corrigée)</div>
+    <div class="filter-row-new" style="padding:0">
+      <div class="chip-new active">Tous (22)</div>
+      <div class="chip-new">🇯🇵 Japonais (13)</div>
+      <div class="chip-new">🇨🇳 Chinois (9)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Ticker -->
+<div style="margin-top:32px">
+  <div style="padding:0 24px;margin-bottom:8px">
+    <div class="label before">ticker — avant (emojis génériques)</div>
+  </div>
+  <div class="ticker-old">
+    <div class="ticker-track-old">
+      <span style="padding:0 32px;font-size:12px;color:rgba(255,255,255,.45)">🇫🇷 Expédition depuis Brest · sous 24h ouvrées</span>
+      <span style="padding:0 32px;font-size:12px;color:rgba(255,255,255,.45)">✈️ Livraison gratuite dès une case complète</span>
+      <span style="padding:0 32px;font-size:12px;color:rgba(255,255,255,.45)">📦 Entrepôt Asie · commande directe</span>
+      <span style="padding:0 32px;font-size:12px;color:rgba(255,255,255,.45)">🚀 Mondial Relay · Colissimo · Express</span>
+      <span style="padding:0 32px;font-size:12px;color:rgba(255,255,255,.45)">⭐ Revendeur Pro &amp; Fournisseur officiel</span>
+    </div>
+  </div>
+
+  <div style="padding:0 24px;margin-top:16px;margin-bottom:8px">
+    <div class="label after">ticker — après (symboles ✦ ◼ ↗, texte clé en blanc)</div>
+  </div>
+  <div class="ticker-new">
+    <div class="ticker-track-new">
+      <div class="ticker-item-new"><span class="sym">🇫🇷</span> Expédition depuis <strong>Brest</strong> · sous 24h ouvrées</div>
+      <div class="ticker-item-new"><span class="sym">✦</span> Livraison <strong>gratuite</strong> dès une case complète</div>
+      <div class="ticker-item-new"><span class="sym">◼</span> Entrepôt Asie · commande <strong>directe</strong></div>
+      <div class="ticker-item-new"><span class="sym">↗</span> Mondial Relay · Colissimo · <strong>Express</strong></div>
+      <div class="ticker-item-new"><span class="sym">◆</span> Revendeur <strong>Pro &amp; Fournisseur</strong> officiel</div>
+      <!-- copie pour boucle -->
+      <div class="ticker-item-new"><span class="sym">🇫🇷</span> Expédition depuis <strong>Brest</strong> · sous 24h ouvrées</div>
+      <div class="ticker-item-new"><span class="sym">✦</span> Livraison <strong>gratuite</strong> dès une case complète</div>
+      <div class="ticker-item-new"><span class="sym">◼</span> Entrepôt Asie · commande <strong>directe</strong></div>
+      <div class="ticker-item-new"><span class="sym">↗</span> Mondial Relay · Colissimo · <strong>Express</strong></div>
+      <div class="ticker-item-new"><span class="sym">◆</span> Revendeur <strong>Pro &amp; Fournisseur</strong> officiel</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 7. ROUE / SPIN BUTTON -->
+<!-- ══════════════════════════════════════════════════════ -->
+<p class="section-title" style="margin-top:48px">⑦ <span>BOUTON SPIN</span> — icône animée au lieu de 🎰</p>
+<hr class="sep">
+
+<div style="padding:0 24px;display:flex;gap:40px;align-items:center;flex-wrap:wrap" class="fade-up delay-3">
+  <div>
+    <div class="label before" style="margin-bottom:10px">avant</div>
+    <button class="spin-btn-old">🎰 Tenter ma chance</button>
+  </div>
+  <div style="font-size:20px;color:rgba(255,255,255,.2)">→</div>
+  <div>
+    <div class="label after" style="margin-bottom:10px">après — icône cercle qui tourne lentement</div>
+    <button class="spin-btn-new">
+      <div class="spin-icon">✦</div>
+      Tenter ma chance
+    </button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 8. CODES COUPONS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<p class="section-title" style="margin-top:48px">⑧ <span>BADGES COUPON</span> — ◈ au lieu de 🎟️</p>
+<hr class="sep">
+
+<div style="padding:0 24px;display:flex;gap:32px;align-items:center;flex-wrap:wrap" class="fade-up delay-4">
+  <div>
+    <div class="label before" style="margin-bottom:10px">avant</div>
+    <div class="coupon-badge-old">🎟️ SHIP0 — Livraison offerte</div>
+  </div>
+  <div style="font-size:20px;color:rgba(255,255,255,.2)">→</div>
+  <div>
+    <div class="label after" style="margin-bottom:10px">après</div>
+    <div class="coupon-badge-new">SHIP0 — Livraison offerte</div>
+  </div>
+  <div class="coupon-badge-new" style="background:rgba(201,168,255,.1);border-color:rgba(201,168,255,.25);color:var(--foil-2)">EDEN10 — -10%</div>
+  <div class="coupon-badge-new" style="background:rgba(255,179,230,.08);border-color:rgba(255,179,230,.2);color:var(--foil-3)">FREE_DISPLAY</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- ANIMATION SCROLL (demo) -->
+<!-- ══════════════════════════════════════════════════════ -->
+<p class="section-title" style="margin-top:64px">⑨ <span>FADE-UP ON SCROLL</span> — IntersectionObserver (nouveau)</p>
+<hr class="sep">
+
+<div style="padding:0 24px 8px">
+  <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px 24px;font-size:13px;color:rgba(255,255,255,.55);line-height:1.8">
+    Toutes les sections (trust badges, cartes produit, jackpot, etc.) apparaîtront avec une animation <strong style="color:#fff">fadeUp de 0.7s</strong> lorsqu'elles entrent dans le viewport, grâce à un <strong style="color:#fff">IntersectionObserver</strong>.<br><br>
+    Les cartes du catalogue auront un <strong style="color:var(--foil-1)">stagger</strong> : chaque carte se décale de <strong style="color:#fff">+80ms</strong> par rapport à la précédente (max 5 cartes), donnant un effet en cascade élégant.<br><br>
+    Code JS ajouté (~15 lignes) :<br>
+    <code style="color:var(--foil-4);font-size:12px;display:block;margin-top:8px;background:rgba(168,255,212,.05);padding:12px;border-radius:8px;border-left:2px solid var(--foil-4)">
+      const io = new IntersectionObserver((entries) => {<br>
+      &nbsp;&nbsp;entries.forEach(e => {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }<br>
+      &nbsp;&nbsp;});<br>
+      }, { threshold: 0.1 });<br>
+      document.querySelectorAll('.anim-section').forEach(el => io.observe(el));
+    </code>
+  </div>
+</div>
+
+<div style="height:60px"></div>
+
+<!-- BOUTON VALIDATION -->
+<div style="position:sticky;bottom:0;background:linear-gradient(0deg,rgba(10,10,12,.98),transparent);padding:20px 24px;display:flex;justify-content:center;gap:16px">
+  <div style="background:rgba(127,217,255,.1);border:1px solid rgba(127,217,255,.3);border-radius:12px;padding:12px 24px;font-size:14px;font-weight:600;color:var(--foil-1);cursor:pointer">
+    ✦ Valider — Appliquer ces changements au vrai site
+  </div>
+  <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 24px;font-size:14px;color:rgba(255,255,255,.5);cursor:pointer">
+    Modifier d'abord
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eden Project TCG — Aperçu Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,700;1,9..144,300&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --obsidian:#0a0a0c; --obsidian-2:#111114; --obsidian-3:#16161b;
+  --glass:rgba(255,255,255,.04); --glass-border:rgba(255,255,255,.09);
+  --foil-1:#7fd9ff; --foil-2:#c9a8ff; --foil-3:#ffb3e6; --foil-4:#a8ffd4;
+  --success:#7fffaa; --danger:#ff7a7a; --gold:#f0c060;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--obsidian);color:#fff;font-family:'Manrope',sans-serif;font-size:15px;line-height:1.6;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Fraunces',serif}
+
+/* ══ ANIMATIONS ══ */
+@keyframes shimmerText{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.65)}}
+@keyframes cardGlow{0%,100%{box-shadow:0 0 50px rgba(127,217,255,.06),inset 0 0 40px rgba(127,217,255,.02)}50%{box-shadow:0 0 70px rgba(201,168,255,.1),inset 0 0 40px rgba(201,168,255,.04)}}
+@keyframes sealShimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes jackpotSweep{from{left:-60%}to{left:160%}}
+@keyframes jackpotPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,192,96,0)}50%{box-shadow:0 0 24px rgba(240,192,96,.07)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spinRotate{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes glowT{0%,100%{text-shadow:0 0 8px rgba(127,217,255,.8)}50%{text-shadow:0 0 20px rgba(127,217,255,1),0 0 40px rgba(127,217,255,.5)}}
+@keyframes glowG{0%,100%{text-shadow:0 0 8px rgba(255,100,100,.8)}50%{text-shadow:0 0 20px rgba(255,100,100,1),0 0 40px rgba(255,100,100,.5)}}
+
+/* ══ NAV ══ */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,10,12,.88);backdrop-filter:blur(28px);
+  border-bottom:1px solid rgba(255,255,255,.05);
+  padding:0 40px;height:54px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;letter-spacing:.01em}
+.nav-logo-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--foil-1),var(--foil-2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#000}
+.logo-t{color:var(--foil-1);animation:glowT 3s ease-in-out infinite}
+.logo-g{color:#ff6464;animation:glowG 3s ease-in-out infinite 1s}
+.nav-sub{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.08em;font-weight:400}
+.nav-links{display:flex;gap:28px;font-size:13px;color:rgba(255,255,255,.5)}
+.nav-links a{color:inherit;text-decoration:none;cursor:pointer;transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-icons{display:flex;gap:14px;align-items:center}
+.nav-icon{width:36px;height:36px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;transition:background .2s}
+.nav-icon:hover{background:rgba(255,255,255,.08)}
+
+/* ══ TICKER ══ */
+.ticker{background:linear-gradient(90deg,rgba(127,217,255,.03),rgba(201,168,255,.03));border-bottom:1px solid rgba(255,255,255,.05);padding:9px 0;overflow:hidden;white-space:nowrap}
+.ticker-track{display:inline-flex;animation:ticker 32s linear infinite}
+.t-item{display:inline-flex;align-items:center;gap:7px;padding:0 36px;font-size:11.5px;color:rgba(255,255,255,.45);letter-spacing:.03em;border-right:1px solid rgba(255,255,255,.06)}
+.t-item .sym{color:var(--foil-1);font-size:10px;flex-shrink:0}
+.t-item strong{color:rgba(255,255,255,.72);font-weight:600}
+
+/* ══ HERO ══ */
+.hero{min-height:86vh;display:flex;align-items:center;padding:60px 80px;gap:64px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(127,217,255,.04) 0%,transparent 60%),radial-gradient(ellipse at 70% 30%,rgba(201,168,255,.04) 0%,transparent 60%);pointer-events:none}
+.hero-left{flex:1;animation:fadeUp .8s cubic-bezier(.16,1,.3,1) both}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:6px 14px 6px 10px;font-size:10.5px;letter-spacing:.1em;color:rgba(255,255,255,.55);margin-bottom:20px;background:rgba(255,255,255,.025);backdrop-filter:blur(8px)}
+.hero-badge .diam{color:var(--foil-2);font-size:9px}
+.hero-eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--foil-4);box-shadow:0 0 8px var(--foil-4);animation:pulseDot 2s ease-in-out infinite;flex-shrink:0}
+.hero-h1{font-size:58px;line-height:1.03;font-weight:700;margin-bottom:12px}
+.hero-h1 .grad{background:linear-gradient(135deg,var(--foil-3) 0%,var(--foil-2) 45%,var(--foil-1) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% auto;animation:shimmerText 5s linear infinite}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.52);line-height:1.7;margin-bottom:32px;max-width:400px}
+.hero-sub strong{color:rgba(255,255,255,.78);font-weight:500}
+.cta-row{display:flex;gap:12px}
+.btn-white{padding:13px 26px;border-radius:12px;font-size:14px;font-weight:600;background:#fff;color:#000;border:none;cursor:pointer;transition:opacity .2s,transform .2s;letter-spacing:.01em}
+.btn-white:hover{opacity:.9;transform:translateY(-1px)}
+.btn-ghost{padding:13px 26px;border-radius:12px;font-size:14px;font-weight:600;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.14);cursor:pointer;transition:all .2s;letter-spacing:.01em;position:relative;overflow:hidden}
+.btn-ghost::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(127,217,255,.07),rgba(201,168,255,.07));opacity:0;transition:opacity .2s}
+.btn-ghost:hover{border-color:rgba(127,217,255,.38);transform:translateY(-1px)}
+.btn-ghost:hover::before{opacity:1}
+.hero-right{flex:0 0 420px;animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .15s both}
+.hero-card-wrap{border-radius:22px;overflow:hidden;background:linear-gradient(145deg,rgba(127,217,255,.05),rgba(201,168,255,.05));border:1px solid rgba(255,255,255,.07);padding:40px 32px;display:flex;align-items:center;justify-content:center;position:relative;animation:cardGlow 5s ease-in-out infinite}
+.hero-card-flag{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 3px 14px rgba(0,0,0,.5)}
+.hero-card-img{width:200px;height:300px;border-radius:14px;background:linear-gradient(160deg,#1e2d3f,#0d1a2a);border:1px solid rgba(127,217,255,.18);display:flex;align-items:center;justify-content:center;font-size:72px;box-shadow:0 24px 64px rgba(0,0,0,.7),0 0 40px rgba(127,217,255,.08)}
+
+/* ══ JACKPOT ══ */
+.jackpot{display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,rgba(240,192,96,.07),rgba(255,179,230,.04));border:1px solid rgba(240,192,96,.18);border-radius:16px;padding:18px 24px;margin:0 80px 60px;position:relative;overflow:hidden;animation:jackpotPulse 3.5s ease-in-out infinite}
+.jackpot::before{content:'';position:absolute;top:0;left:-60%;width:55%;height:100%;background:linear-gradient(90deg,transparent,rgba(240,192,96,.04),transparent);animation:jackpotSweep 4.5s linear infinite}
+.jp-icon{width:46px;height:46px;border-radius:13px;flex-shrink:0;background:linear-gradient(135deg,rgba(240,192,96,.22),rgba(255,179,230,.08));border:1px solid rgba(240,192,96,.28);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--gold)}
+.jp-title{font-family:'Fraunces',serif;font-size:15px;margin-bottom:2px;font-weight:600}
+.jp-sub{font-size:12px;color:rgba(255,255,255,.42);line-height:1.4}
+.jp-val{margin-left:auto;font-family:'Fraunces',serif;font-size:30px;font-weight:700;background:linear-gradient(135deg,var(--gold),#fffacd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+
+/* ══ SECTION HEADERS ══ */
+.section{padding:0 80px 80px}
+.section-head{margin-bottom:36px}
+.s-eyebrow{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:10px}
+.s-title{font-size:36px;font-weight:700;line-height:1.1}
+.s-title em{font-style:italic;font-weight:300;background:linear-gradient(135deg,var(--foil-2),var(--foil-3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.s-desc{font-size:14px;color:rgba(255,255,255,.42);margin-top:8px;max-width:420px;line-height:1.6}
+
+/* ══ FILTERS ══ */
+.filters{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+.chip{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5);cursor:pointer;transition:all .2s}
+.chip:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
+.chip.active{background:rgba(127,217,255,.1);border-color:rgba(127,217,255,.32);color:#fff;box-shadow:0 0 14px rgba(127,217,255,.08)}
+
+/* ══ PRODUCT GRID ══ */
+.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.prod-card{background:var(--obsidian-2);border:1px solid var(--glass-border);border-radius:18px;overflow:hidden;cursor:pointer;transition:border-color .3s,box-shadow .3s,transform .3s;animation:cardIn .5s cubic-bezier(.16,1,.3,1) both}
+.prod-card:nth-child(1){animation-delay:0s}
+.prod-card:nth-child(2){animation-delay:.08s}
+.prod-card:nth-child(3){animation-delay:.16s}
+.prod-card:hover{border-color:rgba(127,217,255,.28);box-shadow:0 0 0 1px rgba(127,217,255,.12),0 20px 50px rgba(0,0,0,.5),0 0 40px rgba(127,217,255,.06);transform:translateY(-3px)}
+.card-img{height:210px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 60%,rgba(127,217,255,.07) 0%,transparent 70%);font-size:70px;position:relative}
+.card-viewers{position:absolute;bottom:10px;right:10px;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);border-radius:20px;padding:3px 9px;font-size:10.5px;color:rgba(255,255,255,.6)}
+.card-viewers::before{content:'';width:5px;height:5px;border-radius:50%;background:#ff5f5f;animation:pulseDot 1.5s ease-in-out infinite;flex-shrink:0}
+.card-body{padding:14px 16px 18px}
+.card-meta{display:flex;align-items:center;gap:6px;margin-bottom:7px;flex-wrap:wrap}
+.lang-cn{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.08em;padding:2px 7px;border-radius:10px;background:rgba(168,255,212,.12);border:1px solid rgba(168,255,212,.22);color:var(--foil-4)}
+.lang-jp{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.08em;padding:2px 7px;border-radius:10px;background:rgba(127,217,255,.1);border:1px solid rgba(127,217,255,.22);color:var(--foil-1)}
+.meta-label{font-size:10px;letter-spacing:.07em;color:rgba(255,255,255,.32);text-transform:uppercase}
+.badge-scelle{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;letter-spacing:.1em;padding:2px 8px;border-radius:20px;background:linear-gradient(90deg,rgba(127,217,255,.14) 0%,rgba(127,217,255,.35) 40%,rgba(201,168,255,.35) 60%,rgba(127,217,255,.14) 100%);background-size:200% auto;border:1px solid rgba(127,217,255,.3);color:#fff;animation:sealShimmer 3.5s linear infinite;margin-left:auto}
+.badge-scelle::before{content:'◆';font-size:7px;color:var(--foil-1)}
+.badge-hc{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;letter-spacing:.1em;padding:2px 8px;border-radius:20px;background:linear-gradient(90deg,rgba(255,179,230,.14),rgba(255,179,230,.35),rgba(201,168,255,.35),rgba(255,179,230,.14));background-size:200% auto;border:1px solid rgba(255,179,230,.3);color:#fff;animation:sealShimmer 3.5s linear infinite .5s;margin-left:auto}
+.badge-hc::before{content:'◆';font-size:7px;color:var(--foil-3)}
+.card-name{font-family:'Fraunces',serif;font-size:16px;margin-bottom:3px;font-weight:600}
+.card-sub{font-size:12px;color:rgba(255,255,255,.38);margin-bottom:13px}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.card-price{font-family:'Fraunces',serif;font-size:20px;font-weight:700}
+.card-price span{font-size:12px;color:rgba(255,255,255,.38);font-family:'Manrope',sans-serif;font-weight:400;margin-left:2px}
+.card-add{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all .2s;color:#fff;font-weight:300}
+.card-add:hover{background:rgba(127,217,255,.15);border-color:rgba(127,217,255,.3)}
+
+/* ══ TRUST BADGES ══ */
+.trust-section{padding:60px 80px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.012),transparent)}
+.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.trust-card{background:var(--obsidian-2);border:1px solid var(--glass-border);border-radius:16px;padding:26px 22px;text-align:center;transition:border-color .3s,box-shadow .3s;animation:fadeUp .7s cubic-bezier(.16,1,.3,1) both}
+.trust-card:nth-child(2){animation-delay:.1s}
+.trust-card:nth-child(3){animation-delay:.2s}
+.trust-card:nth-child(4){animation-delay:.3s}
+.trust-card:hover{border-color:rgba(127,217,255,.18);box-shadow:0 0 28px rgba(127,217,255,.05)}
+.trust-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:20px;font-weight:700}
+.ti-green{background:linear-gradient(135deg,rgba(168,255,212,.18),rgba(127,217,255,.08));border:1px solid rgba(168,255,212,.22);box-shadow:0 0 22px rgba(168,255,212,.08);color:var(--foil-4)}
+.ti-blue{background:linear-gradient(135deg,rgba(127,217,255,.18),rgba(201,168,255,.08));border:1px solid rgba(127,217,255,.22);box-shadow:0 0 22px rgba(127,217,255,.08);color:var(--foil-1)}
+.ti-purple{background:linear-gradient(135deg,rgba(201,168,255,.18),rgba(255,179,230,.08));border:1px solid rgba(201,168,255,.22);box-shadow:0 0 22px rgba(201,168,255,.08);color:var(--foil-2)}
+.ti-gold{background:linear-gradient(135deg,rgba(240,192,96,.18),rgba(255,179,230,.06));border:1px solid rgba(240,192,96,.22);box-shadow:0 0 22px rgba(240,192,96,.07);color:var(--gold)}
+.trust-title{font-family:'Fraunces',serif;font-size:15px;margin-bottom:6px;font-weight:600}
+.trust-desc{font-size:12.5px;color:rgba(255,255,255,.44);line-height:1.55}
+
+/* ══ DASHBOARD / ROUE ══ */
+.dashboard-section{padding:60px 80px}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.dash-card{background:var(--obsidian-2);border:1px solid var(--glass-border);border-radius:20px;padding:28px}
+.dash-title{font-family:'Fraunces',serif;font-size:18px;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.dash-title .diam{color:var(--foil-2);font-size:14px}
+.dash-sub{font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:22px}
+.spin-btn{display:inline-flex;align-items:center;gap:10px;padding:13px 26px;border-radius:13px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid rgba(201,168,255,.32);background:linear-gradient(135deg,rgba(201,168,255,.15),rgba(127,217,255,.1));color:#fff;transition:all .2s}
+.spin-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(201,168,255,.18)}
+.spin-icon{width:22px;height:22px;border-radius:50%;background:rgba(201,168,255,.28);border:1px solid rgba(201,168,255,.45);display:flex;align-items:center;justify-content:center;font-size:11px;animation:spinRotate 8s linear infinite}
+.coupon-list{display:flex;flex-direction:column;gap:10px}
+.coupon-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px}
+.coupon-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:20px;letter-spacing:.04em}
+.cb-green{background:rgba(168,255,212,.1);border:1px solid rgba(168,255,212,.22);color:var(--foil-4)}
+.cb-purple{background:rgba(201,168,255,.1);border:1px solid rgba(201,168,255,.22);color:var(--foil-2)}
+.cb-pink{background:rgba(255,179,230,.08);border:1px solid rgba(255,179,230,.2);color:var(--foil-3)}
+.coupon-badge::before{content:'◈';font-size:9px}
+.coupon-desc{font-size:12.5px;color:rgba(255,255,255,.5)}
+
+/* ══ FOOTER ══ */
+footer{background:var(--obsidian-2);border-top:1px solid rgba(255,255,255,.06);padding:52px 80px 32px}
+.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:44px}
+.foot-brand{font-family:'Fraunces',serif;font-size:18px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.foot-desc{font-size:12.5px;color:rgba(255,255,255,.38);line-height:1.7;max-width:260px}
+.foot-col h5{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px;font-weight:600;font-family:'Manrope',sans-serif}
+.foot-links{display:flex;flex-direction:column;gap:9px}
+.foot-links a{font-size:13px;color:rgba(255,255,255,.45);text-decoration:none;cursor:pointer;transition:color .2s}
+.foot-links a:hover{color:#fff}
+.foot-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:24px;border-top:1px solid rgba(255,255,255,.06);font-size:12px;color:rgba(255,255,255,.28)}
+.foot-bottom a{color:rgba(255,255,255,.35);text-decoration:none;cursor:pointer}
+.foot-bottom a:hover{color:rgba(255,255,255,.6)}
+/* foot ticker */
+.foot-ticker{border-top:1px solid rgba(255,255,255,.05);padding:8px 0;overflow:hidden;white-space:nowrap}
+.foot-track{display:inline-flex;animation:ticker 36s linear infinite}
+.ft-item{padding:0 32px;font-size:11.5px;color:rgba(255,255,255,.28)}
+.ft-item .hi{color:var(--foil-1)}
+
+/* ══ MODAL PRODUIT (en bas) ══ */
+.modal-demo{background:var(--obsidian);padding:60px 80px}
+.modal-wrap{background:var(--obsidian-2);border:1px solid var(--glass-border);border-radius:22px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;max-width:860px;margin:0 auto}
+.modal-left{background:radial-gradient(ellipse at 50% 60%,rgba(127,217,255,.08) 0%,transparent 70%);display:flex;align-items:center;justify-content:center;padding:48px;min-height:420px}
+.modal-img{width:160px;height:240px;border-radius:12px;background:linear-gradient(160deg,#1e2d3f,#0d1a2a);border:1px solid rgba(127,217,255,.2);display:flex;align-items:center;justify-content:center;font-size:56px;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.modal-right{padding:32px}
+.modal-tag{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.modal-title{font-family:'Fraunces',serif;font-size:26px;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:13px;color:rgba(255,255,255,.42);margin-bottom:16px}
+.modal-desc{font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:20px}
+.tiers-table{border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.tier-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.06)}
+.tier-row:last-child{border-bottom:none}
+.tier-row.best{background:rgba(127,217,255,.06);border-left:2px solid rgba(127,217,255,.4)}
+.tier-label{color:rgba(255,255,255,.5)}
+.tier-price{font-weight:700;font-family:'Fraunces',serif;font-size:15px}
+.tier-badge{font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(168,255,212,.15);border:1px solid rgba(168,255,212,.25);color:var(--foil-4);font-weight:600}
+.ebay-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;margin-bottom:16px;font-size:12.5px}
+.ebay-label{color:rgba(255,255,255,.4);display:flex;align-items:center;gap:5px}
+.ebay-price{font-weight:700;color:var(--foil-1)}
+.ebay-save{margin-left:auto;padding:3px 8px;border-radius:20px;background:rgba(168,255,212,.1);border:1px solid rgba(168,255,212,.2);color:var(--foil-4);font-size:11px;font-weight:600}
+.bundle-section{padding:14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:12px;margin-bottom:18px}
+.bundle-title{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.32);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.bundle-title::before{content:'◈';color:var(--foil-2);font-size:10px}
+.bundle-item{display:flex;align-items:center;gap:10px;font-size:13px}
+.bundle-img{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,rgba(201,168,255,.15),rgba(127,217,255,.1));border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.bundle-info{flex:1}
+.bundle-name{font-weight:600;font-size:13px}
+.bundle-sub{font-size:11px;color:rgba(255,255,255,.38)}
+.bundle-add{padding:5px 12px;border-radius:8px;background:rgba(127,217,255,.1);border:1px solid rgba(127,217,255,.22);color:var(--foil-1);font-size:12px;font-weight:600;cursor:pointer}
+.modal-qty{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.qty-btn{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:18px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.qty-btn:hover{background:rgba(255,255,255,.12)}
+.qty-val{font-family:'Fraunces',serif;font-size:18px;min-width:30px;text-align:center}
+.qty-hint{font-size:12px;color:rgba(255,255,255,.35)}
+.modal-btns{display:flex;gap:10px}
+.btn-add-cart{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:600;background:#fff;color:#000;border:none;cursor:pointer;transition:opacity .2s}
+.btn-close{padding:13px 18px;border-radius:12px;font-size:14px;font-weight:600;background:transparent;color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.12);cursor:pointer;transition:all .2s}
+.btn-close:hover{color:#fff;border-color:rgba(255,255,255,.25)}
+.modal-price{font-family:'Fraunces',serif;font-size:20px;font-weight:700;margin-bottom:14px;color:rgba(255,255,255,.5)}
+.modal-price strong{color:#fff;font-size:24px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon">E</div>
+    Eden Project&nbsp;<span><span class="logo-t">T</span><span style="color:rgba(255,255,255,.92)">C</span><span class="logo-g">G</span></span>
+    <span class="nav-sub">Marketplace</span>
+  </div>
+  <div class="nav-links">
+    <a>Case</a><a>Gradées</a><a>Nouveautés</a><a>Ma collection</a><a>Aide</a>
+  </div>
+  <div class="nav-icons">
+    <div class="nav-icon">🔍</div>
+    <div class="nav-icon">👤</div>
+    <div class="nav-icon" style="position:relative">🛒<span style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--foil-1);color:#000;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center">0</span></div>
+  </div>
+</nav>
+
+<!-- TICKER HAUT -->
+<div class="ticker">
+  <div class="ticker-track">
+    <div class="t-item"><span class="sym">🇫🇷</span> Expédition depuis <strong>Brest</strong> · sous 24h ouvrées</div>
+    <div class="t-item"><span class="sym">✦</span> Livraison <strong>gratuite</strong> dès une case complète</div>
+    <div class="t-item"><span class="sym">◼</span> Entrepôt Asie · commande <strong>directe</strong> disponible</div>
+    <div class="t-item"><span class="sym">↗</span> Mondial Relay · Colissimo · <strong>Express</strong></div>
+    <div class="t-item"><span class="sym">◆</span> Revendeur <strong>Pro &amp; Fournisseur</strong> officiel</div>
+    <div class="t-item"><span class="sym">🇫🇷</span> Expédition depuis <strong>Brest</strong> · sous 24h ouvrées</div>
+    <div class="t-item"><span class="sym">✦</span> Livraison <strong>gratuite</strong> dès une case complète</div>
+    <div class="t-item"><span class="sym">◼</span> Entrepôt Asie · commande <strong>directe</strong> disponible</div>
+    <div class="t-item"><span class="sym">↗</span> Mondial Relay · Colissimo · <strong>Express</strong></div>
+    <div class="t-item"><span class="sym">◆</span> Revendeur <strong>Pro &amp; Fournisseur</strong> officiel</div>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-badge"><span class="diam">✦</span> REVENDEUR PRO &amp; FOURNISSEUR</div>
+    <div class="hero-eyebrow"><span class="pulse-dot"></span> ÉDITION JAPONAISE · SCELLÉ D'ORIGINE</div>
+    <h1 class="hero-h1">Eden Project TCG,<br><span class="grad">l'investissement réinventé.</span></h1>
+    <p class="hero-sub">Displays <strong>japonaises et chinoises</strong> scellées, authentifiées, livrées depuis <strong>Brest</strong>. Prix fournisseur direct, <strong>sans intermédiaire</strong>.</p>
+    <div class="cta-row">
+      <button class="btn-white">Explorer le catalogue</button>
+      <button class="btn-ghost">Acheter en Case</button>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-card-wrap">
+      <div class="hero-card-flag">🇯🇵</div>
+      <div class="hero-card-img">🃏</div>
+    </div>
+  </div>
+</section>
+
+<!-- JACKPOT -->
+<div class="jackpot">
+  <div class="jp-icon">◆</div>
+  <div>
+    <div class="jp-title">Jackpot progressif — Display offerte</div>
+    <div class="jp-sub">Chaque commande alimente le jackpot · Le prochain gagnant remporte une display JP de son choix</div>
+  </div>
+  <div class="jp-val">142 €</div>
+</div>
+
+<!-- TRUST BADGES -->
+<div class="trust-section">
+  <div class="trust-grid">
+    <div class="trust-card">
+      <div class="trust-icon ti-green">◆</div>
+      <div class="trust-title">Authenticité certifiée</div>
+      <div class="trust-desc">Chaque produit vérifié avant expédition.</div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-icon ti-blue">↗</div>
+      <div class="trust-title">Logistique blindée</div>
+      <div class="trust-desc">Emballage sécurisé, suivi Mondial Relay.</div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-icon ti-purple">◈</div>
+      <div class="trust-title">Support privé</div>
+      <div class="trust-desc">Accompagnement collectionneur dédié.</div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-icon ti-gold">✦</div>
+      <div class="trust-title">Revendeur Pro</div>
+      <div class="trust-desc">Tarifs fournisseurs &amp; accès stock direct.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CATALOGUE -->
+<section class="section">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px">
+    <div class="section-head" style="margin-bottom:0">
+      <div class="s-eyebrow">Catalogue</div>
+      <h2 class="s-title">Marketplace<br>— <em>sélection du mois.</em></h2>
+    </div>
+    <p class="s-desc">22 displays scellées, vérifiées par notre équipe à Brest. Prix fournisseur direct.</p>
+  </div>
+  <div class="filters">
+    <div class="chip active">Tous (22)</div>
+    <div class="chip">🇯🇵 Japonais (13)</div>
+    <div class="chip">🇨🇳 Chinois (9)</div>
+  </div>
+  <div class="prod-grid">
+    <!-- Card 1 -->
+    <div class="prod-card">
+      <div class="card-img">🎴<div class="card-viewers">4 regardent</div></div>
+      <div class="card-body">
+        <div class="card-meta"><span class="lang-cn">CN</span><span class="meta-label">Display CN</span><div class="badge-scelle">SCELLÉ</div></div>
+        <div class="card-name">CN151 Vol.3</div>
+        <div class="card-sub">Pokémon CN · Gengar Edition</div>
+        <div class="card-footer"><div class="card-price">65€<span>/ boîte</span></div><div class="card-add">+</div></div>
+      </div>
+    </div>
+    <!-- Card 2 -->
+    <div class="prod-card">
+      <div class="card-img">🎴</div>
+      <div class="card-body">
+        <div class="card-meta"><span class="lang-cn">CN</span><span class="meta-label">Display CN</span><div class="badge-scelle">SCELLÉ</div></div>
+        <div class="card-name">CN151 Vol.4</div>
+        <div class="card-sub">Pokémon CN · Pikachu Edition</div>
+        <div class="card-footer"><div class="card-price">65€<span>/ boîte</span></div><div class="card-add">+</div></div>
+      </div>
+    </div>
+    <!-- Card 3 JP HIGH CLASS -->
+    <div class="prod-card">
+      <div class="card-img" style="background:radial-gradient(ellipse at 50% 60%,rgba(127,217,255,.12) 0%,transparent 70%)">🃏<div class="card-viewers">6 regardent</div></div>
+      <div class="card-body">
+        <div class="card-meta"><span class="lang-jp">JP</span><span class="meta-label">Display JP</span><div class="badge-hc">HIGH CLASS</div></div>
+        <div class="card-name">M2a — Méga Dream EX</div>
+        <div class="card-sub">Display JP · 30 boosters</div>
+        <div class="card-footer"><div class="card-price">85€<span>/ boîte</span></div><div class="card-add">+</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL PRODUIT -->
+<div class="modal-demo">
+  <div class="s-eyebrow" style="margin-bottom:16px;padding:0">Aperçu modal produit</div>
+  <div class="modal-wrap">
+    <div class="modal-left">
+      <div class="modal-img">🎴</div>
+    </div>
+    <div class="modal-right">
+      <div class="modal-tag">
+        <span class="lang-cn">CN</span>
+        <span style="font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.08em;text-transform:uppercase">Display CN · Scellé</span>
+      </div>
+      <div class="modal-title">CN151 Vol.3</div>
+      <div class="modal-sub">Pokémon CN · Gengar Edition</div>
+      <div class="modal-desc">Collection 151 Vol.3 — Gengar Edition. 15 boosters/boîte · 5 cartes/booster · 1 holo garanti.</div>
+      <div class="tiers-table">
+        <div class="tier-row"><span class="tier-label">≥10 boîtes</span><span class="tier-price">65€</span></div>
+        <div class="tier-row best"><span class="tier-label">≥20 boîtes</span><span class="tier-price">60€</span><span class="tier-badge">Populaire</span></div>
+        <div class="tier-row"><span class="tier-label">≥60 boîtes</span><span class="tier-price">55€</span></div>
+      </div>
+      <div class="ebay-row">
+        <span class="ebay-label">📈 eBay réf.</span>
+        <span class="ebay-price">78€</span>
+        <span class="ebay-save">-17% vs eBay</span>
+      </div>
+      <div class="bundle-section">
+        <div class="bundle-title">SOUVENT ACHETÉS ENSEMBLE</div>
+        <div class="bundle-item">
+          <div class="bundle-img">🎴</div>
+          <div class="bundle-info"><div class="bundle-name">Gempack Vol.3</div><div class="bundle-sub">Pokémon CN · 65€/boîte</div></div>
+          <button class="bundle-add">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="modal-price"><strong>65€</strong>/boîte</div>
+      <div class="modal-qty">
+        <div class="qty-btn">−</div>
+        <div class="qty-val">0</div>
+        <div class="qty-btn">+</div>
+        <span class="qty-hint">Choisir la quantité</span>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-add-cart">Ajouter au panier</button>
+        <button class="btn-close">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard-section">
+  <div class="s-eyebrow" style="margin-bottom:20px">Dashboard</div>
+  <div class="dash-grid">
+    <div class="dash-card">
+      <div class="dash-title"><span class="diam">✦</span> Roue de la fortune</div>
+      <div class="dash-sub">Un tirage tous les 30 jours · Codes et réductions à gagner</div>
+      <button class="spin-btn"><div class="spin-icon">✦</div> Tenter ma chance</button>
+    </div>
+    <div class="dash-card">
+      <div class="dash-title"><span class="diam">◈</span> Mes coupons</div>
+      <div class="dash-sub">Codes actifs sur votre compte</div>
+      <div class="coupon-list">
+        <div class="coupon-item"><div class="coupon-badge cb-green">SHIP0</div><div class="coupon-desc">Livraison offerte</div></div>
+        <div class="coupon-item"><div class="coupon-badge cb-purple">EDEN10</div><div class="coupon-desc">-10% sur le panier</div></div>
+        <div class="coupon-item"><div class="coupon-badge cb-pink">FREE_DISPLAY</div><div class="coupon-desc">Display offerte</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER TICKER -->
+<div class="foot-ticker">
+  <div class="foot-track">
+    <span class="ft-item">Eden Project TCG</span>
+    <span class="ft-item">Revendeur Pro &amp; Fournisseur</span>
+    <span class="ft-item"><span class="hi">Authenticité certifiée</span> sur chaque produit</span>
+    <span class="ft-item">Expédition depuis Brest · France</span>
+    <span class="ft-item">22 displays en stock · Prix fournisseur</span>
+    <span class="ft-item">Roue de la fortune · Codes promo membres</span>
+    <span class="ft-item">Eden Project TCG</span>
+    <span class="ft-item">Revendeur Pro &amp; Fournisseur</span>
+    <span class="ft-item"><span class="hi">Authenticité certifiée</span> sur chaque produit</span>
+    <span class="ft-item">Expédition depuis Brest · France</span>
+    <span class="ft-item">22 displays en stock · Prix fournisseur</span>
+    <span class="ft-item">Roue de la fortune · Codes promo membres</span>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-grid">
+    <div>
+      <div class="foot-brand">
+        <div class="nav-logo-icon">E</div>
+        Eden Project <span style="margin-left:3px"><span class="logo-t">T</span><span style="color:rgba(255,255,255,.9)">C</span><span class="logo-g">G</span></span>
+      </div>
+      <p class="foot-desc">Marketplace dédiée aux cartes Pokémon japonaises et chinoises. Revendeur Pro &amp; Fournisseur officiel. Sélection rigoureuse, authentification garantie, expédition depuis Brest.</p>
+    </div>
+    <div class="foot-col">
+      <h5>Marketplace</h5>
+      <div class="foot-links"><a>Displays JP</a><a>Displays CN</a><a>Acheter en Case</a><a>Cartes Gradées</a></div>
+    </div>
+    <div class="foot-col">
+      <h5>Compte</h5>
+      <div class="foot-links"><a>Ma collection</a><a>Mes commandes</a><a>Créer un compte</a><a>Codes promo</a></div>
+    </div>
+    <div class="foot-col">
+      <h5>Aide</h5>
+      <div class="foot-links"><a>Contact</a><a>FAQ</a><a>Livraison</a><a>Nouveautés</a></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 Eden Project TCG · Brest, France · Revendeur Pro &amp; Fournisseur</span>
+    <div style="display:flex;gap:20px"><a>CGV</a><a>Mentions légales</a><a>Confidentialité</a></div>
+  </div>
+</footer>
+
+</body>
+</html>
