@@ -3940,9 +3940,15 @@ window.addEventListener('load', () => {
     tbody.innerHTML=_adminOrders.map(o=>{
       const date=new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
       const items=(o.items||[]).map(i=>`${i.n||i.name||'?'} ×${i.q||i.qty||1}`).join(', ').slice(0,60)||'—';
-      const ship=o.shippingMode==='mr'?'📦 MR'+(o.mrPoint?` <span style="font-size:10px;color:var(--foil-1)">${o.mrPoint.ville||''}</span>`:''):o.shippingMode==='colissimo'?'🏠 Colissimo':o.shippingMode==='exp'?'⚡ Express':'—';
-      const badge=o.status==='shipped'?'<span class="order-status-badge osb-shipped">📦 Expédié</span>':o.status==='label_printed'?'<span class="order-status-badge osb-label">🖨️ Étiquette</span>':'<span class="order-status-badge osb-pending">⏳ En attente</span>';
+      const isMR=o.shippingMode==='mr';
+      const ship=isMR?'📦 MR'+(o.mrPoint?` <span style="font-size:10px;color:var(--foil-1)">${o.mrPoint.ville||''}</span>`:''):o.shippingMode==='colissimo'?'🏠 Colissimo':o.shippingMode==='exp'?'⚡ Express':'—';
+      const badge=o.status==='shipped'?'<span class="order-status-badge osb-shipped">📦 Expédié</span>':o.status==='label_printed'?'<span class="order-status-badge osb-label">🖨️ Étiquette imprimée</span>':'<span class="order-status-badge osb-pending">⏳ En attente</span>';
       const prov=o.provider==='paypal'?'🅿 PayPal':'💳 CB';
+      const labelBtn=isMR&&o.mrPoint?.id
+        ? (o.mrLabelUrl
+            ? `<a href="${o.mrLabelUrl}" target="_blank" class="order-action-btn" style="text-decoration:none;color:var(--foil-4);border-color:var(--foil-4)">📄 PDF</a>`
+            : `<button class="order-action-btn" onclick="generateMRLabel('${o.ref}')" style="color:var(--foil-1);border-color:var(--foil-1)">🖨️ Étiquette</button>`)
+        : '';
       return `<tr>
         <td><span style="font-family:monospace;font-size:12px;color:var(--foil-1)">${o.ref||'—'}</span></td>
         <td style="font-size:11.5px;color:var(--text-dim)">${date}</td>
@@ -3953,9 +3959,10 @@ window.addEventListener('load', () => {
         <td>
           ${badge}
           <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
-            <button class="order-action-btn${o.status==='pending'?' active':''}" onclick="setOrderStatus('${o.ref}','pending')">⏳</button>
-            <button class="order-action-btn${o.status==='label_printed'?' active':''}" onclick="setOrderStatus('${o.ref}','label_printed')">🖨️</button>
-            <button class="order-action-btn${o.status==='shipped'?' active':''}" onclick="setOrderStatus('${o.ref}','shipped')">📦</button>
+            ${labelBtn}
+            <button class="order-action-btn${o.status==='pending'?' active':''}" onclick="setOrderStatus('${o.ref}','pending')" title="En attente">⏳</button>
+            <button class="order-action-btn${o.status==='label_printed'?' active':''}" onclick="setOrderStatus('${o.ref}','label_printed')" title="Étiquette imprimée">🖨️</button>
+            <button class="order-action-btn${o.status==='shipped'?' active':''}" onclick="setOrderStatus('${o.ref}','shipped')" title="Expédié">📦</button>
           </div>
         </td>
       </tr>`;
@@ -3969,6 +3976,31 @@ window.addEventListener('load', () => {
       const idx=_adminOrders.findIndex(o=>o.ref===ref);
       if(idx!==-1){_adminOrders[idx].status=status;renderAdminOrders();}
     }catch(e){showNotif('Erreur mise à jour statut','info');}
+  }
+
+  async function generateMRLabel(ref){
+    const code=document.getElementById('adminCodeInput').value;
+    showNotif('Génération de l\'étiquette en cours…','info');
+    try{
+      const res=await fetch('/api/mr-label',{method:'POST',
+        headers:{'Content-Type':'application/json','X-Admin-Code':code},
+        body:JSON.stringify({ref})});
+      const data=await res.json();
+      if(!res.ok) throw new Error(data.error||'Erreur inconnue');
+      // Ouvrir le PDF dans un nouvel onglet
+      window.open(data.labelUrl,'_blank');
+      // Mettre à jour localement
+      const idx=_adminOrders.findIndex(o=>o.ref===ref);
+      if(idx!==-1){
+        _adminOrders[idx].status='label_printed';
+        _adminOrders[idx].mrLabelUrl=data.labelUrl;
+        _adminOrders[idx].mrExpedition=data.expedition;
+        renderAdminOrders();
+      }
+      showNotif('✅ Étiquette générée — n° '+data.expedition,'success');
+    }catch(err){
+      showNotif('❌ '+err.message,'info');
+    }
   }
   document.getElementById('adminOrderRefresh')?.addEventListener('click',loadAdminOrders);
 
