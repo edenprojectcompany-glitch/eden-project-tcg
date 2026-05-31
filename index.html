@@ -1413,17 +1413,6 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
             </div>
           </div>
         </div>
-        <div class="co-section">
-          <h3><span class="num">2</span>Paiement</h3>
-          <div class="pay-opts">
-            <div class="pay-opt selected" data-pay="card">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg> Carte bancaire
-            </div>
-            <div class="pay-opt" data-pay="paypal">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M7 11C7 11 6.5 15 10 16.5C12.5 17.5 15 16 15.5 13.5C16 11 14.5 9 12 8.5C9.5 8 7.5 9 7 11Z" fill="#003087"/></svg> PayPal
-            </div>
-          </div>
-        </div>
       </div>
       <div class="co-summary">
         <h3>Récapitulatif</h3>
@@ -1437,7 +1426,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
         </div>
         <div class="promo-msg" id="promoMsg"></div>
         <div class="co-line grand"><span>Total TTC</span><span id="coTotal">0 €</span></div>
-        <button class="btn-primary" id="payBtn" style="width:100%;margin-top:18px">💳 Payer par Stripe</button>
+        <button class="btn-primary" id="payBtn" style="width:100%;margin-top:18px">💳 Payer par carte bancaire</button>
         <button class="btn-ghost" id="paypalBtn" style="width:100%;margin-top:10px">🅿 Payer avec PayPal</button>
         <div id="payErrorMsg" style="display:none;margin-top:12px;padding:10px 13px;border-radius:9px;font-size:12px;background:rgba(255,122,122,.1);border:1px solid rgba(255,122,122,.3);color:var(--danger)"></div>
         <!-- Trust signals -->
@@ -3686,7 +3675,7 @@ window.addEventListener('load', () => {
       } else throw new Error(data.error||'Erreur paiement');
     }catch(err){
       showPayError('Erreur paiement : '+err.message);
-      btn.textContent='💳 Payer par Stripe'; btn.disabled=false;
+      btn.textContent='💳 Payer par carte bancaire'; btn.disabled=false;
     }
   }
 
