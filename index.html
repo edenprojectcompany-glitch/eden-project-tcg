@@ -3575,6 +3575,11 @@ window.addEventListener('load', () => {
 
   /* ══ CHECKOUT ══ */
   function renderCheckout(){
+    // Reset boutons paiement (ils peuvent être bloqués si l'user revient en arrière)
+    const _pb=document.getElementById('payBtn');
+    if(_pb){_pb.textContent='💳 Payer par carte bancaire';_pb.disabled=false;}
+    const _pp=document.getElementById('paypalBtn');
+    if(_pp){_pp.textContent='🅿 Payer avec PayPal';_pp.disabled=false;}
     const sub=cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
     const auto=getAutoPromo(sub);
     const effectivePct=promoDiscount||(auto&&!promoDiscount?auto.pct:0);
