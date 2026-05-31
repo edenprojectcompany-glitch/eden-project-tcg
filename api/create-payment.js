@@ -53,6 +53,10 @@ module.exports = async (req, res) => {
       ]);
       if (shippingFromKv) shippingCfg = shippingFromKv;
       verifiedUser = userFromKv || null;
+      // Vérification tokenVersion : rejeter les sessions révoquées (ex: après reset mot de passe)
+      if (verifiedUser && verifiedUser.tokenVersion != null && decoded.tokenVersion !== verifiedUser.tokenVersion) {
+        return res.status(401).json({ error: 'Session révoquée — reconnectez-vous' });
+      }
       adminPrices = prices || {};
       // Appliquer les prix flash actifs (priorité sur admin:prices)
       if (flashsale) {

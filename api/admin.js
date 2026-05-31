@@ -16,6 +16,7 @@ module.exports = async (req, res) => {
   const code = req.headers['x-admin-code'];
   if (!code || code !== process.env.ADMIN_CODE) {
     // Rate limiting sur les tentatives échouées : 10 / 15 min par IP
+    // Fail-closed : si KV est indisponible, on bloque plutôt que de laisser passer sans compter
     try {
       const { kv } = require('@vercel/kv');
       const ip = (req.headers['x-vercel-forwarded-for'] || '').trim() || (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
@@ -25,7 +26,11 @@ module.exports = async (req, res) => {
       if (attempts > 10) {
         return res.status(429).json({ error: 'Trop de tentatives. Réessayez dans 15 minutes.' });
       }
-    } catch {}
+    } catch (kvErr) {
+      // KV indisponible → fail-closed : on ne peut pas garantir le rate-limit, on bloque
+      console.error('Admin rate-limit KV error (fail-closed):', kvErr.message);
+      return res.status(429).json({ error: 'Service temporairement indisponible. Réessayez dans quelques instants.' });
+    }
     return res.status(403).json({ error: 'Accès refusé' });
   }
 

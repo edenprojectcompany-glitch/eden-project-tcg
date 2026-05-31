@@ -80,14 +80,22 @@ module.exports = async (req, res) => {
       const wheelRaw = await kv.get('admin:wheel');
       const wheel = wheelRaw || DEFAULT_WHEEL;
 
-      // Weighted random draw — fallback sur dernier segment si les probs < 100 par drift float
+      // Validation : si la somme des probs != 100, on repasse sur la roue par défaut
+      // (évite que le dernier segment soit systématiquement favorisé en cas de mauvaise config)
+      const probSum = wheel.reduce((s, seg) => s + (seg.prob || 0), 0);
+      const safeWheel = Math.abs(probSum - 100) < 0.01 ? wheel : DEFAULT_WHEEL;
+      if (Math.abs(probSum - 100) >= 0.01) {
+        console.warn(`admin:wheel prob sum = ${probSum} (expected 100) — fallback DEFAULT_WHEEL`);
+      }
+
+      // Weighted random draw
       const rand = Math.random() * 100;
-      let cumul = 0, winIndex = wheel.length - 1;
-      for (let i = 0; i < wheel.length; i++) {
-        cumul += wheel[i].prob;
+      let cumul = 0, winIndex = safeWheel.length - 1;
+      for (let i = 0; i < safeWheel.length; i++) {
+        cumul += safeWheel[i].prob;
         if (rand <= cumul) { winIndex = i; break; }
       }
-      const prize = wheel[winIndex];
+      const prize = safeWheel[winIndex];
 
       // Persist lastSpin + loyalty points
       user.lastSpin = new Date().toISOString();

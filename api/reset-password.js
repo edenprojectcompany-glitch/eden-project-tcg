@@ -37,6 +37,17 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Lien expiré ou invalide. Faites une nouvelle demande.' });
     }
 
+    // Verrou atomique NX : seule la première requête peut consommer ce token
+    // Protège contre la race condition (deux requêtes simultanées avec le même lien)
+    const lockKey = `reset:lock:${token}`;
+    const locked = await kv.set(lockKey, 1, { nx: true, ex: 60 });
+    if (!locked) {
+      return res.status(409).json({ error: 'Requête déjà en cours, veuillez patienter.' });
+    }
+
+    // Supprimer le token reset immédiatement (usage unique, avant toute écriture)
+    await kv.del(`reset:${token}`);
+
     const key = `user:${email}`;
     const user = await kv.get(key);
     if (!user) return res.status(404).json({ error: 'Compte introuvable' });
@@ -45,9 +56,6 @@ module.exports = async (req, res) => {
     user.hash = await bcrypt.hash(password, 12);
     user.tokenVersion = (user.tokenVersion || 0) + 1;
     await kv.set(key, user);
-
-    // Supprimer le token reset (usage unique)
-    await kv.del(`reset:${token}`);
 
     // Retourner un nouveau JWT valide immédiatement
     const newToken = jwt.sign(

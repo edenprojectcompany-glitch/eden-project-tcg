@@ -2096,6 +2096,15 @@ window.addEventListener('load', () => {
     document.querySelectorAll('.chip[data-filter="cn"]').forEach(c=>c.innerHTML=`🇨🇳 Chinois (${cn})`);
   })();
 
+  /* ══ UTILITAIRES SÉCURITÉ ══ */
+  // Encode les caractères HTML spéciaux — à utiliser partout où des données issues
+  // du localStorage/API sont injectées via innerHTML (protection XSS)
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
   /* ══ STATE ══ */
   let cart = [], currentShip = 4.90, promoDiscount = 0, shipPromo = false, promoInfo = '';
   let currentFilter = 'all', searchQuery = '';
@@ -2912,23 +2921,27 @@ window.addEventListener('load', () => {
       if(jpItems.length>1) poolLines.push(`📦 ${pools.jp} boîtes JP combinées → palier actif sur tous les produits JP`);
     }
     const poolBanner=poolLines.length?`<div style="font-size:11.5px;color:var(--foil-4);background:rgba(168,255,212,.07);border:1px solid rgba(168,255,212,.18);border-radius:8px;padding:7px 10px;margin-bottom:8px">${poolLines.join('<br>')}</div>`:'';
-    wrap.innerHTML=poolBanner+nudge+cart.map(i=>`
+    wrap.innerHTML=poolBanner+nudge+cart.map(i=>{
+      const safeId=parseInt(i.id)||0;
+      const safeQty=parseInt(i.qty)||1;
+      const safePrice=parseFloat(i.unitPrice)||0;
+      return `
       <div class="cart-item">
-        <div class="thumb"><img src="${IMG_BASE}${i.img}" alt="${i.name}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'"></div>
+        <div class="thumb"><img src="${IMG_BASE}${esc(i.img)}" alt="${esc(i.name)}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'"></div>
         <div class="info">
-          <div class="n">${i.name}</div>
-          <div class="s">${i.qty} × ${i.unitPrice}€/boîte</div>
-          <div class="p">${(i.unitPrice*i.qty).toFixed(2).replace('.',',')} €</div>
+          <div class="n">${esc(i.name)}</div>
+          <div class="s">${safeQty} × ${safePrice}€/boîte</div>
+          <div class="p">${(safePrice*safeQty).toFixed(2).replace('.',',')} €</div>
           <div class="qty">
-            <button onclick="changeQty(${i.id},-1)">−</button>
-            <input type="number" min="1" max="999" value="${i.qty}" onchange="setQty(${i.id},this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-            <button onclick="changeQty(${i.id},1)">+</button>
+            <button onclick="changeQty(${safeId},-1)">−</button>
+            <input type="number" min="1" max="999" value="${safeQty}" onchange="setQty(${safeId},this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <button onclick="changeQty(${safeId},1)">+</button>
           </div>
         </div>
-        <button class="cart-rm" onclick="removeFromCart(${i.id})" aria-label="Retirer">
+        <button class="cart-rm" onclick="removeFromCart(${safeId})" aria-label="Retirer">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
         </button>
-      </div>`).join('');
+      </div>`;}).join('');
     const sub=cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
     const auto=getAutoPromo(sub);
     const autoBar=document.getElementById('promoAutoBar');
