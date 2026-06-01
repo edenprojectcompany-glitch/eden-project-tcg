@@ -278,13 +278,35 @@ tr:hover td{background:rgba(255,255,255,.015)}
 
     <!-- PRODUITS -->
     <div class="tab" id="tab-produits">
-      <div class="sec-head"><div class="sec-title">Prix &amp; Stocks</div></div>
+
+      <!-- ── MARKETPLACE ── -->
+      <div class="sec-head" style="margin-bottom:10px">
+        <div>
+          <div class="sec-title">🛍️ Marketplace — Prix &amp; Stocks</div>
+          <div class="sec-meta" style="margin-top:3px">Stock = 0 retire le produit du catalogue</div>
+        </div>
+      </div>
       <div class="table-wrap">
         <table><thead><tr><th>Produit</th><th>Prix base</th><th>Nouveau prix (€)</th><th>Stock</th></tr></thead>
         <tbody id="prodBody"></tbody></table>
       </div>
-      <button class="btn-sm" id="savePricesBtn" style="margin-top:16px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer prix &amp; stocks</button>
+      <button class="btn-sm" id="savePricesBtn" style="margin-top:12px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer marketplace</button>
       <div id="priceMsg" style="margin-top:10px;font-size:12.5px"></div>
+
+      <!-- ── CASES ── -->
+      <div class="sec-head" style="margin-top:32px;margin-bottom:10px">
+        <div>
+          <div class="sec-title">📦 Cases — Prix</div>
+          <div class="sec-meta" style="margin-top:3px">Expédition directe depuis l'Asie · Pas de stock à gérer</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Produit</th><th>Qté/case</th><th>Prix base (€/case)</th><th>Nouveau prix (€)</th></tr></thead>
+        <tbody id="caseBody"></tbody></table>
+      </div>
+      <button class="btn-sm" id="saveCasePricesBtn" style="margin-top:12px;background:var(--c2);color:#0a0a0c;border-color:var(--c2);font-weight:700">💾 Enregistrer cases</button>
+      <div id="casePriceMsg" style="margin-top:10px;font-size:12.5px"></div>
+
     </div>
 
     <!-- FLASH SALE -->
@@ -355,6 +377,19 @@ const PRODUCTS=[
   {id:22,name:'M5 — Mega Abyss Eye',lang:'jp',price:110},
 ];
 
+/* Cases — expédition directe Asie, pas de stock */
+const CASE_CATALOG=[
+  {id:18,name:'SV10 — Glory Team Rocket',lang:'jp',qty:12,basePrice:92},
+  {id:11,name:'M2 — Méga Inferno X',lang:'jp',qty:12,basePrice:90},
+  {id:15,name:'SV8a — Terastal Festival',lang:'jp',qty:20,basePrice:85},
+  {id:10,name:'M2a — Méga Dream EX',lang:'jp',qty:20,basePrice:85},
+  {id:2, name:'CN151 Vol.4',lang:'cn',qty:20,basePrice:65},
+  {id:1, name:'CN151 Vol.3',lang:'cn',qty:20,basePrice:49},
+  {id:21,name:'SV2a — Pokémon 151',lang:'jp',qty:12,basePrice:299},
+  {id:22,name:'M5 — Mega Abyss Eye',lang:'jp',qty:12,basePrice:110},
+];
+const CASE_SURCHARGE=150;
+
 /* ── Toast ── */
 function toast(msg,type='ok'){
   const el=document.getElementById('toast');
@@ -403,7 +438,7 @@ document.querySelectorAll('.nav-tab').forEach(t=>t.addEventListener('click',()=>
   if(t.dataset.tab==='commandes') loadOrders();
   if(t.dataset.tab==='stats') computeStats();
   if(t.dataset.tab==='live') loadLive();
-  if(t.dataset.tab==='produits'&&_adminData) buildProduits(_adminData.prices||{},_adminData.stocks||{});
+  if(t.dataset.tab==='produits'&&_adminData){buildProduits(_adminData.prices||{},_adminData.stocks||{});buildCases(_adminData.prices||{});}
   if(t.dataset.tab==='flash'&&_adminData) buildFlash(_adminData.flashsale||{});
   if(t.dataset.tab==='roue'&&_adminData) buildRoue(_adminData.wheel||[]);
   if(t.dataset.tab==='livraison'&&_adminData) buildLivraison(_adminData.shipping||{});
@@ -577,7 +612,7 @@ async function loadAdminData(){
   try{
     const r=await fetch('/api/admin',{headers:{'X-Admin-Code':_code}});
     _adminData=await r.json();
-    buildProduits(_adminData.prices||{},_adminData.stocks||{});
+    buildProduits(_adminData.prices||{},_adminData.stocks||{});buildCases(_adminData.prices||{});
     buildFlash(_adminData.flashsale||{});
     buildRoue(_adminData.wheel||[]);
     buildLivraison(_adminData.shipping||{relay:4.90,colissimo:7.90,express:14.90,freeForAll:false});
@@ -607,7 +642,35 @@ document.getElementById('savePricesBtn').addEventListener('click',async()=>{
   try{
     await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_prices',data:prices})});
     await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_stocks',data:stocks})});
-    msg.style.color='var(--success)';msg.textContent='✓ Prix et stocks mis à jour';
+    msg.style.color='var(--success)';msg.textContent='✓ Marketplace mis à jour';
+  }catch{msg.style.color='var(--danger)';msg.textContent='Erreur lors de la sauvegarde';}
+  setTimeout(()=>msg.textContent='',3000);
+});
+
+/* ══ CASES ══ */
+function buildCases(prices){
+  const tbody=document.getElementById('caseBody'); if(!tbody) return;
+  tbody.innerHTML=CASE_CATALOG.map(c=>{
+    const baseTotal=+(c.basePrice*c.qty+CASE_SURCHARGE).toFixed(2);
+    const currentPrice=prices['case_'+c.id]??baseTotal;
+    return `<tr>
+      <td><span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;background:${c.lang==='cn'?'rgba(168,255,212,.15)':'rgba(127,217,255,.15)'};color:${c.lang==='cn'?'var(--c4)':'var(--c1)'}">${c.lang.toUpperCase()}</span> <span style="font-size:13px">${c.name}</span></td>
+      <td style="color:var(--dim);font-size:12px">${c.qty} displays</td>
+      <td style="color:var(--dim);font-size:12px">${baseTotal} €</td>
+      <td><input type="number" id="acp-${c.id}" value="${currentPrice}" placeholder="${baseTotal}" style="width:100px;padding:6px 10px;background:var(--glass);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none"></td>
+    </tr>`;
+  }).join('');
+}
+document.getElementById('saveCasePricesBtn').addEventListener('click',async()=>{
+  const casePrices={};
+  CASE_CATALOG.forEach(c=>{
+    const pv=document.getElementById('acp-'+c.id)?.value;
+    if(pv!=='') casePrices['case_'+c.id]=parseFloat(pv);
+  });
+  const msg=document.getElementById('casePriceMsg');
+  try{
+    await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_prices',data:casePrices})});
+    msg.style.color='var(--success)';msg.textContent='✓ Prix cases mis à jour';
   }catch{msg.style.color='var(--danger)';msg.textContent='Erreur lors de la sauvegarde';}
   setTimeout(()=>msg.textContent='',3000);
 });
