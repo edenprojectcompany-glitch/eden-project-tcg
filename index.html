@@ -4678,10 +4678,14 @@ function openReviewModal(){
   document.getElementById('reviewModal').style.display='flex';
 }
 // Afficher le bouton "Laisser un avis" si connecté + a commandé
+// authUser est dans window.load scope — on lit depuis localStorage pour rester accessible ici
 function updateReviewBtn(){
   const btn=document.getElementById('writeReviewBtn'); if(!btn) return;
-  if(authUser&&(authUser.orders||[]).length>0) btn.style.display='inline-flex';
-  else btn.style.display='none';
+  try{
+    const u=JSON.parse(localStorage.getItem('edn_user')||'null');
+    if(u&&(u.orders||[]).length>0) btn.style.display='inline-flex';
+    else btn.style.display='none';
+  }catch{btn.style.display='none';}
 }
 // Sélecteur d'étoiles
 let _reviewRating=5;
