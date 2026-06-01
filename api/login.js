@@ -22,13 +22,13 @@ module.exports = async (req, res) => {
   try {
     const { kv } = require('@vercel/kv');
 
-    // Rate limiting : max 10 tentatives / 15 min par IP
+    // Rate limiting : max 20 tentatives / 15 min par IP
     const ip = (req.headers['x-vercel-forwarded-for'] || '').trim() || (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
     const ratKey = `ratelimit:login:${ip}`;
     try {
       const attempts = await kv.incr(ratKey);
       await kv.expire(ratKey, 900); // toujours reset — évite une clé bloquée si expire a échoué
-      if (attempts > 10) {
+      if (attempts > 20) {
         return res.status(429).json({ error: 'Trop de tentatives. Réessayez dans 15 minutes.' });
       }
     } catch {}
