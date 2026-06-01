@@ -1120,7 +1120,13 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   .hero h1 { font-size: clamp(22px, 7vw, 36px); }
   .hero-sub { font-size: clamp(13px, 4vw, 16px); }
   .hero-ctas { flex-direction: column; align-items: center; gap: 10px; }
-  .hero-visual { display: none; }
+  .hero-visual { width: 160px; margin: 16px auto 0; }
+
+  /* Scroll natif sur les cartes produit (désactive la capture touch du tilt 3D) */
+  .product-card { touch-action: pan-y; }
+  .grid { touch-action: pan-y; }
+  .case-grid { touch-action: pan-y; }
+  .graded-grid { touch-action: pan-y; }
 
   /* Sections générales */
   section { padding: clamp(40px, 8vw, 90px) clamp(12px, 4vw, 40px); }
