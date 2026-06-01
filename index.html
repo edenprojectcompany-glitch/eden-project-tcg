@@ -1143,10 +1143,14 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 
   /* Grilles produits */
   .grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
-  .case-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .case-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+  .case-body { padding: 12px 14px 14px !important; }
+  .case-name { font-size: 14px !important; }
+  .case-sub { font-size: 11px !important; margin-bottom: 8px !important; }
+  .case-price { font-size: 15px !important; }
   .graded-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
   .help-ship-grid { grid-template-columns: 1fr; gap: 16px; }
-  .news-grid { grid-template-columns: 1fr; gap: 16px; }
+  .news-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
 
   /* Cards produit */
   .product-name { font-size: 13px; }
