@@ -1228,6 +1228,32 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   .co-step-lbl { font-size: 11px; }
   .co-step-line { min-width: 10px; margin: 0 4px; }
 
+  /* ── Overflow global — empêche le zoom involontaire ── */
+  body { overflow-x: hidden; }
+  section { overflow-x: hidden; }
+
+  /* ── Dashboard header — empilé verticalement ── */
+  .dash-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 16px;
+  }
+  .dash-header > div:first-of-type { flex: 1; min-width: 0; }
+  .dash-header .name { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dash-header .email { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dash-loyalty { margin-left: 0; }
+  .dash-loyalty .pts { font-size: 22px; }
+  #logoutBtn { width: 100%; margin-left: 0 !important; }
+
+  /* ── Roue de la fortune — pleine largeur ── */
+  .wheel-section { padding: 16px; }
+  .wheel-wrap { gap: 16px; }
+  .wheel-canvas-wrap { width: 100%; max-width: 100%; }
+  #wheelCanvas { width: 100% !important; max-width: calc(100vw - 32px) !important; height: auto !important; }
+
+  /* ── Tier bar (progression fidélité) ── */
+  .tier-row { font-size: 11px; flex-wrap: wrap; gap: 4px; }
+
 }
 
 /* ---- Breakpoint secondaire : ≤ 400px (très petits écrans) ---- */
