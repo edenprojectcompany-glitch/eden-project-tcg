@@ -1231,6 +1231,24 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   /* ── Overflow global — empêche le zoom involontaire ── */
   body { overflow-x: hidden; }
   section { overflow-x: hidden; }
+  *, *::before, *::after { max-width: 100%; box-sizing: border-box; }
+
+  /* ── Nav searchbox — ne pas déborder ── */
+  .searchbox:focus-within { width: min(180px, 45vw) !important; }
+
+  /* ── Hero — card et PSA ── */
+  .card-3d { width: min(200px, 45vw) !important; height: auto !important; aspect-ratio: 290/410; }
+  .psa-wrap { width: min(220px, 55vw) !important; }
+
+  /* ── Wheel prize display — pas de min-width fixe ── */
+  .wheel-prize-display { min-width: unset !important; width: 100%; }
+
+  /* ── Exit popup — bouton pleine largeur ── */
+  .exit-popup .btn-primary { min-width: unset !important; width: 100%; }
+
+  /* ── Tickers/banners défilants — pas de débordement ── */
+  .ship-banner-float { overflow: hidden; }
+  .foot-tick-track, .ship-track { white-space: nowrap; }
 
   /* ── Dashboard header — empilé verticalement ── */
   .dash-header {
