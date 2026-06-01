@@ -1205,8 +1205,33 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   /* Case hero banner */
   .case-hero-banner { padding: 24px 16px; }
 
-  /* Jackpot banner (Mystery Box) — marges trop larges sur mobile */
+  /* Jackpot banner */
   .jackpot-banner { margin: 0 12px 20px !important; padding: 14px 16px !important; }
+
+  /* Mystery Box banner — layout vertical sur mobile */
+  .mystery-banner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    padding: 16px !important;
+  }
+  .mystery-banner > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100%;
+  }
+  .mystery-banner > div:nth-child(3) {
+    text-align: left !important;
+    flex-shrink: unset !important;
+  }
+  .mystery-banner > div:nth-child(3) > div:first-child {
+    font-size: 20px !important;
+  }
+  .mystery-banner > button {
+    width: 100% !important;
+    flex-shrink: unset !important;
+  }
 
   /* Footer bas — padding latéral réduit */
   .foot-base { padding: 16px !important; flex-direction: column; gap: 10px; text-align: center; }
@@ -1231,7 +1256,8 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   /* ── Overflow global — empêche le zoom involontaire ── */
   body { overflow-x: hidden; }
   section { overflow-x: hidden; }
-  *, *::before, *::after { max-width: 100%; box-sizing: border-box; }
+  img, video, canvas, svg, iframe { max-width: 100%; }
+  input, select, textarea { max-width: 100%; box-sizing: border-box; }
 
   /* ── Nav searchbox — ne pas déborder ── */
   .searchbox:focus-within { width: min(180px, 45vw) !important; }
