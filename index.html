@@ -1136,7 +1136,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 
   /* Grilles produits */
   .grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
-  .case-grid { grid-template-columns: 1fr; gap: 16px; }
+  .case-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
   .graded-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
   .help-ship-grid { grid-template-columns: 1fr; gap: 16px; }
   .news-grid { grid-template-columns: 1fr; gap: 16px; }
@@ -1192,6 +1192,29 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 
   /* Case hero banner */
   .case-hero-banner { padding: 24px 16px; }
+
+  /* Jackpot banner (Mystery Box) — marges trop larges sur mobile */
+  .jackpot-banner { margin: 0 12px 20px !important; padding: 14px 16px !important; }
+
+  /* Footer bas — padding latéral réduit */
+  .foot-base { padding: 16px !important; flex-direction: column; gap: 10px; text-align: center; }
+  .foot-base > div { justify-content: center; }
+
+  /* Toast achat récent — repositionné pour ne pas cacher les CTAs */
+  .purchase-toast { left: 12px !important; bottom: 16px !important; max-width: calc(100vw - 24px); }
+
+  /* Toast panier */
+  .cart-toast { right: 12px !important; bottom: 80px !important; max-width: calc(100vw - 24px); }
+
+  /* Bannière livraison flottante — réduite sur mobile */
+  .ship-banner-float { font-size: 12px; padding: 10px 14px; }
+
+  /* Anneau lumineux roue — masqué sur mobile pour éviter débordement */
+  .wheel-canvas-wrap::before { display: none !important; }
+
+  /* Étapes checkout — plus compactes */
+  .co-step-lbl { font-size: 11px; }
+  .co-step-line { min-width: 10px; margin: 0 4px; }
 
 }
 
