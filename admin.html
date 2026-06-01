@@ -301,7 +301,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
         </div>
       </div>
       <div class="table-wrap">
-        <table><thead><tr><th>Produit</th><th>Qté/case</th><th>Prix base (€/case)</th><th>Nouveau prix (€)</th></tr></thead>
+        <table><thead><tr><th>Produit</th><th>Qté/case</th><th>Prix base (€/case)</th><th>Nouveau prix (€)</th><th>Stock (optionnel)</th></tr></thead>
         <tbody id="caseBody"></tbody></table>
       </div>
       <button class="btn-sm" id="saveCasePricesBtn" style="margin-top:12px;background:var(--c2);color:#0a0a0c;border-color:var(--c2);font-weight:700">💾 Enregistrer cases</button>
@@ -438,7 +438,7 @@ document.querySelectorAll('.nav-tab').forEach(t=>t.addEventListener('click',()=>
   if(t.dataset.tab==='commandes') loadOrders();
   if(t.dataset.tab==='stats') computeStats();
   if(t.dataset.tab==='live') loadLive();
-  if(t.dataset.tab==='produits'&&_adminData){buildProduits(_adminData.prices||{},_adminData.stocks||{});buildCases(_adminData.prices||{});}
+  if(t.dataset.tab==='produits'&&_adminData){buildProduits(_adminData.prices||{},_adminData.stocks||{});buildCases(_adminData.prices||{},_adminData.stocks||{});}
   if(t.dataset.tab==='flash'&&_adminData) buildFlash(_adminData.flashsale||{});
   if(t.dataset.tab==='roue'&&_adminData) buildRoue(_adminData.wheel||[]);
   if(t.dataset.tab==='livraison'&&_adminData) buildLivraison(_adminData.shipping||{});
@@ -612,7 +612,7 @@ async function loadAdminData(){
   try{
     const r=await fetch('/api/admin',{headers:{'X-Admin-Code':_code}});
     _adminData=await r.json();
-    buildProduits(_adminData.prices||{},_adminData.stocks||{});buildCases(_adminData.prices||{});
+    buildProduits(_adminData.prices||{},_adminData.stocks||{});buildCases(_adminData.prices||{},_adminData.stocks||{});
     buildFlash(_adminData.flashsale||{});
     buildRoue(_adminData.wheel||[]);
     buildLivraison(_adminData.shipping||{relay:4.90,colissimo:7.90,express:14.90,freeForAll:false});
@@ -648,29 +648,34 @@ document.getElementById('savePricesBtn').addEventListener('click',async()=>{
 });
 
 /* ══ CASES ══ */
-function buildCases(prices){
+function buildCases(prices,stocks={}){
   const tbody=document.getElementById('caseBody'); if(!tbody) return;
   tbody.innerHTML=CASE_CATALOG.map(c=>{
     const baseTotal=+(c.basePrice*c.qty+CASE_SURCHARGE).toFixed(2);
     const currentPrice=prices['case_'+c.id]??baseTotal;
+    const currentStock=stocks['case_'+c.id]??'';
     return `<tr>
       <td><span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;background:${c.lang==='cn'?'rgba(168,255,212,.15)':'rgba(127,217,255,.15)'};color:${c.lang==='cn'?'var(--c4)':'var(--c1)'}">${c.lang.toUpperCase()}</span> <span style="font-size:13px">${c.name}</span></td>
       <td style="color:var(--dim);font-size:12px">${c.qty} displays</td>
       <td style="color:var(--dim);font-size:12px">${baseTotal} €</td>
       <td><input type="number" id="acp-${c.id}" value="${currentPrice}" placeholder="${baseTotal}" style="width:100px;padding:6px 10px;background:var(--glass);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none"></td>
+      <td><input type="number" id="acs-${c.id}" value="${currentStock}" placeholder="illim." style="width:80px;padding:6px 10px;background:var(--glass);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none" title="Laisser vide = toujours disponible"></td>
     </tr>`;
   }).join('');
 }
 document.getElementById('saveCasePricesBtn').addEventListener('click',async()=>{
-  const casePrices={};
+  const casePrices={},caseStocks={};
   CASE_CATALOG.forEach(c=>{
     const pv=document.getElementById('acp-'+c.id)?.value;
+    const sv=document.getElementById('acs-'+c.id)?.value;
     if(pv!=='') casePrices['case_'+c.id]=parseFloat(pv);
+    if(sv!=='') caseStocks['case_'+c.id]=parseInt(sv);
   });
   const msg=document.getElementById('casePriceMsg');
   try{
     await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_prices',data:casePrices})});
-    msg.style.color='var(--success)';msg.textContent='✓ Prix cases mis à jour';
+    await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_stocks',data:caseStocks})});
+    msg.style.color='var(--success)';msg.textContent='✓ Cases mises à jour';
   }catch{msg.style.color='var(--danger)';msg.textContent='Erreur lors de la sauvegarde';}
   setTimeout(()=>msg.textContent='',3000);
 });

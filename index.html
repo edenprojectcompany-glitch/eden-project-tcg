@@ -1156,8 +1156,13 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   .checkout-wrap { grid-template-columns: 1fr !important; gap: 20px; }
   .co-steps { gap: 4px; font-size: 12px; flex-wrap: wrap; }
 
-  /* Auth */
+  /* Auth — masquer le pitch marketing, afficher uniquement le formulaire */
   .auth-wrap { grid-template-columns: 1fr !important; }
+  .auth-pitch { display: none; }
+  .auth-card { max-width: 100%; }
+
+  /* Supprimer le délai 300ms sur les boutons de formulaire */
+  button, input[type="submit"], .btn-primary, .tab { touch-action: manipulation; }
 
   /* Dashboard utilisateur */
   .dash-grid { grid-template-columns: 1fr !important; }
