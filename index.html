@@ -1162,8 +1162,9 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   /* Dashboard utilisateur */
   .dash-grid { grid-template-columns: 1fr !important; }
 
-  /* Bande défilante */
-  .band { gap: 24px; }
+  /* Badges 4 items → grille 2×2 */
+  .band { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; }
+  .band .item { margin: 0; }
 
   /* Footer */
   .foot-main { padding: 40px 16px 20px; }
@@ -2602,7 +2603,7 @@ window.addEventListener('load', () => {
     }
     evtEl.addEventListener('mousemove',e=>onMove(e.clientX,e.clientY));
     evtEl.addEventListener('mouseleave',onLeave);
-    evtEl.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches[0];onMove(t.clientX,t.clientY);},{passive:false});
+    evtEl.addEventListener('touchmove',e=>{const t=e.touches[0];onMove(t.clientX,t.clientY);},{passive:true});
     evtEl.addEventListener('touchend',onLeave);
   }
 
