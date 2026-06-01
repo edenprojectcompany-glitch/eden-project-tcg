@@ -118,6 +118,67 @@ tr:hover td{background:rgba(255,255,255,.015)}
   .nav-tab{padding:11px 14px;font-size:12px}
 }
 </style>
+
+<!-- Mobile responsive CSS — branche mobile-responsive uniquement -->
+<style id="admin-mobile-responsive-css">
+
+@media (max-width: 768px) {
+
+  /* Header admin */
+  .app-header { flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
+  .app-header h1 { font-size: 16px; }
+  .live-dot-wrap { font-size: 11px; }
+
+  /* Layout général */
+  .app-body { padding: 12px; }
+
+  /* Onglets navigation */
+  .app-nav { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .nav-tab { white-space: nowrap; font-size: 11px; padding: 10px 12px; }
+
+  /* Tableaux — scroll horizontal propre */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+  table { min-width: 600px; }
+
+  /* Grille stats */
+  .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+  .stat-card { padding: 14px 12px; }
+  .stat-val { font-size: 22px; }
+
+  /* Compteur live visiteurs */
+  .live-num { font-size: clamp(36px, 12vw, 80px); }
+
+  /* Grille flashsale / roue */
+  .flashsale-row { grid-template-columns: 1fr !important; gap: 8px; }
+  .wheel-row { grid-template-columns: 1fr !important; gap: 8px; }
+
+  /* Inputs */
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Grille produits (prix/stocks) */
+  .products-grid { grid-template-columns: 1fr 1fr !important; gap: 8px; }
+
+  /* Grille gradées */
+  .graded-admin-grid { grid-template-columns: 1fr !important; }
+
+  /* Section livraison */
+  .delivery-section { max-width: 100% !important; }
+
+  /* Boutons */
+  .btn { font-size: 13px; padding: 8px 14px; }
+
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr !important; }
+  .products-grid { grid-template-columns: 1fr !important; }
+  .app-header h1 { font-size: 14px; }
+}
+
+</style>
 </head>
 <body>
 

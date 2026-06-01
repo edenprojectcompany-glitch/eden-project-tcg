@@ -1098,6 +1098,106 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 .cart-join-nudge:hover{background:rgba(201,168,255,.14)}
 .cart-join-nudge strong{color:var(--foil-2)}
 </style>
+
+<!-- ============================================================
+     MOBILE RESPONSIVE CSS — branche mobile-responsive uniquement
+     Toutes les règles ci-dessous s'activent UNIQUEMENT sur mobile
+     Le CSS desktop (au-dessus) est 100% inchangé
+     ============================================================ -->
+<style id="mobile-responsive-css">
+
+/* ---- Breakpoint principal : ≤ 768px ---- */
+@media (max-width: 768px) {
+
+  /* Navigation */
+  .nav { padding: 12px 16px; }
+  .navlinks { display: none !important; }
+  .ham-btn { display: flex !important; }
+  .brand { font-size: 18px; }
+
+  /* Hero */
+  .hero { padding: 80px 16px 40px; text-align: center; }
+  .hero h1 { font-size: clamp(22px, 7vw, 36px); }
+  .hero-sub { font-size: clamp(13px, 4vw, 16px); }
+  .hero-ctas { flex-direction: column; align-items: center; gap: 10px; }
+  .hero-visual { display: none; }
+
+  /* Sections générales */
+  section { padding: clamp(40px, 8vw, 90px) clamp(12px, 4vw, 40px); }
+  .section-title { font-size: clamp(18px, 6vw, 28px); }
+  h2 { font-size: clamp(16px, 5.5vw, 26px); }
+  h3 { font-size: clamp(14px, 4.5vw, 20px); }
+
+  /* Grilles produits */
+  .grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
+  .case-grid { grid-template-columns: 1fr; gap: 16px; }
+  .graded-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
+  .help-ship-grid { grid-template-columns: 1fr; gap: 16px; }
+  .news-grid { grid-template-columns: 1fr; gap: 16px; }
+
+  /* Cards produit */
+  .product-name { font-size: 13px; }
+  .product-body { padding: 12px 14px; }
+
+  /* Modal produit */
+  .modal { grid-template-columns: 1fr !important; }
+  .modal-img { min-height: 200px; }
+  .modal-body { padding: 20px 16px; }
+  .modal-name { font-size: 20px; }
+  .modal-wrap { padding: 12px; }
+
+  /* Checkout */
+  .checkout-wrap { grid-template-columns: 1fr !important; gap: 20px; }
+  .co-steps { gap: 4px; font-size: 12px; flex-wrap: wrap; }
+
+  /* Auth */
+  .auth-wrap { grid-template-columns: 1fr !important; }
+
+  /* Dashboard utilisateur */
+  .dash-grid { grid-template-columns: 1fr !important; }
+
+  /* Bande défilante */
+  .band { gap: 24px; }
+
+  /* Footer */
+  .foot-main { padding: 40px 16px 20px; }
+  .foot-cols { flex-direction: column; gap: 24px; }
+  .foot-col { min-width: unset; width: 100%; }
+
+  /* Panier sidebar */
+  .cart-panel { width: 100vw; }
+  .cart-item .thumb { width: 50px; height: 50px; }
+
+  /* Roue de la fortune */
+  #wheelCanvas { width: 100% !important; max-width: 320px; height: auto !important; }
+  .wheel-canvas-wrap { overflow: hidden; }
+  .wheel-prize-display .prize-label { font-size: 18px; }
+
+  /* Popup exit-intent */
+  .popup-box { width: 92vw; padding: 24px 16px; }
+
+  /* Filtres catalogue */
+  .filter-row { flex-wrap: wrap; gap: 8px; }
+  .filter-chip { font-size: 12px; padding: 6px 12px; }
+
+  /* PSA lightbox */
+  .psa-lb-inner { width: 95vw; padding: 20px 14px; }
+
+  /* Case hero banner */
+  .case-hero-banner { padding: 24px 16px; }
+
+}
+
+/* ---- Breakpoint secondaire : ≤ 400px (très petits écrans) ---- */
+@media (max-width: 400px) {
+  .grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .graded-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .product-body { padding: 8px 10px; }
+  .hero { padding: 70px 12px 30px; }
+  .cart-panel { width: 100vw; }
+}
+
+</style>
 </head>
 <body>
 <canvas id="holoCanvas"></canvas>
