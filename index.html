@@ -1254,6 +1254,16 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   /* ── Tier bar (progression fidélité) ── */
   .tier-row { font-size: 11px; flex-wrap: wrap; gap: 4px; }
 
+  /* ── Cartes gradées — largeur fluide ── */
+  .graded-grid { grid-template-columns: 1fr 1fr !important; gap: 8px; }
+  .holo-card-wrap { width: 100%; }
+  .holo-card { width: 100% !important; aspect-ratio: 210 / 296; height: auto !important; }
+  .hcard-label { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .hcard-badge { font-size: 8px; padding: 2px 6px; }
+  .hcard-emblem { width: 60px !important; height: 60px !important; }
+  .hcard-name { font-size: 13px !important; }
+  .hcard-price { font-size: 13px !important; }
+
 }
 
 /* ---- Breakpoint secondaire : ≤ 400px (très petits écrans) ---- */
