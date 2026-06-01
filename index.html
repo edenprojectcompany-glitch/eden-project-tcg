@@ -1135,8 +1135,8 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   .case-grid { touch-action: pan-y; }
   .graded-grid { touch-action: pan-y; }
 
-  /* Sections générales */
-  section { padding: clamp(40px, 8vw, 90px) clamp(12px, 4vw, 40px); }
+  /* Sections générales — padding-top >= hauteur nav (~56px) + marge */
+  section { padding: 72px 16px 40px; }
   .section-title { font-size: clamp(18px, 6vw, 28px); }
   h2 { font-size: clamp(16px, 5.5vw, 26px); }
   h3 { font-size: clamp(14px, 4.5vw, 20px); }
