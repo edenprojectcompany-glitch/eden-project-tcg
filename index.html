@@ -311,6 +311,13 @@ h1 span{display:block}
   text-transform:uppercase;font-weight:700;padding:3px 8px;border-radius:100px;
   background:rgba(255,217,127,.15);border:1px solid rgba(255,217,127,.3);
   color:var(--gold);backdrop-filter:blur(8px);z-index:2}
+.badge-soon{position:absolute;top:12px;right:12px;font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;padding:4px 10px;border-radius:100px;
+  background:rgba(138,138,147,.18);border:1px solid rgba(138,138,147,.35);
+  color:#8a8a93;backdrop-filter:blur(8px);z-index:2}
+.card-disabled{pointer-events:none;opacity:.55;cursor:default}
+.btn-soon{background:rgba(138,138,147,.15)!important;border-color:rgba(138,138,147,.3)!important;
+  color:#8a8a93!important;cursor:default!important;pointer-events:none}
 .product-body{padding:18px 20px 20px}
 .product-tag{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:7px}
 .lang-badge{display:inline-block;padding:2px 6px;border-radius:50px;font-size:8.5px;font-weight:700;
@@ -2824,18 +2831,22 @@ window.addEventListener('load', () => {
     if(!list.length){grid.innerHTML='<div class="no-results">Aucun produit trouvé.</div>';return;}
     grid.innerHTML=list.map(p=>{
       const hasPrice=p.price!==null;
+      const outOfStock=p.stock!=null&&p.stock===0;
       const flashBadge=p.flashSale?`<span class="badge-flash">⚡ Flash</span>`:'';
-      const stockBadge=p.stock!=null
+      const stockBadge=(!outOfStock&&p.stock!=null)
         ?(p.stock<=3?`<span class="badge-stock-urgent">⚠️ Dernières ${p.stock} boîtes !</span>`
           :p.stock<=8?`<span class="badge-stock-urgent" style="background:rgba(255,179,51,.15);border-color:rgba(255,179,51,.4);color:#ffb333;animation:none">🔥 Plus que ${p.stock} dispo</span>`
           :`<span class="badge-stock">Stock: ${p.stock}</span>`)
         :'';
-      return `<article class="product" data-id="${p.id}" tabindex="0" role="button" style="opacity:0;transition:opacity .35s ease,border-color .4s ease,box-shadow .4s ease,transform .25s ease">
+      const sealBadge=outOfStock
+        ?`<span class="badge-soon">Bientôt de retour</span>`
+        :(p.price!==null&&!p.flashSale?`<span class="badge-rare ${p.lang==='cn'?'badge-cn':'badge-jp'}">SCELLÉ</span>`:'');
+      return `<article class="product${outOfStock?' card-disabled':''}" data-id="${p.id}" tabindex="0" role="button" style="opacity:0;transition:opacity .35s ease,border-color .4s ease,box-shadow .4s ease,transform .25s ease">
         <div class="product-img">
-          ${p.flashSale?flashBadge:''}
-          ${p.price!==null&&!p.flashSale?`<span class="badge-rare ${p.lang==='cn'?'badge-cn':'badge-jp'}">SCELLÉ</span>`:''}
+          ${p.flashSale&&!outOfStock?flashBadge:''}
+          ${sealBadge}
           ${stockBadge}
-          ${p.flashSale?`<div class="flash-timer" style="position:absolute;bottom:12px;right:12px;z-index:3"><span class="timer-seg flash-timer-val" data-end="${p._flashEndTime||0}">--:--:--</span></div>`:''}
+          ${p.flashSale&&!outOfStock?`<div class="flash-timer" style="position:absolute;bottom:12px;right:12px;z-index:3"><span class="timer-seg flash-timer-val" data-end="${p._flashEndTime||0}">--:--:--</span></div>`:''}
           <div class="visual">
             <img src="${IMG_BASE}${p.img}" alt="${p.name}" loading="lazy"
                  onerror="this.parentElement.innerHTML='<div class=\\'img-ph\\'>${p.lang==='cn'?'🀄':'🎴'}</div>'">
@@ -2849,12 +2860,15 @@ window.addEventListener('load', () => {
           ${buildTiersHtml(p)}${buildEbayHtml(p)}
           <div class="product-foot">
             ${hasPrice
-              ?`<div class="product-price" id="cprice-${p.id}">${getBasePrice(p)}<span class="price-unit">€/boîte</span></div>
-                <div class="card-qty" id="cqc-${p.id}">
-                  <button class="cq-btn cq-minus" onclick="event.stopPropagation();cardChangeQty(${p.id},-1)" aria-label="Retirer">−</button>
-                  <input class="cq-input" id="cqn-${p.id}" type="number" min="1" max="999" value="0" onchange="event.stopPropagation();cardSetQty(${p.id},this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                  <button class="cq-btn cq-plus" onclick="event.stopPropagation();cardChangeQty(${p.id},1)" aria-label="Ajouter">+</button>
-                </div>`
+              ?outOfStock
+                ?`<div class="product-price" style="color:#8a8a93">${getBasePrice(p)}<span class="price-unit">€/boîte</span></div>
+                  <button class="add-btn btn-soon" disabled>Bientôt</button>`
+                :`<div class="product-price" id="cprice-${p.id}">${getBasePrice(p)}<span class="price-unit">€/boîte</span></div>
+                  <div class="card-qty" id="cqc-${p.id}">
+                    <button class="cq-btn cq-minus" onclick="event.stopPropagation();cardChangeQty(${p.id},-1)" aria-label="Retirer">−</button>
+                    <input class="cq-input" id="cqn-${p.id}" type="number" min="1" max="999" value="0" onchange="event.stopPropagation();cardSetQty(${p.id},this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                    <button class="cq-btn cq-plus" onclick="event.stopPropagation();cardChangeQty(${p.id},1)" aria-label="Ajouter">+</button>
+                  </div>`
               :'<div class="price-on-demand">Prix sur demande</div>'
             }
           </div>
@@ -2909,8 +2923,10 @@ window.addEventListener('load', () => {
       const caseTotal=+(tierPrice*caseQty+CASE_SURCHARGE).toFixed(2);
       const baseTotal=+((p.tiers?p.tiers[0].p:p.price)*caseQty+CASE_SURCHARGE).toFixed(2);
       const saving=+(baseTotal-caseTotal).toFixed(2);
-      return `<div class="case-card">
-        <div class="case-img">
+        const caseOutOfStock = caseStocks['case_'+p.id]!=null && caseStocks['case_'+p.id]===0;
+      return `<div class="case-card${caseOutOfStock?' card-disabled':''}">
+        <div class="case-img" style="position:relative">
+          ${caseOutOfStock?`<span class="badge-soon">Bientôt de retour</span>`:''}
           <img src="${IMG_BASE}${p.img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
           <div class="foil"></div>
         </div>
@@ -2920,12 +2936,15 @@ window.addEventListener('load', () => {
           <div class="case-sub">${p.sub}</div>
           <div class="case-foot">
             <div>
-              <div class="case-price">${caseTotal}<span class="case-unit">€/case</span></div>
-              ${saving>0?`<div class="case-save">Économie : ${saving}€ vs prix unitaire</div>`:''}
+              <div class="case-price" style="${caseOutOfStock?'color:#8a8a93':''}">${caseTotal}<span class="case-unit">€/case</span></div>
+              ${!caseOutOfStock&&saving>0?`<div class="case-save">Économie : ${saving}€ vs prix unitaire</div>`:''}
             </div>
-            <button class="add-btn" onclick="event.stopPropagation(); for(let i=0;i<${caseQty};i++) addToCart(${p.id})" aria-label="Ajouter">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            </button>
+            ${caseOutOfStock
+              ?`<button class="add-btn btn-soon" disabled>Bientôt</button>`
+              :`<button class="add-btn" onclick="event.stopPropagation(); for(let i=0;i<${caseQty};i++) addToCart(${p.id})" aria-label="Ajouter">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                </button>`
+            }
           </div>
         </div>
       </div>`;
@@ -4451,6 +4470,9 @@ window.addEventListener('load', () => {
     });
   }
 
+  /* Stocks des cases (clés case_X dans KV) — alimenté par loadProductOverrides */
+  let caseStocks={};
+
   /* ══ OVERRIDES PRODUITS DEPUIS API ══ */
   async function loadProductOverrides(){
     try{
@@ -4458,6 +4480,9 @@ window.addEventListener('load', () => {
       if(!res.ok) return;
       const {prices,stocks,flashsale,shipping,graded}=await res.json();
       const now=Date.now();
+      // Extraire les stocks cases (clés "case_X")
+      caseStocks={};
+      Object.keys(stocks||{}).forEach(k=>{if(k.startsWith('case_'))caseStocks[k]=stocks[k];});
       products.forEach(p=>{
         if(prices[p.id]!=null){ p.price=prices[p.id]; p.adminPrice=prices[p.id]; }
         if(stocks[p.id]!=null) p.stock=stocks[p.id];
