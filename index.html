@@ -2984,20 +2984,26 @@ window.addEventListener('load', () => {
   /* ══ CASE PAGE ══ */
   // Cases disponibles — JP : 12 displays/case · CN : 20 displays/case · +150€ logistique
   const CASE_CATALOG = [
-    {id:18, qty:12}, // SV10 — Glory Rocket (JP)
-    {id:11, qty:12}, // M2 — Méga Inferno X (JP)
-    {id:15, qty:20}, // SV8a — Terastal Fest (JP — 20 displays)
-    {id:10, qty:20}, // M2a — Méga Dream EX (JP — 20 displays)
-    {id:2,  qty:20}, // CN151 Vol.4 (CN)
-    {id:1,  qty:20}, // CN151 Vol.3 (CN)
-    {id:21, qty:12}, // SV2a — Pokémon 151 (JP)
-    {id:22, qty:12}, // M5 — Mega Abyss Eye (JP)
+    {id:18, qty:12, basePrice:130}, // SV10 — Glory Rocket (JP)
+    {id:11, qty:12, basePrice:110}, // M2 — Méga Inferno X (JP)
+    {id:15, qty:20, basePrice:100}, // SV8a — Terastal Fest (JP — 20 displays)
+    {id:10, qty:20, basePrice:85},  // M2a — Méga Dream EX (JP — 20 displays)
+    {id:2,  qty:20, basePrice:65},  // CN151 Vol.4 (CN)
+    {id:1,  qty:20, basePrice:49},  // CN151 Vol.3 (CN)
+    {id:21, qty:12, basePrice:299}, // SV2a — Pokémon 151 (JP)
+    {id:22, qty:12, basePrice:120}, // M5 — Mega Abyss Eye (JP)
   ];
   const CASE_SURCHARGE = 150;
 
   function renderCases(){
     const grid=document.getElementById('caseGrid'); if(!grid) return;
-    const caseProducts=CASE_CATALOG.map(c=>({...products.find(p=>p.id===c.id), _caseQty:c.qty})).filter(p=>p.id&&p.price!==null);
+    // Les cases sont toujours affichées — indépendantes du stock/prix marketplace
+    const caseProducts=CASE_CATALOG.map(c=>{
+      const prod=products.find(p=>p.id===c.id)||{};
+      // Prix de base depuis l'objet produit OU depuis CASE_CATALOG (fallback)
+      const basePrice=prod.adminPrice??prod.price??c.basePrice??null;
+      return {...prod, id:c.id, price:basePrice, _caseQty:c.qty};
+    });
     grid.innerHTML=caseProducts.map(p=>{
       const caseQty=p._caseQty;
       // Prix selon la quantité de la case (tier correspondant)
