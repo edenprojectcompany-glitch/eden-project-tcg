@@ -57,6 +57,11 @@ module.exports = async (req, res) => {
         return res.status(401).json({ error: 'Session expirée, reconnectez-vous' });
       }
 
+      // Roue verrouillée jusqu'au premier achat
+      if (!user.orders || user.orders.length === 0) {
+        return res.status(403).json({ error: 'La roue se débloque après votre premier achat !' });
+      }
+
       // Cooldown basé sur le tier VIP
       const totalSpent = (user.orders || []).reduce((s, o) => s + parseFloat(o.amount || 0), 0);
       let cooldownMs;
