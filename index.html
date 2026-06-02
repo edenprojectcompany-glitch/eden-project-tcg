@@ -647,23 +647,11 @@ h1 span{display:block}
   z-index:-2;
 }
 
-/* Widget Mondial Relay — fond sombre, textes noirs → blancs, couleurs violet/blanc conservées */
-#Zone_Widget{background:#0d0d10 !important;position:relative;z-index:1;}
-/* Fond sombre sur tous les conteneurs internes */
-#Zone_Widget *{background-color:#0d0d10 !important;}
-/* Restaurer les couleurs de fond spécifiques (violet MR, selected, hover) */
-#Zone_Widget [class*="MR-Widget-HeaderLogo"],
-#Zone_Widget [class*="Selected"],
-#Zone_Widget [class*="selected"]{background-color:#1a0a2e !important;}
-#Zone_Widget [class*="hover"]:hover,
-#Zone_Widget li:hover{background-color:#160824 !important;}
-/* Textes noirs → blancs */
-#Zone_Widget *{color:#f0f0f0 !important;}
-/* Restaurer les couleurs violet/cyan MR */
-#Zone_Widget [style*="color"]{color:inherit !important;}
-#Zone_Widget a{color:#7fd9ff !important;}
-/* Garder le logo MR */
-#Zone_Widget img{background-color:transparent !important;}
+/* Widget Mondial Relay — fond sombre via filter, carte Leaflet ré-inversée */
+#Zone_Widget{position:relative;z-index:1;filter:invert(1) hue-rotate(180deg) brightness(0.88);}
+/* Re-inverser uniquement la carte Leaflet pour garder ses couleurs d'origine */
+#Zone_Widget .leaflet-container{filter:invert(1) hue-rotate(180deg) brightness(1.1);}
+#Zone_Widget img{filter:invert(1) hue-rotate(180deg);}
 
 /* Bouton paiement Stripe — thème site */
 #payBtn{
@@ -2820,9 +2808,15 @@ window.addEventListener('load', () => {
     document.addEventListener('visibilitychange',()=>{
       if(!document.hidden){
         draw();
-        // Reset bouton Stripe si l'utilisateur revient de la page de paiement
-        const pb=document.getElementById('payBtn');
-        if(pb&&pb.disabled){pb.textContent='💳 Payer par carte bancaire';pb.disabled=false;}
+        // Reset bouton Stripe si bloqué sur "Chargement…" (retour depuis page Stripe)
+        // NE PAS toucher au panier ni à l'auth — ils viennent de localStorage
+        try{
+          const pb=document.getElementById('payBtn');
+          if(pb&&pb.disabled&&(pb.textContent.includes('Chargement')||pb.textContent.includes('...'))){
+            pb.textContent='💳 Payer par carte bancaire';
+            pb.disabled=false;
+          }
+        }catch{}
       }
     });
     window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});

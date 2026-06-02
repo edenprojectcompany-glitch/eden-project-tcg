@@ -63,6 +63,11 @@ module.exports = async (req, res) => {
         if (typeof data !== 'object' || Array.isArray(data)) {
           return res.status(400).json({ error: 'Format invalide' });
         }
+        // Reset complet si demandé
+        if (data.__reset === true) {
+          await kv.set('admin:prices', {});
+          return res.status(200).json({ ok: true, reset: true });
+        }
         // Lire les prix existants pour merger (ne pas écraser les clés case_X)
         const existing = await kv.get('admin:prices') || {};
         // Nettoyer les clés invalides héritées d'anciens bugs
@@ -82,6 +87,11 @@ module.exports = async (req, res) => {
       if (action === 'set_stocks') {
         if (typeof data !== 'object' || Array.isArray(data)) {
           return res.status(400).json({ error: 'Format invalide' });
+        }
+        // Reset complet si demandé
+        if (data.__reset === true) {
+          await kv.set('admin:stocks', {});
+          return res.status(200).json({ ok: true, reset: true });
         }
         // Lire les stocks existants pour merger (ne pas écraser les clés case_X)
         const existing = await kv.get('admin:stocks') || {};

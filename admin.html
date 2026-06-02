@@ -290,7 +290,10 @@ tr:hover td{background:rgba(255,255,255,.015)}
         <table><thead><tr><th>Produit</th><th>Prix base</th><th>Nouveau prix (€)</th><th>Stock</th></tr></thead>
         <tbody id="prodBody"></tbody></table>
       </div>
-      <button class="btn-sm" id="savePricesBtn" style="margin-top:12px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer marketplace</button>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn-sm" id="savePricesBtn" style="background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer marketplace</button>
+        <button class="btn-sm" id="resetAllBtn" style="background:var(--danger);color:#0a0a0c;border-color:var(--danger);font-weight:700">🔄 Réinitialiser TOUT aux prix par défaut</button>
+      </div>
       <div id="priceMsg" style="margin-top:10px;font-size:12.5px"></div>
 
       <!-- ── CASES ── -->
@@ -630,6 +633,22 @@ function buildProduits(prices,stocks){
     <td><input type="number" id="as-${p.id}" value="${stocks[p.id]??''}" placeholder="illim." style="width:80px;padding:6px 10px;background:var(--glass);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none"></td>
   </tr>`).join('');
 }
+document.getElementById('resetAllBtn').addEventListener('click',async()=>{
+  if(!confirm('Réinitialiser TOUS les prix, stocks et flash sales aux valeurs par défaut ? Cette action est irréversible.')) return;
+  const msg=document.getElementById('priceMsg');
+  msg.style.color='var(--dim)';msg.textContent='Réinitialisation en cours…';
+  try{
+    // Vider complètement prices, stocks et flashsale dans KV
+    await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_prices',data:{__reset:true}})});
+    await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_stocks',data:{__reset:true}})});
+    await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_flashsale',data:{}})});
+    // Recharger les données
+    await loadAdminData();
+    msg.style.color='var(--success)';msg.textContent='✓ Tout réinitialisé aux prix par défaut';
+  }catch{msg.style.color='var(--danger)';msg.textContent='Erreur lors de la réinitialisation';}
+  setTimeout(()=>msg.textContent='',4000);
+});
+
 document.getElementById('savePricesBtn').addEventListener('click',async()=>{
   const prices={},stocks={};
   PRODUCTS.forEach(p=>{
