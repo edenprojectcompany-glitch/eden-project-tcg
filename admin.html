@@ -759,7 +759,9 @@ document.getElementById('saveShipBtn').addEventListener('click',async()=>{
 
 /* ══ GRADÉES ══ */
 function buildGradees(graded){
-  const wrap=document.getElementById('gradedRows'); if(!wrap||!graded.length) return;
+  const wrap=document.getElementById('gradedRows'); if(!wrap) return;
+  // Compléter avec des cartes vides si moins de 4
+  while(graded.length<4) graded.push({name:'',sub:'',tag:'',price:null,badge:'',available:false});
   wrap.innerHTML=graded.map((c,i)=>`
     <div style="padding:16px;border-radius:12px;background:var(--glass);border:1px solid var(--gb)">
       <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--c2);margin-bottom:12px">Carte ${i+1}</div>

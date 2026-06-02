@@ -65,7 +65,8 @@ module.exports = async (req, res) => {
         }
         // Lire les prix existants pour merger (ne pas écraser les clés case_X)
         const existing = await kv.get('admin:prices') || {};
-        const validated = { ...existing };
+        // Nettoyer les clés invalides héritées d'anciens bugs
+        const validated = Object.fromEntries(Object.entries(existing).filter(([k]) => k !== 'NaN' && k !== 'undefined'));
         for (const [k, v] of Object.entries(data)) {
           const price = parseFloat(v);
           if (!isNaN(price) && price >= 0 && price <= 10000) {
@@ -84,7 +85,8 @@ module.exports = async (req, res) => {
         }
         // Lire les stocks existants pour merger (ne pas écraser les clés case_X)
         const existing = await kv.get('admin:stocks') || {};
-        const validated = { ...existing };
+        // Nettoyer les clés invalides héritées d'anciens bugs
+        const validated = Object.fromEntries(Object.entries(existing).filter(([k]) => k !== 'NaN' && k !== 'undefined'));
         for (const [k, v] of Object.entries(data)) {
           const stock = parseInt(v);
           if (!isNaN(stock) && stock >= 0 && stock <= 100000) {

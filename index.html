@@ -3001,8 +3001,9 @@ window.addEventListener('load', () => {
     const caseProducts=CASE_CATALOG.map(c=>{
       const prod=products.find(p=>p.id===c.id)||{};
       // Prix de base depuis l'objet produit OU depuis CASE_CATALOG (fallback)
-      const basePrice=prod.adminPrice??prod.price??c.basePrice??null;
-      return {...prod, id:c.id, price:basePrice, _caseQty:c.qty};
+      // Prix : override admin case > override admin produit > prix produit > basePrice catalogue
+      const basePrice=casePricesOverride['case_'+c.id]??prod.adminPrice??prod.price??c.basePrice??null;
+      return {...prod, id:c.id, price:basePrice, adminPrice:basePrice, _caseQty:c.qty};
     });
     grid.innerHTML=caseProducts.map(p=>{
       const caseQty=p._caseQty;
@@ -4560,8 +4561,9 @@ window.addEventListener('load', () => {
     });
   }
 
-  /* Stocks des cases (clés case_X dans KV) — alimenté par loadProductOverrides */
+  /* Stocks ET prix des cases (clés case_X dans KV) — alimentés par loadProductOverrides */
   let caseStocks={};
+  let casePricesOverride={};
 
   /* ══ OVERRIDES PRODUITS DEPUIS API ══ */
   async function loadProductOverrides(){
@@ -4570,9 +4572,11 @@ window.addEventListener('load', () => {
       if(!res.ok) return;
       const {prices,stocks,flashsale,shipping,graded}=await res.json();
       const now=Date.now();
-      // Extraire les stocks cases (clés "case_X")
+      // Extraire les stocks ET prix des cases (clés "case_X")
       caseStocks={};
+      casePricesOverride={};
       Object.keys(stocks||{}).forEach(k=>{if(k.startsWith('case_'))caseStocks[k]=stocks[k];});
+      Object.keys(prices||{}).forEach(k=>{if(k.startsWith('case_'))casePricesOverride[k]=prices[k];});
       products.forEach(p=>{
         if(prices[p.id]!=null){ p.price=prices[p.id]; p.adminPrice=prices[p.id]; }
         if(stocks[p.id]!=null) p.stock=stocks[p.id];
