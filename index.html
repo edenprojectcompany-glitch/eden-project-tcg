@@ -5013,10 +5013,10 @@ window.addEventListener('load', () => {
   gridObs.observe(document.getElementById('grid')||document.body,{childList:true,subtree:false});
 
   /* ══ INIT ══ */
-  loadAuth();
-  loadCart();
+  try{loadAuth();}catch(e){sessionStorage.setItem('_ie',e?.message||'loadAuth');}
+  try{loadCart();}catch(e){cart=[];sessionStorage.setItem('_ie',e?.message||'loadCart');}
   loadProductOverrides().then(()=>renderGrid('all'));
-  renderCart();
+  try{renderCart();}catch(e){sessionStorage.setItem('_ie',e?.message||'renderCart');}
   initJackpot();
   (()=>{
     let startPage='home';
