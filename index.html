@@ -5041,6 +5041,22 @@ window.addEventListener('load', () => {
   try{loadCart();}catch{cart=[];}
   loadProductOverrides().then(()=>renderGrid('all'));
   renderCart();
+
+  /* ══ PRIX EBAY LIVE (après le rendu initial) ══ */
+  (async function loadEbayPrices(){
+    try{
+      const queries=products.filter(p=>p.price!==null).map(p=>({
+        id:p.id,
+        term:`${p.name} display ${p.lang==='jp'?'JP sealed':'CN sealed'}`
+      }));
+      const res=await fetch('/api/ebay-prices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({queries})});
+      if(!res.ok) return;
+      const {prices}=await res.json();
+      let updated=false;
+      products.forEach(p=>{if(prices[p.id]!=null){p.ebay=prices[p.id];updated=true;}});
+      if(updated) renderGrid(currentFilter);
+    }catch{}
+  })();
   initJackpot();
   (()=>{
     let startPage='home';
