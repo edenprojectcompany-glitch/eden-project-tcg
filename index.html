@@ -275,18 +275,18 @@ h1 span{display:block}
 .filters .divider{width:1px;height:22px;background:var(--glass-border);margin:0 4px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:22px;perspective:1200px}
 .no-results{text-align:center;padding:70px 20px;color:var(--text-dim);font-size:14.5px;grid-column:1/-1}
-/* Halo lucioles sur cartes marketplace & cases — subtil, cycle foil */
-@keyframes cardHolo{
-  0%,100%{box-shadow:0 0 0 1px rgba(127,217,255,.12),0 0 10px rgba(127,217,255,.04)}
-  33%{box-shadow:0 0 0 1px rgba(201,168,255,.12),0 0 10px rgba(201,168,255,.04)}
-  66%{box-shadow:0 0 0 1px rgba(168,255,212,.10),0 0 10px rgba(168,255,212,.03)}
+/* Halo lucioles permanent — bordure animée cycle foil, foil intérieur hover only */
+@keyframes cardHoloBorder{
+  0%,100%{border-color:rgba(127,217,255,.18);box-shadow:0 0 8px rgba(127,217,255,.05)}
+  33%{border-color:rgba(201,168,255,.18);box-shadow:0 0 8px rgba(201,168,255,.05)}
+  66%{border-color:rgba(168,255,212,.15);box-shadow:0 0 8px rgba(168,255,212,.04)}
 }
 /* Cartes produit */
 .product{position:relative;border-radius:var(--radius-card);background:var(--obsidian-2);
   border:1px solid var(--glass-border);overflow:visible;
   transition:border-color .35s ease,box-shadow .35s ease,transform .35s var(--spring);cursor:pointer;
   transform-style:preserve-3d;will-change:transform;
-  animation:cardHolo 9s ease-in-out infinite}
+  animation:cardHoloBorder 9s ease-in-out infinite}
 .product:hover{border-color:rgba(127,217,255,.28);box-shadow:0 0 0 1px rgba(127,217,255,.1),0 24px 50px rgba(0,0,0,.5),0 0 36px rgba(127,217,255,.06);transform:translateY(-3px)}
 .product-img{position:relative;aspect-ratio:3/4;background:linear-gradient(160deg,#1a1a22,#0e0e13);
   overflow:hidden;border-radius:var(--radius-card) var(--radius-card) 0 0;perspective:1000px}
@@ -318,18 +318,30 @@ h1 span{display:block}
   text-transform:uppercase;font-weight:700;padding:3px 8px;border-radius:100px;
   background:rgba(255,217,127,.15);border:1px solid rgba(255,217,127,.3);
   color:var(--gold);backdrop-filter:blur(8px);z-index:2}
+/* Badge "Bientôt de retour" — spot LED doré qui fait le tour */
+@keyframes badgeLedTravel{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
 .badge-soon{position:absolute;top:12px;right:12px;font-size:9.5px;letter-spacing:.1em;
   text-transform:uppercase;font-weight:700;padding:4px 10px;border-radius:100px;
   background:rgba(240,192,96,.08);
-  border:1px solid rgba(240,192,96,.45);
-  color:rgba(240,192,96,.8);
-  backdrop-filter:blur(8px);z-index:2;
-  box-shadow:0 0 8px rgba(240,192,96,.2),inset 0 0 6px rgba(240,192,96,.06);
-  animation:badgeSoonGlow 2.5s ease-in-out infinite}
-@keyframes badgeSoonGlow{
-  0%,100%{box-shadow:0 0 6px rgba(240,192,96,.2),inset 0 0 4px rgba(240,192,96,.04)}
-  50%{box-shadow:0 0 14px rgba(240,192,96,.4),0 0 24px rgba(240,192,96,.1),inset 0 0 8px rgba(240,192,96,.08)}
-}
+  border:1px solid rgba(240,192,96,.35);
+  color:rgba(240,192,96,.85);
+  backdrop-filter:blur(8px);z-index:2;overflow:hidden;
+  box-shadow:0 0 8px rgba(240,192,96,.15)}
+.badge-soon::before{
+  content:'';position:absolute;
+  width:300%;height:300%;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(0deg);
+  background:conic-gradient(
+    from 0deg,transparent 0deg,transparent 330deg,
+    rgba(240,192,96,.2) 340deg,rgba(255,230,100,.9) 350deg,
+    rgba(255,255,200,1) 355deg,rgba(255,230,100,.9) 360deg,
+    rgba(240,192,96,.2) 365deg,transparent 370deg,transparent 360deg);
+  animation:badgeLedTravel 3s linear infinite;
+  z-index:0;pointer-events:none}
+.badge-soon::after{
+  content:'';position:absolute;inset:0;border-radius:100px;
+  background:rgba(240,192,96,.06);z-index:0}
 /* stock=0 : carte visible + hover/holo actif, seuls les boutons d'achat désactivés */
 .card-disabled{opacity:.6;cursor:default}
 .card-disabled .add-btn,.card-disabled .card-qty,.card-disabled .cq-btn{pointer-events:none}
@@ -387,7 +399,7 @@ h1 span{display:block}
 .case-card{border-radius:var(--radius-card);background:var(--obsidian-2);border:1px solid var(--glass-border);
   overflow:hidden;transition:border-color .4s ease,box-shadow .4s ease;cursor:pointer;
   transform-style:preserve-3d;will-change:transform;
-  animation:cardHolo 9s ease-in-out infinite 3s}
+  animation:cardHoloBorder 9s ease-in-out infinite 3s}
 .case-card:hover{border-color:var(--foil-2);box-shadow:0 20px 50px rgba(0,0,0,.4)}
 .case-img{aspect-ratio:4/3;background:linear-gradient(160deg,#1a1a22,#0e0e13);
   display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
@@ -577,13 +589,10 @@ h1 span{display:block}
 #mr-widget-glow-wrap{
   position:relative;
   border-radius:14px;
-  padding:2px;
+  padding:4px; /* épaisseur bande LED */
   overflow:hidden;
-  /* bande dorée de base visible en permanence sur tout le périmètre */
-  background:linear-gradient(#0f0f12,#0f0f12) padding-box,
-             linear-gradient(135deg,rgba(240,192,96,.5),rgba(255,217,127,.3),rgba(240,192,96,.5)) border-box;
-  border:2px solid transparent;
-  box-shadow:0 0 10px rgba(240,192,96,.2),0 0 25px rgba(240,192,96,.08);
+  background:#0f0f12; /* fond sombre — contenu au-dessus via z-index */
+  box-shadow:0 0 15px rgba(240,192,96,.18),0 0 35px rgba(240,192,96,.08);
 }
 /* Spot LED brillant qui fait tout le tour */
 #mr-widget-glow-wrap::before{
