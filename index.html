@@ -2658,11 +2658,17 @@ window.addEventListener('load', () => {
   /* ── Persistance panier ── */
   function saveCart(){
     const d=JSON.stringify(cart);
-    // Cookie compact : juste les champs essentiels pour rester sous 3.5KB
-    let compact='[]';
-    try{compact=JSON.stringify(cart.map(i=>({i:i.id,q:i.qty,up:i.unitPrice,...(i.isCaseItem?{ic:1,ck:i._caseKey,cq:i.caseQty}:{})}})));}catch{}
-    _write('edn_cart','edn_cart_ss','edn_cc',d);
-    if(compact!==d)_ckSet('edn_cc',compact,30);
+    try{localStorage.setItem('edn_cart',d);}catch{}
+    try{sessionStorage.setItem('edn_cart_ss',d);}catch{}
+    try{
+      const compact=cart.map(function(i){
+        const o={i:i.id,q:i.qty,up:i.unitPrice};
+        if(i.isCaseItem){o.ic=1;o.ck=i._caseKey;o.cq=i.caseQty;}
+        return o;
+      });
+      const cd=JSON.stringify(compact);
+      if(cd.length<3500)_ckSet('edn_cc',cd,30);else _ckDel('edn_cc');
+    }catch{}
   }
   function loadCart(){
     let raw=null;
