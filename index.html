@@ -2634,12 +2634,16 @@ window.addEventListener('load', () => {
   const WHEEL_ONLY_CODES_FRONT = { SHIP0:{minAmount:50}, BOOSTER:{minAmount:0}, FREE_DISPLAY:{minAmount:0} };
 
   /* ── Persistance panier ── */
-  function saveCart(){try{localStorage.setItem('edn_cart',JSON.stringify(cart));}catch{}}
+  function saveCart(){
+    const d=JSON.stringify(cart);
+    try{localStorage.setItem('edn_cart',d);}catch{}
+    try{sessionStorage.setItem('edn_cart_ss',d);}catch{}
+  }
   function loadCart(){
     try{
-      const saved=JSON.parse(localStorage.getItem('edn_cart')||'[]');
+      const raw=localStorage.getItem('edn_cart')||sessionStorage.getItem('edn_cart_ss');
       // Filtrer les articles invalides (produit supprimé du catalogue)
-      cart=saved.filter(s=>s.id===0||products.find(p=>p.id===s.id&&p.price!==null));
+      cart=(JSON.parse(raw||'[]')).filter(s=>s.id===0||products.find(p=>p.id===s.id&&p.price!==null));
     }catch{cart=[];}
   }
   // Sync panier entre onglets (ex : paiement Stripe nouvel onglet vide le panier)
@@ -3659,26 +3663,23 @@ window.addEventListener('load', () => {
   /* ══ AUTH ══ */
   function loadAuth(){
     try{
-      authToken=localStorage.getItem('edn_token');
-      authUser=JSON.parse(localStorage.getItem('edn_user')||'null');
+      authToken=localStorage.getItem('edn_token')||sessionStorage.getItem('edn_token_ss');
+      const raw=localStorage.getItem('edn_user')||sessionStorage.getItem('edn_user_ss');
+      authUser=JSON.parse(raw||'null');
     }catch(e){authToken=null;authUser=null;}
     if(authUser) updateAuthUI();
     updateReviewBtn();
   }
   function saveAuth(user,token){
     authUser=user;authToken=token;
-    try{
-      localStorage.setItem('edn_token',token);
-      localStorage.setItem('edn_user',JSON.stringify(user));
-    }catch(e){console.warn('Auth storage failed:',e);}
+    try{localStorage.setItem('edn_token',token);localStorage.setItem('edn_user',JSON.stringify(user));}catch{}
+    try{sessionStorage.setItem('edn_token_ss',token);sessionStorage.setItem('edn_user_ss',JSON.stringify(user));}catch{}
     updateAuthUI(); updateReviewBtn();
   }
   function clearAuth(){
     authUser=null;authToken=null;
-    try{
-      localStorage.removeItem('edn_token');
-      localStorage.removeItem('edn_user');
-    }catch{}
+    try{localStorage.removeItem('edn_token');localStorage.removeItem('edn_user');}catch{}
+    try{sessionStorage.removeItem('edn_token_ss');sessionStorage.removeItem('edn_user_ss');}catch{}
     updateAuthUI(); updateReviewBtn();
   }
   function updateAuthUI(){
