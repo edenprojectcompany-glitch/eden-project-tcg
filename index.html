@@ -539,6 +539,13 @@ h1 span{display:block}
 .wheel-cooldown{font-size:12.5px;color:var(--text-dim);margin-top:8px}
 .wheel-spin-btn{width:100%}
 
+/* ── DELETE ACCOUNT ── */
+.delete-account-zone{margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,.06);text-align:center}
+.delete-account-btn{background:none;border:1px solid rgba(255,100,100,.25);color:rgba(255,100,100,.5);border-radius:12px;padding:10px 22px;font-size:12.5px;font-weight:600;cursor:pointer;transition:.3s;font-family:inherit;letter-spacing:.02em}
+.delete-account-btn:hover{border-color:rgba(255,100,100,.55);color:rgba(255,120,120,.85);background:rgba(255,50,50,.06)}
+.delete-account-btn.sending{opacity:.5;cursor:not-allowed}
+.delete-sent-msg{display:none;margin-top:12px;font-size:13px;color:rgba(255,200,200,.7);line-height:1.5}
+
 /* ── VERIFY EMAIL POPUP ── */
 .ve-overlay{position:fixed;inset:0;background:rgba(4,4,8,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .4s ease}
 .ve-box{background:linear-gradient(155deg,#12121a,#0c0c11);border:1px solid rgba(240,192,96,.22);border-radius:28px;padding:48px 36px 40px;max-width:480px;width:100%;text-align:center;position:relative;overflow:hidden;animation:popIn .5s cubic-bezier(.16,1,.3,1);box-shadow:0 0 100px rgba(240,192,96,.1),0 40px 80px rgba(0,0,0,.7)}
@@ -1939,6 +1946,11 @@ loadAndRenderReviews();
             <div style="color:var(--text-dim);font-size:13.5px;padding:16px 0;text-align:center">Aucune commande pour le moment.</div>
           </div>
         </div>
+        <!-- Suppression compte -->
+        <div class="delete-account-zone reveal-up">
+          <button class="delete-account-btn" id="deleteAccountBtn">🗑 Supprimer mon compte</button>
+          <div class="delete-sent-msg" id="deleteSentMsg">📧 Un email de confirmation a été envoyé.<br>Clique sur le lien dans cet email pour confirmer la suppression.</div>
+        </div>
       </div>
     </div>
   </section>
@@ -3331,6 +3343,26 @@ window.addEventListener('load', () => {
   window.renderCases = renderCases;
   window.openModal = openModal;
 
+  /* ══ SUPPRESSION COMPTE ══ */
+  document.getElementById('deleteAccountBtn')?.addEventListener('click',async()=>{
+    const btn=document.getElementById('deleteAccountBtn');
+    const msg=document.getElementById('deleteSentMsg');
+    if(!authToken) return;
+    if(btn.classList.contains('sending')) return;
+    btn.classList.add('sending'); btn.textContent='Envoi…';
+    try{
+      const res=await fetch('/api/request-delete',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken}});
+      if(res.ok){
+        btn.style.display='none';
+        if(msg) msg.style.display='block';
+      } else {
+        btn.classList.remove('sending'); btn.textContent='🗑 Supprimer mon compte';
+        const data=await res.json();
+        alert(data.error||'Erreur — réessayez');
+      }
+    }catch{btn.classList.remove('sending');btn.textContent='🗑 Supprimer mon compte';}
+  });
+
   /* ══ VERIFY EMAIL POPUP ══ */
   function showVerifyEmailPopup(email){
     const ov=document.getElementById('veOverlay'); if(!ov) return;
@@ -4015,6 +4047,29 @@ window.addEventListener('load', () => {
     sessionStorage.setItem('eden_reset_token',token);
     history.replaceState({},'',location.pathname);
     go('reset-pwd');
+  })();
+
+  // Confirmation suppression compte depuis le lien (?delete_token=TOKEN)
+  (function checkDeleteToken(){
+    const p=new URLSearchParams(location.search);
+    const token=p.get('delete_token');
+    if(!token) return;
+    history.replaceState({},'',location.pathname);
+    fetch('/api/confirm-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})})
+      .then(r=>r.json())
+      .then(data=>{
+        if(data.ok){
+          clearAuth();
+          go('home');
+          setTimeout(()=>{
+            const msg=document.createElement('div');
+            msg.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a1a22;border:1px solid rgba(127,255,170,.3);color:#7fffaa;border-radius:12px;padding:14px 24px;z-index:9999;font-size:14px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)';
+            msg.textContent='✓ Votre compte a été supprimé. À bientôt !';
+            document.body.appendChild(msg);
+            setTimeout(()=>msg.remove(),5000);
+          },300);
+        }
+      }).catch(()=>{});
   })();
 
   // Vérification email depuis le lien (?verify_token=TOKEN)
