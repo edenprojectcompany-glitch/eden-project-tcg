@@ -2765,8 +2765,8 @@ window.addEventListener('load', () => {
       if(hasGSAP) gsap.fromTo(nxt,{opacity:0,y:12},{opacity:1,y:0,duration:.4,ease:'power3.out'});
       window.scrollTo({top:0,behavior:'smooth'});
       closeMobileMenu(); updateNavLinks(page);
-      if(page==='catalog'){renderGrid(currentFilter);startFlashTimers();loadProductOverrides().then(()=>{renderGrid(currentFilter);startFlashTimers();});}
-      if(page==='case'){renderCases();loadProductOverrides().then(()=>renderCases());}
+      if(page==='catalog'){renderGrid(currentFilter);startFlashTimers();}
+      if(page==='case') renderCases();
       if(page==='checkout'){renderCheckout();document.getElementById('coStep3Num')?.classList.remove('active');}
       if(page==='graded') setTimeout(initHoloCards,80);
       if(page==='dashboard') renderDashboard();
@@ -2997,27 +2997,20 @@ window.addEventListener('load', () => {
 
   function renderCases(){
     const grid=document.getElementById('caseGrid'); if(!grid) return;
-    // Les cases sont toujours affichées — indépendantes du stock/prix marketplace
-    const caseProducts=CASE_CATALOG.map(c=>{
-      const prod=products.find(p=>p.id===c.id)||{};
-      // Prix de base depuis l'objet produit OU depuis CASE_CATALOG (fallback)
-      // Prix : override admin case > override admin produit > prix produit > basePrice catalogue
-      const basePrice=casePricesOverride['case_'+c.id]??prod.adminPrice??prod.price??c.basePrice??null;
-      return {...prod, id:c.id, price:basePrice, adminPrice:basePrice, _caseQty:c.qty};
-    });
+    const caseProducts=CASE_CATALOG.map(c=>({...products.find(p=>p.id===c.id),_caseQty:c.qty})).filter(p=>p.id&&p.price!==null);
     grid.innerHTML=caseProducts.map(p=>{
       const caseQty=p._caseQty;
-      // Prix selon la quantité de la case (tier correspondant)
       let tierPrice=p.tiers?p.tiers[0].p:p.price;
       if(p.tiers) for(const t of p.tiers){if(caseQty>=t.q&&t.p!==null)tierPrice=t.p;}
       if(p.adminPrice!=null) tierPrice=p.adminPrice;
       const caseTotal=+(tierPrice*caseQty+CASE_SURCHARGE).toFixed(2);
       const baseTotal=+((p.tiers?p.tiers[0].p:p.price)*caseQty+CASE_SURCHARGE).toFixed(2);
       const saving=+(baseTotal-caseTotal).toFixed(2);
-        const caseOutOfStock = caseStocks['case_'+p.id]!=null && caseStocks['case_'+p.id]===0;
+      // Badge "Bientôt de retour" si stock case = 0 (défini dans admin Cases)
+      const caseOutOfStock=caseStocks['case_'+p.id]!=null&&caseStocks['case_'+p.id]===0;
       return `<div class="case-card${caseOutOfStock?' card-disabled':''}">
-        <div class="case-img" style="position:relative">
-          ${caseOutOfStock?`<span class="badge-soon">Bientôt de retour</span>`:''}
+        <div class="case-img">
+          ${caseOutOfStock?`<span class="badge-soon" style="position:absolute;top:12px;right:12px;z-index:2">Bientôt de retour</span>`:''}
           <img src="${IMG_BASE}${p.img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
           <div class="foil"></div>
         </div>
@@ -3027,8 +3020,8 @@ window.addEventListener('load', () => {
           <div class="case-sub">${p.sub}</div>
           <div class="case-foot">
             <div>
-              <div class="case-price" style="${caseOutOfStock?'color:#8a8a93':''}">${caseTotal}<span class="case-unit">€/case</span></div>
-              ${!caseOutOfStock&&saving>0?`<div class="case-save">Économie : ${saving}€ vs prix unitaire</div>`:''}
+              <div class="case-price">${caseTotal}<span class="case-unit">€/case</span></div>
+              ${saving>0?`<div class="case-save">Économie : ${saving}€ vs prix unitaire</div>`:''}
             </div>
             ${caseOutOfStock
               ?`<button class="add-btn btn-soon" disabled>Bientôt</button>`
