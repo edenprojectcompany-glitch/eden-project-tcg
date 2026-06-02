@@ -2540,7 +2540,6 @@ loadAndRenderReviews();
 <script>
 /* ── INIT après chargement GSAP (defer) ── */
 window.addEventListener('load', () => {
-  window.onerror=function(msg,src,line,col,err){try{sessionStorage.setItem('_WIN_ERR',JSON.stringify({msg,line,col,stack:err&&err.stack?err.stack.split('\n').slice(0,4).join('|'):null}));}catch{}};
   const hasGSAP = typeof gsap !== 'undefined';
   if (hasGSAP && typeof ScrollTrigger !== 'undefined') gsap.registerPlugin(ScrollTrigger);
 
@@ -2688,14 +2687,7 @@ window.addEventListener('load', () => {
         }
       }catch{}
     }
-    const _dbg={raw:raw?raw.substring(0,100):'null',products_len:products.length};
-    try{cart=(JSON.parse(raw||'[]')).filter(s=>{
-      const p=products.find(x=>x.id===s.id);
-      _dbg['id_'+s.id]={price:p?.price,found:!!p,pass:s.id===0||(!!(p&&p.price!==null))};
-      return s.id===0||(p&&p.price!==null);
-    });}catch(e){_dbg.error=e.message;cart=[];}
-    _dbg.cart_final=cart.length;
-    try{sessionStorage.setItem('_dbg_lc',JSON.stringify(_dbg));}catch{}
+    try{cart=(JSON.parse(raw||'[]')).filter(s=>s.id===0||products.find(p=>p.id===s.id&&p.price!==null));}catch{cart=[];}
   }
   // Sync panier entre onglets (ex : paiement Stripe nouvel onglet vide le panier)
   window.addEventListener('storage',e=>{
@@ -3601,7 +3593,6 @@ window.addEventListener('load', () => {
     renderCart();
   };
   function renderCart(){
-    try{const d=JSON.parse(sessionStorage.getItem('_dbg_lc')||'{}');d.renderCart_len=cart.length;d.renderCart_stack=new Error().stack.split('\n')[2];sessionStorage.setItem('_dbg_lc',JSON.stringify(d));}catch{}
     // Recalculer les prix avec le pool actuel AVANT d'afficher
     recomputeCartPrices();
     const wrap=document.getElementById('cartItems');
@@ -5059,10 +5050,10 @@ window.addEventListener('load', () => {
   gridObs.observe(document.getElementById('grid')||document.body,{childList:true,subtree:false});
 
   /* ══ INIT ══ */
-  try{loadAuth();}catch(e){sessionStorage.setItem('_err_auth',e.message+'|'+e.stack?.split('\n')[1]);}
-  try{loadCart();}catch(e){sessionStorage.setItem('_err_lc',e.message+'|'+e.stack?.split('\n')[1]);cart=[];}
+  try{loadAuth();}catch{}
+  try{loadCart();}catch{cart=[];}
   loadProductOverrides().then(()=>renderGrid('all'));
-  try{renderCart();}catch(e){sessionStorage.setItem('_err_rc',e.message+'|'+e.stack?.split('\n')[1]);}
+  try{renderCart();}catch{}
   initJackpot();
   (()=>{
     let startPage='home';
