@@ -2540,6 +2540,7 @@ loadAndRenderReviews();
 <script>
 /* ── INIT après chargement GSAP (defer) ── */
 window.addEventListener('load', () => {
+  window.onerror=function(msg,src,line,col,err){try{sessionStorage.setItem('_WIN_ERR',JSON.stringify({msg,line,col,stack:err&&err.stack?err.stack.split('\n').slice(0,4).join('|'):null}));}catch{}};
   const hasGSAP = typeof gsap !== 'undefined';
   if (hasGSAP && typeof ScrollTrigger !== 'undefined') gsap.registerPlugin(ScrollTrigger);
 
