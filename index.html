@@ -3035,8 +3035,20 @@ window.addEventListener('load', () => {
     }).join('');
     grid.querySelectorAll('.case-card').forEach(card=>initTilt(card,card,card.querySelector('.foil'),8));
   }
-  // Make addToCart accessible for inline onclick in cases
+  // Expose pour debug + inline onclick
   window.addToCart = addToCart;
+  window.renderCases = renderCases;
+  window.debugCases = function() {
+    const cc = CASE_CATALOG.map(c=>({...products.find(p=>p.id===c.id),_caseQty:c.qty}));
+    const filtered = cc.filter(p=>p.id&&p.price!==null);
+    return {
+      catalogLen: CASE_CATALOG.length,
+      mappedLen: cc.length,
+      filteredLen: filtered.length,
+      sample: filtered[0] ? {id:filtered[0].id, price:filtered[0].price, name:filtered[0].name} : 'EMPTY',
+      unfiltered: cc[0] ? {id:cc[0].id, price:cc[0].price, idType:typeof cc[0].id} : 'EMPTY'
+    };
+  };
 
   /* ══ MODAL ══ */
   const modalOverlay=document.getElementById('modalOverlay');
