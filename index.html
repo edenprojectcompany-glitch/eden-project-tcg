@@ -275,13 +275,18 @@ h1 span{display:block}
 .filters .divider{width:1px;height:22px;background:var(--glass-border);margin:0 4px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:22px;perspective:1200px}
 .no-results{text-align:center;padding:70px 20px;color:var(--text-dim);font-size:14.5px;grid-column:1/-1}
-/* Halo holo lucioles autour des cartes — rotation lente */
-@keyframes holoCardSpin{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+/* Halo lucioles sur cartes marketplace & cases — subtil, cycle foil */
+@keyframes cardHolo{
+  0%,100%{box-shadow:0 0 0 1px rgba(127,217,255,.12),0 0 10px rgba(127,217,255,.04)}
+  33%{box-shadow:0 0 0 1px rgba(201,168,255,.12),0 0 10px rgba(201,168,255,.04)}
+  66%{box-shadow:0 0 0 1px rgba(168,255,212,.10),0 0 10px rgba(168,255,212,.03)}
+}
 /* Cartes produit */
 .product{position:relative;border-radius:var(--radius-card);background:var(--obsidian-2);
   border:1px solid var(--glass-border);overflow:visible;
   transition:border-color .35s ease,box-shadow .35s ease,transform .35s var(--spring);cursor:pointer;
-  transform-style:preserve-3d;will-change:transform}
+  transform-style:preserve-3d;will-change:transform;
+  animation:cardHolo 9s ease-in-out infinite}
 .product:hover{border-color:rgba(127,217,255,.28);box-shadow:0 0 0 1px rgba(127,217,255,.1),0 24px 50px rgba(0,0,0,.5),0 0 36px rgba(127,217,255,.06);transform:translateY(-3px)}
 .product-img{position:relative;aspect-ratio:3/4;background:linear-gradient(160deg,#1a1a22,#0e0e13);
   overflow:hidden;border-radius:var(--radius-card) var(--radius-card) 0 0;perspective:1000px}
@@ -381,7 +386,8 @@ h1 span{display:block}
   grid-template-columns:repeat(3,1fr);gap:24px;perspective:1200px}
 .case-card{border-radius:var(--radius-card);background:var(--obsidian-2);border:1px solid var(--glass-border);
   overflow:hidden;transition:border-color .4s ease,box-shadow .4s ease;cursor:pointer;
-  transform-style:preserve-3d;will-change:transform}
+  transform-style:preserve-3d;will-change:transform;
+  animation:cardHolo 9s ease-in-out infinite 3s}
 .case-card:hover{border-color:var(--foil-2);box-shadow:0 20px 50px rgba(0,0,0,.4)}
 .case-img{aspect-ratio:4/3;background:linear-gradient(160deg,#1a1a22,#0e0e13);
   display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
@@ -3006,15 +3012,17 @@ window.addEventListener('load', () => {
     const ratio = (p.adminPrice!=null && baseT0) ? p.adminPrice/baseT0 : 1;
     return `<div class="tiers-wrap">${p.tiers.map((t,i)=>{
       const displayPrice = t.p!==null ? Math.round(t.p*ratio) : null;
+      const isLast = i===p.tiers.length-1;
+      const prev = i>0 ? p.tiers[i-1] : null;
       let label;
-      if(i===0){
-        const next=p.tiers[1];
-        label=next?`1 à ${next.q-1} boîte${next.q-1>1?'s':''}`:'1 boîte et +';
-      } else if(i<p.tiers.length-1){
-        const next=p.tiers[i+1];
-        label=`${t.q} à ${next.q-1} boîte${next.q-1>1?'s':''}`;
-      } else {
+      if(isLast){
+        // Dernier palier : "Xq boîtes et +"
         label=`${t.q} boîtes et +`;
+      } else {
+        // Palier intermédiaire/premier : "start à (tiers[i].q - 1) boîtes"
+        const start = prev ? prev.q : 1;
+        const end = t.q - 1;
+        label=`${start} à ${end} boîte${end>1?'s':''}`;
       }
       return `
       <div class="tier-row ${i===0?'tier-first':''} ${activeTierIdx===i?'tier-active':''}" data-pid="${p.id}" data-tidx="${i}">
