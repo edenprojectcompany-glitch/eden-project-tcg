@@ -2687,7 +2687,9 @@ window.addEventListener('load', () => {
         }
       }catch{}
     }
-    try{cart=(JSON.parse(raw||'[]')).filter(s=>s.id===0||products.find(p=>p.id===s.id&&p.price!==null));}catch{cart=[];}
+    console.log('[DEBUG] loadCart raw=',raw?raw.substring(0,80):'null');
+    try{cart=(JSON.parse(raw||'[]')).filter(s=>s.id===0||products.find(p=>p.id===s.id&&p.price!==null));}catch(e){console.error('[DEBUG] loadCart filter error',e);cart=[];}
+    console.log('[DEBUG] loadCart cart.length=',cart.length);
   }
   // Sync panier entre onglets (ex : paiement Stripe nouvel onglet vide le panier)
   window.addEventListener('storage',e=>{
@@ -3593,6 +3595,7 @@ window.addEventListener('load', () => {
     renderCart();
   };
   function renderCart(){
+    console.log('[DEBUG] renderCart cart.length=',cart.length, new Error().stack.split('\n')[2]);
     // Recalculer les prix avec le pool actuel AVANT d'afficher
     recomputeCartPrices();
     const wrap=document.getElementById('cartItems');
