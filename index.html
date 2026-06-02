@@ -2982,6 +2982,10 @@ window.addEventListener('load', () => {
   });
 
   /* ══ CASE PAGE ══ */
+  // Déclarés ICI pour être accessibles dans renderCases avant loadProductOverrides
+  let caseStocks = {};
+  let casePricesOverride = {};
+
   // Cases disponibles — JP : 12 displays/case · CN : 20 displays/case · +150€ logistique
   const CASE_CATALOG = [
     {id:18, qty:12, basePrice:130}, // SV10 — Glory Rocket (JP)
@@ -4567,9 +4571,6 @@ window.addEventListener('load', () => {
   }
 
   /* Stocks ET prix des cases (clés case_X dans KV) — alimentés par loadProductOverrides */
-  let caseStocks={};
-  let casePricesOverride={};
-
   /* ══ OVERRIDES PRODUITS DEPUIS API ══ */
   async function loadProductOverrides(){
     try{
