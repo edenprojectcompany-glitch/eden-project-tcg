@@ -2674,6 +2674,7 @@ window.addEventListener('load', () => {
   function loadCart(){
     let raw=null;
     try{raw=localStorage.getItem('edn_cart');}catch{}
+    console.log('LCS',raw?raw.length:0);
     if(!raw||raw==='[]') try{const s=sessionStorage.getItem('edn_cart_ss');if(s&&s!=='[]')raw=s;}catch{}
     if(!raw||raw==='[]'){
       try{
