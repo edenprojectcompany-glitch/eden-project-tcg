@@ -315,8 +315,16 @@ h1 span{display:block}
   color:var(--gold);backdrop-filter:blur(8px);z-index:2}
 .badge-soon{position:absolute;top:12px;right:12px;font-size:9.5px;letter-spacing:.1em;
   text-transform:uppercase;font-weight:700;padding:4px 10px;border-radius:100px;
-  background:rgba(138,138,147,.18);border:1px solid rgba(138,138,147,.35);
-  color:#8a8a93;backdrop-filter:blur(8px);z-index:2}
+  background:rgba(240,192,96,.08);
+  border:1px solid rgba(240,192,96,.45);
+  color:rgba(240,192,96,.8);
+  backdrop-filter:blur(8px);z-index:2;
+  box-shadow:0 0 8px rgba(240,192,96,.2),inset 0 0 6px rgba(240,192,96,.06);
+  animation:badgeSoonGlow 2.5s ease-in-out infinite}
+@keyframes badgeSoonGlow{
+  0%,100%{box-shadow:0 0 6px rgba(240,192,96,.2),inset 0 0 4px rgba(240,192,96,.04)}
+  50%{box-shadow:0 0 14px rgba(240,192,96,.4),0 0 24px rgba(240,192,96,.1),inset 0 0 8px rgba(240,192,96,.08)}
+}
 /* stock=0 : carte visible + hover/holo actif, seuls les boutons d'achat désactivés */
 .card-disabled{opacity:.6;cursor:default}
 .card-disabled .add-btn,.card-disabled .card-qty,.card-disabled .cq-btn{pointer-events:none}
@@ -592,7 +600,7 @@ h1 span{display:block}
     transparent 367deg,
     transparent 360deg
   );
-  animation:ledTravel 2.8s linear infinite;
+  animation:ledTravel 6s linear infinite;
   z-index:0;
 }
 /* Halo diffus qui suit le spot */
@@ -614,31 +622,19 @@ h1 span{display:block}
     transparent 375deg,
     transparent 360deg
   );
-  animation:ledTravel 2.8s linear infinite;
+  animation:ledTravel 6s linear infinite;
   filter:blur(6px);
   z-index:0;
 }
 
-/* Widget Mondial Relay — fond sombre, couleurs d'origine conservées */
-#Zone_Widget,
-#Zone_Widget .MR-Widget-Body,
-#Zone_Widget table,
-#Zone_Widget td,
-#Zone_Widget tr,
-#Zone_Widget .MR-Widget-Col-Left,
-#Zone_Widget .MR-Widget-Col-Right,
-#Zone_Widget .MR-Widget-Headline,
-#Zone_Widget .MR-Widget-HeadlineTitle {
-  background-color:#0f0f12 !important;
-}
-#Zone_Widget .MR-Widget-Col-Left li,
-#Zone_Widget .MR-Widget-Col-Left div {
-  background-color:#0f0f12 !important;
-}
-#Zone_Widget .MR-Widget-Col-Left li:hover,
-#Zone_Widget .MR-Widget-Col-Left li.MR-Widget-Selected {
-  background-color:#1a1a24 !important;
-}
+/* Widget Mondial Relay — fond sombre via inversion, carte Leaflet ré-inversée */
+#Zone_Widget { filter:invert(1) brightness(0.88) !important; }
+/* Re-inverser SEULEMENT la carte pour la garder en couleurs d'origine */
+#Zone_Widget .leaflet-container,
+#Zone_Widget .leaflet-tile-pane,
+#Zone_Widget [id*="Map"],
+#Zone_Widget [class*="map"],
+#Zone_Widget [class*="Map"] { filter:invert(1) brightness(1.1) !important; }
 
 /* Bouton paiement Stripe — thème site */
 #payBtn{
@@ -3004,10 +3000,12 @@ window.addEventListener('load', () => {
   }
   function buildTiersHtml(p, activeQty=0){
     if(!p.tiers) return '';
-    // Tier 0 toujours illuminé par défaut (avant tout ajout au panier)
     const activeTierIdx = activeQty>0 ? getActiveTierIdx(p, activeQty) : 0;
+    // Si adminPrice override, scaler tous les prix des tiers proportionnellement
+    const baseT0 = p.tiers[0].p;
+    const ratio = (p.adminPrice!=null && baseT0) ? p.adminPrice/baseT0 : 1;
     return `<div class="tiers-wrap">${p.tiers.map((t,i)=>{
-      // Affichage en plages "X à Y" plus lisible pour le client
+      const displayPrice = t.p!==null ? Math.round(t.p*ratio) : null;
       let label;
       if(i===0){
         const next=p.tiers[1];
@@ -3021,7 +3019,7 @@ window.addEventListener('load', () => {
       return `
       <div class="tier-row ${i===0?'tier-first':''} ${activeTierIdx===i?'tier-active':''}" data-pid="${p.id}" data-tidx="${i}">
         <span class="tier-qty">${label}</span>
-        <span class="tier-price">${t.p!==null?t.p+'€':'Sur dem.'}</span>
+        <span class="tier-price">${displayPrice!==null?displayPrice+'€':'Sur dem.'}</span>
       </div>`;
     }).join('')}</div>`;
   }
