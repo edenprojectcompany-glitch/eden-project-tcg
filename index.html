@@ -5054,8 +5054,10 @@ window.addEventListener('load', () => {
   /* ══ INIT ══ */
   try{loadAuth();}catch{}
   try{loadCart();}catch{cart=[];}
+  try{_ckSet('_d1','lc:'+cart.length+',ls:'+(localStorage.getItem('edn_cart')||'').length,1/24);}catch{}
   loadProductOverrides().then(()=>renderGrid('all'));
-  try{renderCart();}catch{}
+  try{renderCart();}catch(e){try{_ckSet('_d2','rc_err:'+e.message,1/24);}catch{}}
+  try{_ckSet('_d3','badge:'+document.getElementById('cartCount').textContent+',cl:'+cart.length,1/24);}catch{}
   initJackpot();
   (()=>{
     let startPage='home';
