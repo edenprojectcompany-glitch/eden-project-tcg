@@ -393,14 +393,15 @@ const PRODUCTS=[
 
 /* Cases — expédition directe Asie, pas de stock */
 const CASE_CATALOG=[
-  {id:18,name:'SV10 — Glory Team Rocket',lang:'jp',qty:12,basePrice:92},
-  {id:11,name:'M2 — Méga Inferno X',lang:'jp',qty:12,basePrice:90},
-  {id:15,name:'SV8a — Terastal Festival',lang:'jp',qty:20,basePrice:85},
-  {id:10,name:'M2a — Méga Dream EX',lang:'jp',qty:20,basePrice:85},
-  {id:2, name:'CN151 Vol.4',lang:'cn',qty:20,basePrice:65},
-  {id:1, name:'CN151 Vol.3',lang:'cn',qty:20,basePrice:49},
-  {id:21,name:'SV2a — Pokémon 151',lang:'jp',qty:12,basePrice:299},
-  {id:22,name:'M5 — Mega Abyss Eye',lang:'jp',qty:12,basePrice:110},
+  /* basePrice = prix unitaire au palier de la case (lib/prices.js) */
+  {id:18,name:'SV10 — Glory Team Rocket',lang:'jp',qty:12,basePrice:125}, /* 125×12+150=1650€ */
+  {id:11,name:'M2 — Méga Inferno X',     lang:'jp',qty:12,basePrice:105}, /* 105×12+150=1410€ */
+  {id:15,name:'SV8a — Terastal Festival', lang:'jp',qty:20,basePrice:95},  /* 95×20+150=2050€  */
+  {id:10,name:'M2a — Méga Dream EX',     lang:'jp',qty:20,basePrice:80},  /* 80×20+150=1750€  */
+  {id:2, name:'CN151 Vol.4',             lang:'cn',qty:20,basePrice:60},  /* 60×20+150=1350€  */
+  {id:1, name:'CN151 Vol.3',             lang:'cn',qty:20,basePrice:60},  /* 60×20+150=1350€  */
+  {id:21,name:'SV2a — Pokémon 151',     lang:'jp',qty:12,basePrice:295}, /* 295×12+150=3690€ */
+  {id:22,name:'M5 — Mega Abyss Eye',    lang:'jp',qty:12,basePrice:110}, /* 110×12+150=1470€ */
 ];
 const CASE_SURCHARGE=150;
 

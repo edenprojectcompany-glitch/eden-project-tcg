@@ -3140,14 +3140,14 @@ window.addEventListener('load', () => {
 
   // Cases disponibles — JP : 12 displays/case · CN : 20 displays/case · +150€ logistique
   const CASE_CATALOG = [
-    {id:18, qty:12, basePrice:130}, // SV10 — Glory Rocket (JP)
-    {id:11, qty:12, basePrice:110}, // M2 — Méga Inferno X (JP)
-    {id:15, qty:20, basePrice:100}, // SV8a — Terastal Fest (JP — 20 displays)
-    {id:10, qty:20, basePrice:85},  // M2a — Méga Dream EX (JP — 20 displays)
-    {id:2,  qty:20, basePrice:65},  // CN151 Vol.4 (CN)
-    {id:1,  qty:20, basePrice:49},  // CN151 Vol.3 (CN)
-    {id:21, qty:12, basePrice:299}, // SV2a — Pokémon 151 (JP)
-    {id:22, qty:12, basePrice:120}, // M5 — Mega Abyss Eye (JP)
+    {id:18, qty:12, basePrice:125}, // SV10 — Glory Rocket    JP  125×12+150=1650€
+    {id:11, qty:12, basePrice:105}, // M2 — Méga Inferno X   JP  105×12+150=1410€
+    {id:15, qty:20, basePrice:95},  // SV8a — Terastal Fest  JP   95×20+150=2050€
+    {id:10, qty:20, basePrice:80},  // M2a — Méga Dream EX   JP   80×20+150=1750€
+    {id:2,  qty:20, basePrice:60},  // CN151 Vol.4            CN   60×20+150=1350€
+    {id:1,  qty:20, basePrice:60},  // CN151 Vol.3            CN   60×20+150=1350€
+    {id:21, qty:12, basePrice:295}, // SV2a — Pokémon 151    JP  295×12+150=3690€
+    {id:22, qty:12, basePrice:110}, // M5 — Mega Abyss Eye   JP  110×12+150=1470€
   ];
   const CASE_SURCHARGE = 150;
 
@@ -3473,7 +3473,7 @@ window.addEventListener('load', () => {
     if(p&&item.unitPrice<prevPrice) showTierBadge(p,item.unitPrice,prevPrice);
     renderCart();
   };
-  window.removeFromCart=function(id){cart=cart.filter(c=>c.id!==id);renderCart();};
+  window.removeFromCart=function(id){cart=cart.filter(c=>!(c.id===id&&!c.isCaseItem));renderCart();};
   /* ══ CASE CART ══ */
   window.removeCaseItem=function(key){cart=cart.filter(c=>c._caseKey!==key);renderCart();};
 
@@ -3525,7 +3525,7 @@ window.addEventListener('load', () => {
   };
 
   window.changeQty=function(id,d){
-    const item=cart.find(c=>c.id===id&&!c.isCaseItem); if(!item) return;
+    const item=cart.find(c=>c.id===id&&!c.isCaseItem);if(!item) return;
     const prevPrice=item.unitPrice;
     item.qty+=d;
     if(item.qty<=0){removeFromCart(id);return;}
@@ -3536,7 +3536,7 @@ window.addEventListener('load', () => {
   };
   window.setQty=function(id,val){
     const qty=parseInt(val);if(isNaN(qty)||qty<1){renderCart();return;}
-    const item=cart.find(c=>c.id===id); if(!item) return;
+    const item=cart.find(c=>c.id===id&&!c.isCaseItem); if(!item) return;
     const prevPrice=item.unitPrice;
     item.qty=Math.min(qty,999);
     const p=products.find(x=>x.id===id);
