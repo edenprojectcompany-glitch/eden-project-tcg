@@ -2765,8 +2765,8 @@ window.addEventListener('load', () => {
       if(hasGSAP) gsap.fromTo(nxt,{opacity:0,y:12},{opacity:1,y:0,duration:.4,ease:'power3.out'});
       window.scrollTo({top:0,behavior:'smooth'});
       closeMobileMenu(); updateNavLinks(page);
-      if(page==='catalog'){loadProductOverrides().then(()=>{renderGrid(currentFilter);startFlashTimers();});}
-      if(page==='case'){loadProductOverrides().then(()=>renderCases());}
+      if(page==='catalog'){renderGrid(currentFilter);startFlashTimers();loadProductOverrides().then(()=>{renderGrid(currentFilter);startFlashTimers();});}
+      if(page==='case'){renderCases();loadProductOverrides().then(()=>renderCases());}
       if(page==='checkout'){renderCheckout();document.getElementById('coStep3Num')?.classList.remove('active');}
       if(page==='graded') setTimeout(initHoloCards,80);
       if(page==='dashboard') renderDashboard();
