@@ -539,6 +539,27 @@ h1 span{display:block}
 .wheel-cooldown{font-size:12.5px;color:var(--text-dim);margin-top:8px}
 .wheel-spin-btn{width:100%}
 
+/* ── VERIFY EMAIL POPUP ── */
+.ve-overlay{position:fixed;inset:0;background:rgba(4,4,8,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .4s ease}
+.ve-box{background:linear-gradient(155deg,#12121a,#0c0c11);border:1px solid rgba(240,192,96,.22);border-radius:28px;padding:48px 36px 40px;max-width:480px;width:100%;text-align:center;position:relative;overflow:hidden;animation:popIn .5s cubic-bezier(.16,1,.3,1);box-shadow:0 0 100px rgba(240,192,96,.1),0 40px 80px rgba(0,0,0,.7)}
+/* Lucioles dans le popup */
+.ve-fireflies{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ve-firefly{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(240,192,96,.9);box-shadow:0 0 6px 2px rgba(240,192,96,.6);animation:veFly var(--d,4s) ease-in-out infinite var(--delay,0s)}
+@keyframes veFly{0%{transform:translate(0,0) scale(.6);opacity:0}20%{opacity:.9}50%{transform:translate(var(--tx,20px),var(--ty,-30px)) scale(1);opacity:.7}80%{opacity:.4}100%{transform:translate(calc(var(--tx,20px)*1.5),calc(var(--ty,-30px)*1.8)) scale(.5);opacity:0}}
+/* Enveloppe animée */
+.ve-envelope{font-size:58px;display:block;margin-bottom:16px;animation:envFloat 3s ease-in-out infinite}
+@keyframes envFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+.ve-badge{display:inline-block;background:rgba(240,192,96,.1);border:1px solid rgba(240,192,96,.25);border-radius:20px;padding:5px 14px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#f0c060;font-weight:700;margin-bottom:16px}
+.ve-title{font-family:'Fraunces',serif;font-size:clamp(20px,5vw,26px);font-weight:600;margin-bottom:12px;line-height:1.25;color:#fff}
+.ve-sub{font-size:14.5px;color:rgba(255,255,255,.6);margin-bottom:20px;line-height:1.65}
+.ve-sub strong{color:#f0c060}
+.ve-email-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:13px 18px;font-size:13.5px;color:rgba(255,255,255,.5);margin-bottom:24px;word-break:break-all}
+.ve-tip{font-size:12px;color:rgba(255,255,255,.3);margin-bottom:28px;line-height:1.5}
+.ve-cta{width:100%;padding:16px;font-size:15px;font-weight:700;background:linear-gradient(135deg,#c08010,#e0a830);color:#fff;border:none;border-radius:16px;cursor:pointer;transition:.2s;font-family:inherit;letter-spacing:.02em;text-shadow:0 1px 3px rgba(0,0,0,.3);margin-bottom:12px}
+.ve-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(240,192,96,.3)}
+.ve-resend{background:none;border:none;color:rgba(255,255,255,.28);font-size:12.5px;cursor:pointer;padding:8px;transition:.2s;font-family:inherit;display:block;width:100%;text-align:center}
+.ve-resend:hover{color:rgba(255,255,255,.55)}
+
 /* ── WELCOME POPUP ── */
 .wp-overlay{position:fixed;inset:0;background:rgba(4,4,8,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .3s ease}
 .wp-box{background:linear-gradient(155deg,#13131a,#0d0d12);border:1px solid rgba(240,192,96,.28);border-radius:28px;padding:40px 36px 36px;max-width:460px;width:100%;text-align:center;position:relative;overflow:hidden;animation:popIn .5s cubic-bezier(.16,1,.3,1);box-shadow:0 0 80px rgba(240,192,96,.12),0 40px 80px rgba(0,0,0,.6)}
@@ -2582,6 +2603,29 @@ loadAndRenderReviews();
   </div>
 </div>
 
+<!-- VERIFY EMAIL POPUP (après inscription) -->
+<div class="ve-overlay" id="veOverlay" style="display:none">
+  <div class="ve-box">
+    <!-- Lucioles animées -->
+    <div class="ve-fireflies">
+      <div class="ve-firefly" style="--d:3.8s;--delay:0s;--tx:25px;--ty:-35px;left:12%;top:70%"></div>
+      <div class="ve-firefly" style="--d:5.2s;--delay:.8s;--tx:-20px;--ty:-45px;left:82%;top:65%"></div>
+      <div class="ve-firefly" style="--d:4.1s;--delay:1.6s;--tx:15px;--ty:-28px;left:25%;top:80%"></div>
+      <div class="ve-firefly" style="--d:6s;--delay:.3s;--tx:-30px;--ty:-50px;left:68%;top:75%"></div>
+      <div class="ve-firefly" style="--d:4.7s;--delay:2.1s;--tx:18px;--ty:-22px;left:48%;top:85%"></div>
+      <div class="ve-firefly" style="--d:3.5s;--delay:1s;--tx:-12px;--ty:-38px;left:90%;top:55%"></div>
+    </div>
+    <span class="ve-envelope">📧</span>
+    <div class="ve-badge">✦ Compte créé avec succès</div>
+    <h2 class="ve-title">Vérifie ta boîte mail !</h2>
+    <p class="ve-sub">Un email de confirmation vient d'être envoyé à<br><strong id="veEmailDisplay">ton adresse</strong></p>
+    <div class="ve-email-box" id="veEmailBox">—</div>
+    <p class="ve-tip">📬 Clique sur le lien dans l'email pour activer ton compte<br>et débloquer ton code <span style="color:#f0c060;font-weight:700">WELCOME10 (-10%)</span><br><span style="opacity:.6">⏱ Lien valable 24 heures · Vérifie tes spams si besoin</span></p>
+    <button class="ve-cta" id="veCtaBtn">✓ J'ai compris, merci !</button>
+    <button class="ve-resend" id="veResendBtn">Renvoyer l'email de confirmation</button>
+  </div>
+</div>
+
 <!-- WELCOME POPUP (inscription) -->
 <div class="wp-overlay" id="wpOverlay" style="display:none">
   <div class="wp-box">
@@ -3287,6 +3331,28 @@ window.addEventListener('load', () => {
   window.renderCases = renderCases;
   window.openModal = openModal;
 
+  /* ══ VERIFY EMAIL POPUP ══ */
+  function showVerifyEmailPopup(email){
+    const ov=document.getElementById('veOverlay'); if(!ov) return;
+    const emailBox=document.getElementById('veEmailBox');
+    const emailDisplay=document.getElementById('veEmailDisplay');
+    if(emailBox) emailBox.textContent=email||'—';
+    if(emailDisplay) emailDisplay.textContent=email||'ton adresse';
+    ov.style.display='flex';
+    document.getElementById('veCtaBtn').onclick=()=>{ov.style.display='none';};
+    // Bouton renvoyer
+    const resendBtn=document.getElementById('veResendBtn');
+    if(resendBtn) resendBtn.onclick=async()=>{
+      if(!authUser?.email) return;
+      resendBtn.disabled=true; resendBtn.textContent='Envoi en cours…';
+      try{
+        await fetch('/api/resend-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:authUser.email})});
+        resendBtn.textContent='✓ Email renvoyé !';
+        setTimeout(()=>{resendBtn.textContent='Renvoyer l\'email de confirmation';resendBtn.disabled=false;},4000);
+      }catch{resendBtn.textContent='Erreur — réessayez';resendBtn.disabled=false;}
+    };
+  }
+
   /* ══ WELCOME POPUP ══ */
   function applyPromoCodeDirect(code){
     const entry=PROMO_CODES[code.toUpperCase()];
@@ -3878,13 +3944,8 @@ window.addEventListener('load', () => {
       if(!res.ok) throw new Error(data.error||'Erreur serveur');
       saveAuth(data.user,data.token);
       if(isReg){
-        // Inscription : montrer message "vérifie ton email" au lieu du welcome popup direct
         go('dashboard');
-        setTimeout(()=>{
-          const cd=document.getElementById('wheelCooldown');
-          const prizeLabel=document.getElementById('prizeLabel');
-          if(prizeLabel) prizeLabel.innerHTML='📧 <strong>Vérifie ton email !</strong><br><span style="font-size:13px;color:var(--text-dim)">Un email de confirmation t\'a été envoyé à '+data.user.email+'. Clique sur le lien pour activer ton compte et débloquer ton code WELCOME10 🎁</span>';
-        },400);
+        setTimeout(()=>{ showVerifyEmailPopup(data.user.email); },350);
       } else { go('dashboard'); }
     }catch(err){
       msg.className='auth-msg error'; msg.textContent=err.message; msg.style.display='block';

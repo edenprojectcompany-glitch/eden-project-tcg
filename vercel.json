@@ -11,6 +11,7 @@
     { "src": "/(.*)", "has": [{ "type": "host", "value": "edenprojecttcg.com" }], "dest": "https://www.edenprojecttcg.com/$1", "status": 301 },
     { "src": "/api/stripe-webhook", "dest": "/api/stripe-webhook.js" },
     { "src": "/api/verify-email", "dest": "/api/verify-email.js" },
+    { "src": "/api/resend-verify", "dest": "/api/resend-verify.js" },
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
     { "src": "/image/(.*)", "dest": "/image/$1" },
     { "src": "/admin", "dest": "/admin.html" },
