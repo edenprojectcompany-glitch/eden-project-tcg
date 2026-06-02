@@ -5043,11 +5043,34 @@ window.addEventListener('load', () => {
   renderCart();
 
   /* ══ PRIX EBAY LIVE (après le rendu initial) ══ */
+  const EBAY_TERMS={
+    1:'Pokemon 151 CN Gengar Edition booster box sealed',
+    2:'Pokemon 151 CN Pikachu Jungle booster box sealed',
+    3:'Pokemon 151 CN Journey Edition booster box sealed',
+    4:'Pokemon 151 CN Hope Edition booster box sealed',
+    5:'Pokemon Gempack Vol.3 Gengar Orange booster box CN',
+    6:'Pokemon Gempack Vol.2 Sylveon booster box Chinese',
+    8:'Pokemon Gempack Vol.4 Ponyta booster box Chinese',
+    9:'Pokemon Gempack Vol.5 Sprigatito booster box Chinese',
+    10:'Pokemon Mega Dream EX booster box Japanese sealed',
+    11:'Pokemon Mega Inferno X booster box Japanese sealed',
+    12:'Pokemon Mega Brave booster box Japanese sealed',
+    13:'Pokemon Mega Symphonia booster box Japanese sealed',
+    14:'Pokemon Munikis Zero booster box Japanese sealed',
+    15:'Pokemon Terastal Festival ex SV8a booster box sealed',
+    16:'Pokemon Battle Partners SV9 booster box Japanese sealed',
+    17:'Pokemon Heat Wave Arena SV9a booster box Japanese sealed',
+    18:'Pokemon Glory Team Rocket SV10 booster box Japanese sealed',
+    19:'Pokemon Black Bolt SV11b booster box Japanese sealed',
+    20:'Pokemon White Flare SV11w booster box Japanese sealed',
+    21:'Pokemon 151 SV2a booster box Japanese sealed',
+    22:'Pokemon Mega Abyss Eye booster box Japanese sealed',
+  };
   (async function loadEbayPrices(){
     try{
-      const queries=products.filter(p=>p.price!==null).map(p=>({
+      const queries=products.filter(p=>p.price!==null&&EBAY_TERMS[p.id]).map(p=>({
         id:p.id,
-        term:`${p.name} display ${p.lang==='jp'?'JP sealed':'CN sealed'}`
+        term:EBAY_TERMS[p.id]
       }));
       const res=await fetch('/api/ebay-prices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({queries})});
       if(!res.ok) return;
