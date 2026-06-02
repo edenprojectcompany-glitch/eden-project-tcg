@@ -3016,8 +3016,9 @@ window.addEventListener('load', () => {
       const prev = i>0 ? p.tiers[i-1] : null;
       let label;
       if(isLast){
-        // Dernier palier : "Xq boîtes et +"
-        label=`${t.q} boîtes et +`;
+        // Dernier palier : partir du seuil précédent pour rendre le meilleur prix accessible
+        const bestStart = prev ? prev.q : t.q;
+        label=`${bestStart} boîtes et + · 🏆`;
       } else {
         // Palier intermédiaire/premier : "start à (tiers[i].q - 1) boîtes"
         const start = prev ? prev.q : 1;
