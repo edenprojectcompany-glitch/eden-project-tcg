@@ -363,7 +363,8 @@ tr:hover td{background:rgba(255,255,255,.015)}
 
 <script>
 const PAGE_LABELS={home:'🏠 Accueil',catalog:'🛍️ Catalogue',case:'📦 Case',checkout:'🛒 Checkout',dashboard:'👤 Mon compte',graded:'🏅 Gradées',news:'📰 News',help:'❓ Aide'};
-let _code='', _orders=[], _liveTimer=null, _adminData=null;
+// Restaurer le code admin depuis sessionStorage (persist le refresh, pas la fermeture)
+let _code=sessionStorage.getItem('eden_admin_code')||'', _orders=[], _liveTimer=null, _adminData=null;
 
 /* Prix de référence = tier[0].p de lib/prices.js — SOURCE DE VÉRITÉ */
 const PRODUCTS=[
@@ -422,6 +423,7 @@ async function login(){
     const r=await fetch('/api/admin',{headers:{'X-Admin-Code':code}});
     if(!r.ok) throw new Error();
     _code=code;
+    sessionStorage.setItem('eden_admin_code',code); // persist pour refresh
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='flex';
     loadOrders();
@@ -434,9 +436,17 @@ async function login(){
 document.getElementById('loginBtn').addEventListener('click',login);
 document.getElementById('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
 
+/* ── Auto-login si code déjà en sessionStorage (persist refresh) ── */
+if(_code){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  loadOrders(); loadAdminData(); startLiveHeader();
+}
+
 /* ── Logout ── */
 document.getElementById('logoutBtn').addEventListener('click',()=>{
   _code=''; _orders=[];
+  sessionStorage.removeItem('eden_admin_code');
   if(_liveTimer) clearInterval(_liveTimer);
   document.getElementById('app').style.display='none';
   document.getElementById('loginScreen').style.display='flex';

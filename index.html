@@ -3657,18 +3657,27 @@ window.addEventListener('load', () => {
 
   /* ══ AUTH ══ */
   function loadAuth(){
-    try{authToken=localStorage.getItem('edn_token');authUser=JSON.parse(localStorage.getItem('edn_user')||'null');}catch{}
+    try{
+      authToken=localStorage.getItem('edn_token');
+      authUser=JSON.parse(localStorage.getItem('edn_user')||'null');
+    }catch(e){authToken=null;authUser=null;}
     if(authUser) updateAuthUI();
     updateReviewBtn();
   }
   function saveAuth(user,token){
     authUser=user;authToken=token;
-    localStorage.setItem('edn_token',token);localStorage.setItem('edn_user',JSON.stringify(user));
+    try{
+      localStorage.setItem('edn_token',token);
+      localStorage.setItem('edn_user',JSON.stringify(user));
+    }catch(e){console.warn('Auth storage failed:',e);}
     updateAuthUI(); updateReviewBtn();
   }
   function clearAuth(){
     authUser=null;authToken=null;
-    localStorage.removeItem('edn_token');localStorage.removeItem('edn_user');
+    try{
+      localStorage.removeItem('edn_token');
+      localStorage.removeItem('edn_user');
+    }catch{}
     updateAuthUI(); updateReviewBtn();
   }
   function updateAuthUI(){
