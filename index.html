@@ -2658,6 +2658,7 @@ window.addEventListener('load', () => {
   /* ── Persistance panier ── */
   function saveCart(){
     const d=JSON.stringify(cart);
+    console.log('SC',cart.length,new Error().stack.split('\n')[2]);
     try{localStorage.setItem('edn_cart',d);}catch{}
     try{sessionStorage.setItem('edn_cart_ss',d);}catch{}
     try{
