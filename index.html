@@ -275,18 +275,17 @@ h1 span{display:block}
 .filters .divider{width:1px;height:22px;background:var(--glass-border);margin:0 4px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:22px;perspective:1200px}
 .no-results{text-align:center;padding:70px 20px;color:var(--text-dim);font-size:14.5px;grid-column:1/-1}
-/* Halo lucioles permanent — bordure animée cycle foil, foil intérieur hover only */
-@keyframes cardHoloBorder{
-  0%,100%{border-color:rgba(127,217,255,.18);box-shadow:0 0 8px rgba(127,217,255,.05)}
-  33%{border-color:rgba(201,168,255,.18);box-shadow:0 0 8px rgba(201,168,255,.05)}
-  66%{border-color:rgba(168,255,212,.15);box-shadow:0 0 8px rgba(168,255,212,.04)}
+/* Halo doré luciole permanent sur contour des cartes */
+@keyframes cardGoldHalo{
+  0%,100%{box-shadow:0 0 0 1px rgba(240,192,96,.14),0 0 10px rgba(240,192,96,.06)}
+  50%{box-shadow:0 0 0 1px rgba(240,192,96,.28),0 0 18px rgba(240,192,96,.1),0 0 30px rgba(240,192,96,.04)}
 }
 /* Cartes produit */
 .product{position:relative;border-radius:var(--radius-card);background:var(--obsidian-2);
   border:1px solid var(--glass-border);overflow:visible;
   transition:border-color .35s ease,box-shadow .35s ease,transform .35s var(--spring);cursor:pointer;
   transform-style:preserve-3d;will-change:transform;
-  animation:cardHoloBorder 9s ease-in-out infinite}
+  animation:cardGoldHalo 4s ease-in-out infinite}
 .product:hover{border-color:rgba(127,217,255,.28);box-shadow:0 0 0 1px rgba(127,217,255,.1),0 24px 50px rgba(0,0,0,.5),0 0 36px rgba(127,217,255,.06);transform:translateY(-3px)}
 .product-img{position:relative;aspect-ratio:3/4;background:linear-gradient(160deg,#1a1a22,#0e0e13);
   overflow:hidden;border-radius:var(--radius-card) var(--radius-card) 0 0;perspective:1000px}
@@ -318,30 +317,42 @@ h1 span{display:block}
   text-transform:uppercase;font-weight:700;padding:3px 8px;border-radius:100px;
   background:rgba(255,217,127,.15);border:1px solid rgba(255,217,127,.3);
   color:var(--gold);backdrop-filter:blur(8px);z-index:2}
-/* Badge "Bientôt de retour" — spot LED doré qui fait le tour */
-@keyframes badgeLedTravel{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
-.badge-soon{position:absolute;top:12px;right:12px;font-size:9.5px;letter-spacing:.1em;
-  text-transform:uppercase;font-weight:700;padding:4px 10px;border-radius:100px;
-  background:rgba(240,192,96,.08);
-  border:1px solid rgba(240,192,96,.35);
-  color:rgba(240,192,96,.85);
-  backdrop-filter:blur(8px);z-index:2;overflow:hidden;
-  box-shadow:0 0 8px rgba(240,192,96,.15)}
+/* Badge "Bientôt de retour" — spot LED doré qui fait le tour du contour */
+@keyframes ledTravelBadge{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+.badge-soon{
+  position:absolute;top:12px;right:12px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+  padding:4px 10px;border-radius:100px;
+  color:rgba(240,192,96,.9);
+  z-index:2;overflow:hidden;
+  /* fond sombre pour que le LED soit visible uniquement sur la bordure */
+  background:transparent;
+  isolation:isolate
+}
+/* Spot LED rotatif (derrière le texte) */
 .badge-soon::before{
   content:'';position:absolute;
-  width:300%;height:300%;
+  width:350%;height:350%;
   top:50%;left:50%;
   transform:translate(-50%,-50%) rotate(0deg);
   background:conic-gradient(
-    from 0deg,transparent 0deg,transparent 330deg,
-    rgba(240,192,96,.2) 340deg,rgba(255,230,100,.9) 350deg,
-    rgba(255,255,200,1) 355deg,rgba(255,230,100,.9) 360deg,
-    rgba(240,192,96,.2) 365deg,transparent 370deg,transparent 360deg);
-  animation:badgeLedTravel 3s linear infinite;
-  z-index:0;pointer-events:none}
+    from 0deg,
+    rgba(240,192,96,.18) 0deg,rgba(240,192,96,.18) 335deg,
+    rgba(255,220,80,.7) 345deg,rgba(255,248,180,1) 352deg,
+    rgba(255,255,220,1) 356deg,rgba(255,248,180,1) 360deg,
+    rgba(255,220,80,.7) 363deg,rgba(240,192,96,.18) 368deg,
+    rgba(240,192,96,.18) 360deg
+  );
+  animation:ledTravelBadge 3s linear infinite;
+  z-index:-2
+}
+/* Masque intérieur — cache le centre, laisse visible uniquement la bande LED */
 .badge-soon::after{
-  content:'';position:absolute;inset:0;border-radius:100px;
-  background:rgba(240,192,96,.06);z-index:0}
+  content:'';position:absolute;
+  inset:1.5px;border-radius:100px;
+  background:#0d0d10;
+  z-index:-1
+}
 /* stock=0 : carte visible + hover/holo actif, seuls les boutons d'achat désactivés */
 .card-disabled{opacity:.6;cursor:default}
 .card-disabled .add-btn,.card-disabled .card-qty,.card-disabled .cq-btn{pointer-events:none}
@@ -399,7 +410,7 @@ h1 span{display:block}
 .case-card{border-radius:var(--radius-card);background:var(--obsidian-2);border:1px solid var(--glass-border);
   overflow:hidden;transition:border-color .4s ease,box-shadow .4s ease;cursor:pointer;
   transform-style:preserve-3d;will-change:transform;
-  animation:cardHoloBorder 9s ease-in-out infinite 3s}
+  animation:cardGoldHalo 4s ease-in-out infinite 2s}
 .case-card:hover{border-color:var(--foil-2);box-shadow:0 20px 50px rgba(0,0,0,.4)}
 .case-img{aspect-ratio:4/3;background:linear-gradient(160deg,#1a1a22,#0e0e13);
   display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
@@ -586,70 +597,73 @@ h1 span{display:block}
 /* === LED strip doré — périmètre complet du widget Mondial Relay === */
 @keyframes ledTravel{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
 
+/* === MR Widget : même effet LED que badge, 6s, bande épaisse === */
 #mr-widget-glow-wrap{
   position:relative;
   border-radius:14px;
-  padding:4px; /* épaisseur bande LED */
+  padding:4px;       /* épaisseur de la bande LED */
   overflow:hidden;
-  background:#0f0f12; /* fond sombre — contenu au-dessus via z-index */
-  box-shadow:0 0 15px rgba(240,192,96,.18),0 0 35px rgba(240,192,96,.08);
+  background:#0d0d10; /* fond sombre centre */
+  box-shadow:0 0 16px rgba(240,192,96,.18),0 0 35px rgba(240,192,96,.07);
+  isolation:isolate;
 }
-/* Spot LED brillant qui fait tout le tour */
+/* Spot LED principal — même motif que le badge */
 #mr-widget-glow-wrap::before{
   content:'';
   position:absolute;
-  width:300%;height:300%;
+  width:350%;height:350%;
   top:50%;left:50%;
   transform:translate(-50%,-50%) rotate(0deg);
   background:conic-gradient(
     from 0deg,
-    transparent 0deg,
-    transparent 345deg,
-    rgba(240,192,96,.3) 348deg,
-    rgba(255,220,80,.85) 352deg,
-    rgba(255,248,200,1) 355deg,
-    rgba(255,255,230,1) 357deg,
-    rgba(255,248,200,1) 359deg,
-    rgba(255,220,80,.85) 361deg,
-    rgba(240,192,96,.3) 364deg,
-    transparent 367deg,
-    transparent 360deg
+    rgba(240,192,96,.2) 0deg,rgba(240,192,96,.2) 335deg,
+    rgba(255,220,80,.7) 345deg,rgba(255,248,180,1) 352deg,
+    rgba(255,255,220,1) 356deg,rgba(255,248,180,1) 360deg,
+    rgba(255,220,80,.7) 363deg,rgba(240,192,96,.2) 368deg,
+    rgba(240,192,96,.2) 360deg
   );
   animation:ledTravel 6s linear infinite;
-  z-index:0;
+  z-index:-2;
 }
 /* Halo diffus qui suit le spot */
 #mr-widget-glow-wrap::after{
   content:'';
   position:absolute;
-  width:310%;height:310%;
+  width:360%;height:360%;
   top:50%;left:50%;
   transform:translate(-50%,-50%) rotate(0deg);
   background:conic-gradient(
     from 0deg,
-    transparent 0deg,
-    transparent 335deg,
-    rgba(240,192,96,.1) 342deg,
-    rgba(255,217,127,.45) 355deg,
-    rgba(255,240,160,.6) 358deg,
-    rgba(255,217,127,.45) 361deg,
-    rgba(240,192,96,.1) 368deg,
-    transparent 375deg,
-    transparent 360deg
+    transparent 0deg,transparent 330deg,
+    rgba(240,192,96,.08) 340deg,
+    rgba(255,217,127,.4) 352deg,
+    rgba(255,240,160,.5) 357deg,
+    rgba(255,217,127,.4) 362deg,
+    rgba(240,192,96,.08) 370deg,
+    transparent 375deg,transparent 360deg
   );
   animation:ledTravel 6s linear infinite;
-  filter:blur(6px);
-  z-index:0;
+  filter:blur(7px);
+  z-index:-2;
 }
 
-/* Widget Mondial Relay — fond sombre via inversion, carte Leaflet ré-inversée */
-#Zone_Widget { filter:invert(1) brightness(0.88) !important; }
-/* Re-inverser SEULEMENT la carte pour la garder en couleurs d'origine */
-#Zone_Widget .leaflet-container,
-#Zone_Widget .leaflet-tile-pane,
-#Zone_Widget [id*="Map"],
-#Zone_Widget [class*="map"],
-#Zone_Widget [class*="Map"] { filter:invert(1) brightness(1.1) !important; }
+/* Widget Mondial Relay — fond sombre, textes noirs → blancs, couleurs violet/blanc conservées */
+#Zone_Widget{background:#0d0d10 !important;position:relative;z-index:1;}
+/* Fond sombre sur tous les conteneurs internes */
+#Zone_Widget *{background-color:#0d0d10 !important;}
+/* Restaurer les couleurs de fond spécifiques (violet MR, selected, hover) */
+#Zone_Widget [class*="MR-Widget-HeaderLogo"],
+#Zone_Widget [class*="Selected"],
+#Zone_Widget [class*="selected"]{background-color:#1a0a2e !important;}
+#Zone_Widget [class*="hover"]:hover,
+#Zone_Widget li:hover{background-color:#160824 !important;}
+/* Textes noirs → blancs */
+#Zone_Widget *{color:#f0f0f0 !important;}
+/* Restaurer les couleurs violet/cyan MR */
+#Zone_Widget [style*="color"]{color:inherit !important;}
+#Zone_Widget a{color:#7fd9ff !important;}
+/* Garder le logo MR */
+#Zone_Widget img{background-color:transparent !important;}
 
 /* Bouton paiement Stripe — thème site */
 #payBtn{
