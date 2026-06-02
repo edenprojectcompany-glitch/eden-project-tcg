@@ -2865,7 +2865,7 @@ window.addEventListener('load', () => {
       if(hasGSAP) gsap.fromTo(nxt,{opacity:0,y:12},{opacity:1,y:0,duration:.4,ease:'power3.out'});
       window.scrollTo({top:0,behavior:'smooth'});
       closeMobileMenu(); updateNavLinks(page);
-      if(page==='catalog'){renderGrid(currentFilter);startFlashTimers();}
+      if(page==='catalog'){renderGrid(currentFilter);startFlashTimers();loadProductOverrides().then(()=>{renderGrid(currentFilter);startFlashTimers();});}
       if(page==='case') renderCases();
       if(page==='checkout'){renderCheckout();document.getElementById('coStep3Num')?.classList.remove('active');}
       if(page==='graded') setTimeout(initHoloCards,80);
@@ -2994,12 +2994,26 @@ window.addEventListener('load', () => {
   }
   function buildTiersHtml(p, activeQty=0){
     if(!p.tiers) return '';
-    const activeTierIdx = activeQty>0 ? getActiveTierIdx(p, activeQty) : -1;
-    return `<div class="tiers-wrap">${p.tiers.map((t,i)=>`
+    // Tier 0 toujours illuminé par défaut (avant tout ajout au panier)
+    const activeTierIdx = activeQty>0 ? getActiveTierIdx(p, activeQty) : 0;
+    return `<div class="tiers-wrap">${p.tiers.map((t,i)=>{
+      // Affichage en plages "X à Y" plus lisible pour le client
+      let label;
+      if(i===0){
+        const next=p.tiers[1];
+        label=next?`1 à ${next.q-1} boîte${next.q-1>1?'s':''}`:'1 boîte et +';
+      } else if(i<p.tiers.length-1){
+        const next=p.tiers[i+1];
+        label=`${t.q} à ${next.q-1} boîte${next.q-1>1?'s':''}`;
+      } else {
+        label=`${t.q} boîtes et +`;
+      }
+      return `
       <div class="tier-row ${i===0?'tier-first':''} ${activeTierIdx===i?'tier-active':''}" data-pid="${p.id}" data-tidx="${i}">
-        <span class="tier-qty">≥${t.q} boîte${t.q>1?'s':''}</span>
+        <span class="tier-qty">${label}</span>
         <span class="tier-price">${t.p!==null?t.p+'€':'Sur dem.'}</span>
-      </div>`).join('')}</div>`;
+      </div>`;
+    }).join('')}</div>`;
   }
   function buildEbayHtml(p){
     if(!p.ebay||!p.price) return '';
