@@ -3175,7 +3175,7 @@ window.addEventListener('load', () => {
       const saving=+(baseTotal-caseTotal).toFixed(2);
       // Badge "Bientôt de retour" si stock case = 0 (défini dans admin Cases)
       const caseOutOfStock=caseStocks['case_'+p.id]!=null&&caseStocks['case_'+p.id]===0;
-      return `<div class="case-card${caseOutOfStock?' card-disabled':''}" data-id="${p.id}" role="button" tabindex="0" style="cursor:pointer" onclick="if(!event.target.closest('.card-qty')&&!event.target.closest('.add-btn'))openModal(${p.id})">
+      return `<div class="case-card${caseOutOfStock?' card-disabled':''}" data-id="${p.id}" role="button" tabindex="0" style="cursor:pointer" onclick="if(!event.target.closest('.card-qty')&&!event.target.closest('.add-btn'))openCaseModal(${p.id},${caseQty},${caseTotal},${tierPrice},${saving})">
         <div class="case-img">
           ${caseOutOfStock?`<span class="badge-soon" style="position:absolute;top:12px;right:12px;z-index:2">Bientôt de retour</span>`:''}
           <img src="${IMG_BASE}${p.img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
@@ -3208,6 +3208,24 @@ window.addEventListener('load', () => {
   window.addToCart = addToCart;
   window.renderCases = renderCases;
   window.openModal = openModal;
+  window.openCaseModal = function(id, caseQty, caseTotal, tierPrice, saving){
+    const p=products.find(x=>x.id===id); if(!p) return;
+    // Override temporairement la desc et le tag pour afficher les infos case
+    const origDesc=p.desc, origTag=p.tag;
+    const caseDesc=`📦 <strong>Case de ${caseQty} displays scellées</strong> — commande groupée au meilleur prix.<br><br>`
+      +`<strong>💰 Prix de la case :</strong> ${caseTotal.toFixed(2).replace('.',',')} € TTC`
+      +(saving>0?` <span style="color:var(--foil-4);font-size:11px">(économie de ${saving.toFixed(0)}€ vs achat unitaire)</span>`:'')+`<br>`
+      +`<strong>📊 Prix/display dans la case :</strong> ${tierPrice.toFixed(0)}€/boîte<br>`
+      +`<strong>🚢 Livraison :</strong> Expédition directe depuis l'Asie · +150€ logistique inclus dans le prix<br>`
+      +`<strong>📅 Délai :</strong> 2 à 4 semaines selon disponibilité<br><br>`
+      +p.desc;
+    p.desc=caseDesc; p.tag='CASE '+p.tag;
+    openModal(id);
+    p.desc=origDesc; p.tag=origTag;
+    // Masquer le bouton "Ajouter au panier" individuel du modal
+    const btn=document.getElementById('mAddBtn');
+    if(btn) btn.style.display='none';
+  };
   window.debugCases = function() {
     const cc = CASE_CATALOG.map(c=>({...products.find(p=>p.id===c.id),_caseQty:c.qty}));
     const filtered = cc.filter(p=>p.id&&p.price!==null);
