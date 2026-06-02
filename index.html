@@ -552,6 +552,25 @@ h1 span{display:block}
 .co-section h3 .num{width:24px;height:24px;border-radius:50%;background:var(--glass);
   border:1px solid var(--glass-border);display:grid;place-items:center;
   font-family:'Manrope',sans-serif;font-size:11px;font-weight:600;color:var(--text-dim)}
+/* Halo Mondial Relay */
+@keyframes mrGlowPulse{
+  0%,100%{box-shadow:0 0 8px rgba(127,217,255,.2),0 0 24px rgba(127,217,255,.08),0 0 0 0 rgba(240,192,96,.15)}
+  50%{box-shadow:0 0 16px rgba(127,217,255,.35),0 0 40px rgba(127,217,255,.15),0 0 0 4px rgba(240,192,96,.08)}
+}
+#mr-widget-glow-wrap{box-shadow:0 0 8px rgba(127,217,255,.2),0 0 24px rgba(127,217,255,.08)}
+
+/* Bouton paiement Stripe — thème site */
+#payBtn{
+  background:rgba(10,10,12,.92) !important;
+  border:1px solid rgba(240,192,96,.45) !important;
+  box-shadow:0 0 0 0 rgba(240,192,96,.2),0 0 12px rgba(240,192,96,.1) !important;
+  animation:payBtnGlow 2.5s ease-in-out infinite !important;
+}
+@keyframes payBtnGlow{
+  0%,100%{box-shadow:0 0 6px rgba(240,192,96,.15),0 0 0 0 rgba(240,192,96,.1)}
+  50%{box-shadow:0 0 14px rgba(240,192,96,.3),0 0 0 3px rgba(240,192,96,.06)}
+}
+
 .ship-opts{display:grid;gap:9px}
 .ship-opt{padding:14px;border-radius:12px;border:1px solid var(--glass-border);
   background:var(--glass);cursor:pointer;display:flex;justify-content:space-between;
@@ -1803,7 +1822,9 @@ loadAndRenderReviews();
             </div>
             <span id="mr-point-addr" style="color:var(--text-dim);padding-left:21px;display:block;"></span>
           </div>
-          <div id="Zone_Widget" style="border-radius:12px;overflow:hidden;border:1px solid rgba(127,217,255,.4);box-shadow:0 0 0 1px rgba(127,217,255,.15),0 0 18px rgba(127,217,255,.12);transition:box-shadow .3s;"></div>
+          <div id="mr-widget-glow-wrap" style="position:relative;border-radius:14px;padding:2px;background:linear-gradient(135deg,rgba(127,217,255,.25),rgba(201,168,255,.15),rgba(127,217,255,.25));animation:mrGlowPulse 3s ease-in-out infinite;">
+            <div id="Zone_Widget" style="border-radius:12px;overflow:hidden;filter:invert(1) hue-rotate(180deg) brightness(.85) saturate(.9);"></div>
+          </div>
           <input type="hidden" id="Retour_Widget">
         </div>
       </div>
@@ -2856,7 +2877,10 @@ window.addEventListener('load', () => {
     const pools={cn:0,jp:0};
     cart.forEach(i=>{
       const lang=PRODUCT_LANG_FRONT[i.id];
-      if(lang&&pools[lang]!==undefined) pools[lang]+=i.qty;
+      if(lang&&pools[lang]!==undefined){
+        // Pour les cases, compter le nb de displays réels (qty × caseQty)
+        pools[lang]+=(i.isCaseItem?(i.qty*(i.caseQty||1)):i.qty);
+      }
     });
     return pools;
   }
@@ -2877,6 +2901,7 @@ window.addEventListener('load', () => {
   function recomputeCartPrices(){
     const pools=computeLangPools();
     cart.forEach(i=>{
+      if(i.isCaseItem) return; // prix case fixe, pas de recalcul par tier
       const p=i.id===0?null:products.find(x=>x.id===i.id);
       if(!p) return;
       const newPrice=getActivePrice(p,i.qty,pools);
@@ -3036,7 +3061,12 @@ window.addEventListener('load', () => {
             </div>
             ${caseOutOfStock
               ?`<button class="add-btn btn-soon" disabled>Bientôt</button>`
-              :`<button class="add-btn" onclick="event.stopPropagation(); for(let i=0;i<${caseQty};i++) addToCart(${p.id})" aria-label="Ajouter">
+              :`<div class="card-qty" id="cqc-case-${p.id}" style="display:none">
+                  <button class="cq-btn cq-minus" onclick="event.stopPropagation();(function(){var k='case_${p.id}';var it=cart.find(c=>c._caseKey===k);if(it){changeCaseQty(k,-1);}else{document.getElementById('cqc-case-${p.id}').style.display='none';document.getElementById('cadd-${p.id}').style.display='flex';}})()">−</button>
+                  <input class="cq-input" id="cqn-case-${p.id}" type="number" min="1" max="50" value="1" onchange="event.stopPropagation();(function(){var k='case_${p.id}';var it=cart.find(c=>c._caseKey===k);if(it){setCaseQty(k,document.getElementById('cqn-case-${p.id}').value);}})()">
+                  <button class="cq-btn cq-plus" onclick="event.stopPropagation();(function(){var k='case_${p.id}';addCaseToCart(${p.id},${caseQty},${caseTotal});document.getElementById('cqn-case-${p.id}').value=(cart.find(c=>c._caseKey===k)||{qty:1}).qty;})()">+</button>
+                </div>
+                <button class="add-btn" id="cadd-${p.id}" onclick="event.stopPropagation();addCaseToCart(${p.id},${caseQty},${caseTotal});document.getElementById('cadd-${p.id}').style.display='none';document.getElementById('cqc-case-${p.id}').style.display='flex';document.getElementById('cqn-case-${p.id}').value=1;" aria-label="Ajouter">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                 </button>`
             }
@@ -3320,8 +3350,33 @@ window.addEventListener('load', () => {
     renderCart();
   };
   window.removeFromCart=function(id){cart=cart.filter(c=>c.id!==id);renderCart();};
+  /* ══ CASE CART ══ */
+  window.addCaseToCart=function(productId,caseQty,caseTotal){
+    const p=products.find(x=>x.id===productId); if(!p||p.price===null) return;
+    const key='case_'+productId;
+    const ex=cart.find(c=>c._caseKey===key);
+    if(ex){ex.qty++;}
+    else cart.push({...p,_caseKey:key,qty:1,unitPrice:caseTotal,isCaseItem:true,caseQty:caseQty});
+    renderCart();
+    const cc=document.getElementById('cartCount');
+    cc.classList.remove('pulse'); void cc.offsetWidth; cc.classList.add('pulse');
+    showCartToast(p);
+  };
+  window.changeCaseQty=function(key,d){
+    const item=cart.find(c=>c._caseKey===key); if(!item) return;
+    item.qty+=d;
+    if(item.qty<=0){cart=cart.filter(c=>c._caseKey!==key);renderCart();return;}
+    renderCart();
+  };
+  window.setCaseQty=function(key,val){
+    const qty=parseInt(val); if(isNaN(qty)||qty<1){renderCart();return;}
+    const item=cart.find(c=>c._caseKey===key); if(!item) return;
+    item.qty=Math.min(qty,50);
+    renderCart();
+  };
+
   window.changeQty=function(id,d){
-    const item=cart.find(c=>c.id===id); if(!item) return;
+    const item=cart.find(c=>c.id===id&&!c.isCaseItem); if(!item) return;
     const prevPrice=item.unitPrice;
     item.qty+=d;
     if(item.qty<=0){removeFromCart(id);return;}
@@ -3374,6 +3429,28 @@ window.addEventListener('load', () => {
       const safeId=parseInt(i.id)||0;
       const safeQty=parseInt(i.qty)||1;
       const safePrice=parseFloat(i.unitPrice)||0;
+      if(i.isCaseItem){
+        const safeKey=esc(i._caseKey||'');
+        return `
+        <div class="cart-item">
+          <div class="thumb" style="background:rgba(127,217,255,.06);border-radius:9px;display:flex;align-items:center;justify-content:center">
+            <img src="${IMG_BASE}${esc(i.img)}" alt="${esc(i.name)}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">
+          </div>
+          <div class="info">
+            <div class="n">${esc(i.name)}</div>
+            <div class="s" style="color:var(--foil-1)">📦 Case · ×${i.caseQty} displays</div>
+            <div class="p">${(safePrice*safeQty).toFixed(2).replace('.',',')} €</div>
+            <div class="qty">
+              <button onclick="changeCaseQty('${safeKey}',-1)">−</button>
+              <input type="number" min="1" max="50" value="${safeQty}" onchange="setCaseQty('${safeKey}',this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+              <button onclick="changeCaseQty('${safeKey}',1)">+</button>
+            </div>
+          </div>
+          <button class="cart-rm" onclick="cart=cart.filter(c=>c._caseKey!=='${safeKey}');renderCart();" aria-label="Retirer">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+          </button>
+        </div>`;
+      }
       return `
       <div class="cart-item">
         <div class="thumb"><img src="${IMG_BASE}${esc(i.img)}" alt="${esc(i.name)}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'"></div>
@@ -4072,7 +4149,7 @@ window.addEventListener('load', () => {
       const shipMode=document.querySelector('.ship-opt.selected')?.dataset.ship||'';
       const res=await fetch('/api/create-payment',{method:'POST',headers,
         body:JSON.stringify({
-          items:cart.map(i=>({id:i.id,name:i.name,sub:i.sub,img:i.img,unitPrice:i.unitPrice,qty:i.qty})),
+          items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',sub:i.sub,img:i.img,qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,sub:i.sub,img:i.img,unitPrice:i.unitPrice,qty:i.qty})),
           shippingCost:shipPromo?0:currentShip,
           promoCode:document.getElementById('promoInput')?.value||'',
           customerEmail:authUser?.email,
@@ -4115,7 +4192,7 @@ window.addEventListener('load', () => {
       const shipModeP=document.querySelector('.ship-opt.selected')?.dataset.ship||'';
       const res=await fetch('/api/create-paypal-order',{method:'POST',headers,
         body:JSON.stringify({
-          items:cart.map(i=>({id:i.id,name:i.name,unitPrice:i.unitPrice,qty:i.qty})),
+          items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,unitPrice:i.unitPrice,qty:i.qty})),
           shippingCost:shipPromo?0:currentShip,
           promoCode:document.getElementById('promoInput')?.value||'',
           customerEmail:authUser?.email||'',
