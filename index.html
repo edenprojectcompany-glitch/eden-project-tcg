@@ -1129,6 +1129,12 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 .viewer-badge .vdot{width:5px;height:5px;border-radius:50%;background:#ff6b6b;flex-shrink:0;animation:vblink 1.4s ease-in-out infinite}
 @keyframes vblink{0%,100%{opacity:1}50%{opacity:.3}}
 
+/* ── LANG TOGGLE ── */
+.lang-toggle{display:flex;align-items:center;background:var(--glass);border:1px solid rgba(127,217,255,.18);border-radius:100px;overflow:hidden;flex-shrink:0;animation:navIconGlow 5s ease-in-out infinite}
+.lt-btn{padding:7px 11px;color:rgba(255,255,255,.45);transition:all .3s ease;background:none;border:none;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:.04em}
+.lt-btn.active{background:rgba(127,217,255,.14);color:var(--foil-1)}
+.lt-btn:hover:not(.active){color:rgba(255,255,255,.75)}
+
 /* ── SCROLL TO TOP ── */
 .scroll-top{position:fixed;bottom:60px;right:20px;width:42px;height:42px;z-index:89;
   border-radius:50%;background:var(--glass);border:1px solid var(--glass-border);
@@ -1533,18 +1539,22 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
     <span><span class="brand-eden">Eden Project</span> <span class="brand-tcg"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span></span>
   </div>
   <div class="navlinks">
-    <a data-page="catalog">Marketplace</a>
-    <a data-page="case">Case</a>
-    <a data-page="graded">Gradées</a>
-    <a data-page="news">Nouveautés</a>
-    <a data-page="dashboard">Ma collection</a>
-    <a data-page="help">Aide</a>
+    <a data-page="catalog" data-i18n="nav.marketplace">Marketplace</a>
+    <a data-page="case" data-i18n="nav.case">Case</a>
+    <a data-page="graded" data-i18n="nav.graded">Gradées</a>
+    <a data-page="news" data-i18n="nav.news">Nouveautés</a>
+    <a data-page="dashboard" data-i18n="nav.collection">Ma collection</a>
+    <a data-page="help" data-i18n="nav.help">Aide</a>
   </div>
   <div class="navactions">
     <label class="searchbox" id="searchBox">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" id="searchInput" placeholder="Rechercher…" autocomplete="off">
+      <input type="text" id="searchInput" data-i18n-placeholder="nav.search" placeholder="Rechercher…" autocomplete="off">
     </label>
+    <div class="lang-toggle" id="langToggle" aria-label="Langue / Language">
+      <button class="lt-btn active" data-lang="fr">FR</button>
+      <button class="lt-btn" data-lang="en">EN</button>
+    </div>
     <button class="icon-btn" id="authBtn" aria-label="Profil">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
     </button>
@@ -1558,13 +1568,13 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
-  <a data-page="catalog">Marketplace</a>
-  <a data-page="case">Case</a>
-  <a data-page="graded">Gradées</a>
-  <a data-page="news">Nouveautés</a>
-  <a data-page="dashboard">Ma collection</a>
-  <a data-page="help">Aide</a>
-  <a id="mobileAuthLink" data-page="auth">Mon compte</a>
+  <a data-page="catalog" data-i18n="nav.marketplace">Marketplace</a>
+  <a data-page="case" data-i18n="nav.case">Case</a>
+  <a data-page="graded" data-i18n="nav.graded">Gradées</a>
+  <a data-page="news" data-i18n="nav.news">Nouveautés</a>
+  <a data-page="dashboard" data-i18n="nav.collection">Ma collection</a>
+  <a data-page="help" data-i18n="nav.help">Aide</a>
+  <a id="mobileAuthLink" data-page="auth" data-i18n="nav.account">Mon compte</a>
 </div>
 
 <main>
@@ -1575,14 +1585,14 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
     <div class="hero-copy">
       <div class="badge-pro">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4Z"/></svg>
-        Revendeur Pro &amp; Fournisseur
+        <span data-i18n="hero.badge">Revendeur Pro &amp; Fournisseur</span>
       </div>
-      <div class="eyebrow"><span class="dot"></span>Édition Japonaise · Scellé d'origine</div>
-      <h1><span>Eden Project TCG,</span><span class="grad">l'investissement réinventé.</span></h1>
-      <p class="lede">Displays japonaises et chinoises scellées, authentifiées, <strong>expédiées depuis la France</strong>. Tarifs grossiste, vérifiées une à une, expédiées depuis La France.</p>
+      <div class="eyebrow"><span class="dot"></span><span data-i18n="hero.eyebrow">Édition Japonaise · Scellé d'origine</span></div>
+      <h1><span data-i18n="hero.h1.line1">Eden Project TCG,</span><span class="grad" data-i18n="hero.h1.grad">l'investissement réinventé.</span></h1>
+      <p class="lede" data-i18n-html="hero.lede">Displays japonaises et chinoises scellées, authentifiées, <strong>expédiées depuis la France</strong>. Tarifs grossiste, vérifiées une à une, expédiées depuis La France.</p>
       <div class="cta-row">
-        <button class="btn-primary" data-page="catalog">Explorer le catalogue</button>
-        <button class="btn-ghost" data-page="case">Acheter en Case</button>
+        <button class="btn-primary" data-page="catalog" data-i18n="hero.cta1">Explorer le catalogue</button>
+        <button class="btn-ghost" data-page="case" data-i18n="hero.cta2">Acheter en Case</button>
       </div>
     </div>
     <div class="hero-visual">
@@ -1605,19 +1615,19 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   <div class="band" id="band">
     <div class="item reveal-up">
       <div class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg></div>
-      <h4>Authenticité certifiée</h4><p>Chaque produit vérifié avant expédition.</p>
+      <h4 data-i18n="band.1.h4">Authenticité certifiée</h4><p data-i18n="band.1.p">Chaque produit vérifié avant expédition.</p>
     </div>
     <div class="item reveal-up">
       <div class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h13v10H3z"/><path d="M16 10h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></div>
-      <h4>Logistique blindée</h4><p>Emballage sécurisé, suivi Mondial Relay.</p>
+      <h4 data-i18n="band.2.h4">Logistique blindée</h4><p data-i18n="band.2.p">Emballage sécurisé, suivi Mondial Relay.</p>
     </div>
     <div class="item reveal-up">
       <div class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"/></svg></div>
-      <h4>Support privé</h4><p>Un accompagnement collectionneur dédié.</p>
+      <h4 data-i18n="band.3.h4">Support privé</h4><p data-i18n="band.3.p">Un accompagnement collectionneur dédié.</p>
     </div>
     <div class="item reveal-up">
       <div class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
-      <h4>Revendeur Pro</h4><p>Tarifs fournisseurs &amp; accès stock direct.</p>
+      <h4 data-i18n="band.4.h4">Revendeur Pro</h4><p data-i18n="band.4.p">Tarifs fournisseurs &amp; accès stock direct.</p>
     </div>
   </div>
 
@@ -1754,8 +1764,8 @@ loadAndRenderReviews();
 <div class="page" id="page-catalog">
   <section>
     <div class="sec-head reveal-up">
-      <h2>Marketplace<br><em>— sélection du mois.</em></h2>
-      <div class="sub">22 displays scellés, vérifiés par notre équipe à Brest. Prix fournisseur direct.</div>
+      <h2 data-i18n-html="catalog.h2">Marketplace<br><em>— sélection du mois.</em></h2>
+      <div class="sub" data-i18n="catalog.sub">22 displays scellés, vérifiés par notre équipe à Brest. Prix fournisseur direct.</div>
     </div>
     <div class="catalog-wrap">
       <!-- Mystery Box Banner -->
@@ -1785,16 +1795,16 @@ loadAndRenderReviews();
 <div class="page" id="page-case">
   <section>
     <div class="sec-head reveal-up">
-      <h2>Acheter en<br><em>— Case.</em></h2>
-      <div class="sub">Prix grossiste réservés aux revendeurs et collectionneurs professionnels. Livraison entrepôt Asie disponible.</div>
+      <h2 data-i18n-html="case.h2">Acheter en<br><em>— Case.</em></h2>
+      <div class="sub" data-i18n="case.sub">Prix grossiste réservés aux revendeurs et collectionneurs professionnels. Livraison entrepôt Asie disponible.</div>
     </div>
     <div class="case-hero-banner reveal-up">
       <div class="icon">📦</div>
       <div>
-        <h3>Entrepôt Asie — Livraison directe</h3>
-        <p>Commandez une case complète depuis notre entrepôt en Asie et recevez directement chez vous. Frais de port offerts à partir d'une case complète. Délai 7–14 jours selon le produit.</p>
+        <h3 data-i18n="case.banner.h3">Entrepôt Asie — Livraison directe</h3>
+        <p data-i18n="case.banner.p">Commandez une case complète depuis notre entrepôt en Asie et recevez directement chez vous. Frais de port offerts à partir d'une case complète. Délai 7–14 jours selon le produit.</p>
       </div>
-      <a href="mailto:contact@edenprojecttcg.com" class="btn-ghost btn-sm" style="white-space:nowrap">Contacter pour devis</a>
+      <a href="mailto:contact@edenprojecttcg.com" class="btn-ghost btn-sm" style="white-space:nowrap" data-i18n="case.banner.cta">Contacter pour devis</a>
     </div>
     <div class="case-grid" id="caseGrid"></div>
   </section>
@@ -1805,8 +1815,8 @@ loadAndRenderReviews();
   <section>
     <div class="auth-wrap">
       <div class="auth-pitch reveal-up">
-        <h2>Un espace<br><em>taillé pour les passionnés.</em></h2>
-        <p>Suivez votre collection, accédez aux ventes privées et à la roue de la fortune mensuelle.</p>
+        <h2 data-i18n-html="auth.h2">Un espace<br><em>taillé pour les passionnés.</em></h2>
+        <p data-i18n="auth.p">Suivez votre collection, accédez aux ventes privées et à la roue de la fortune mensuelle.</p>
         <ul class="auth-features">
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Portfolio valorisé en direct (eBay live)</li>
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Accès anticipé aux nouveaux arrivages</li>
@@ -1816,28 +1826,28 @@ loadAndRenderReviews();
       </div>
       <div class="auth-card reveal-up">
         <div class="tab-row">
-          <button class="tab active" data-tab="login">Connexion</button>
-          <button class="tab" data-tab="register">Inscription</button>
+          <button class="tab active" data-tab="login" data-i18n="auth.tab.login">Connexion</button>
+          <button class="tab" data-tab="register" data-i18n="auth.tab.register">Inscription</button>
         </div>
         <div class="auth-msg" id="authMsg"></div>
         <form id="authForm" novalidate>
           <div class="field" id="f-name" style="display:none">
             <input type="text" id="i-name" placeholder=" " autocomplete="name">
-            <label for="i-name">Nom complet</label>
+            <label for="i-name" data-i18n="auth.name">Nom complet</label>
             <div class="err">Merci d'indiquer votre nom</div>
           </div>
           <div class="field" id="f-email">
             <input type="email" id="i-email" placeholder=" " autocomplete="email">
-            <label for="i-email">Adresse e-mail</label>
+            <label for="i-email" data-i18n="auth.email">Adresse e-mail</label>
             <div class="err">E-mail invalide</div>
           </div>
           <div class="field" id="f-pwd">
             <input type="password" id="i-pwd" placeholder=" " autocomplete="current-password">
-            <label for="i-pwd">Mot de passe</label>
+            <label for="i-pwd" data-i18n="auth.password">Mot de passe</label>
             <div class="err">Minimum 8 caractères</div>
           </div>
-          <button type="submit" class="btn-primary" id="authSubmitBtn">Se connecter</button>
-          <div class="auth-meta"><span class="forgot-link" id="forgotLink">Mot de passe oublié ?</span></div>
+          <button type="submit" class="btn-primary" id="authSubmitBtn" data-i18n="auth.login_btn">Se connecter</button>
+          <div class="auth-meta"><span class="forgot-link" id="forgotLink" data-i18n="auth.forgot">Mot de passe oublié ?</span></div>
         </form>
         <!-- Formulaire mot de passe oublié (caché par défaut) -->
         <div id="forgotForm" style="display:none">
@@ -1846,7 +1856,7 @@ loadAndRenderReviews();
             <input type="email" id="forgotEmail" placeholder=" ">
             <label for="forgotEmail">Adresse e-mail</label>
           </div>
-          <button class="btn-primary" id="forgotSubmitBtn" style="width:100%">Envoyer le lien</button>
+          <button class="btn-primary" id="forgotSubmitBtn" style="width:100%" data-i18n="auth.forgot.send">Envoyer le lien</button>
           <div class="auth-msg" id="forgotMsg" style="margin-top:12px"></div>
           <div style="margin-top:14px;text-align:center"><span class="forgot-link" id="backToLogin">← Retour à la connexion</span></div>
         </div>
@@ -1879,8 +1889,8 @@ loadAndRenderReviews();
 <div class="page" id="page-dashboard">
   <section>
     <div class="sec-head">
-      <h2>Mon espace<br><em>collection.</em></h2>
-      <div class="sub" id="dashSubtitle">Connectez-vous pour voir votre portfolio.</div>
+      <h2 data-i18n-html="dash.h2">Mon espace<br><em>collection.</em></h2>
+      <div class="sub" id="dashSubtitle" data-i18n="dash.sub">Connectez-vous pour voir votre portfolio.</div>
     </div>
     <div class="dash-wrap">
       <!-- Non connecté -->
@@ -1900,13 +1910,13 @@ loadAndRenderReviews();
           </div>
           <div class="dash-loyalty">
             <div class="pts" id="dashPoints">0</div>
-            <div class="lbl">Points fidélité</div>
+            <div class="lbl" data-i18n="dash.loyalty">Points fidélité</div>
           </div>
-          <button class="btn-ghost btn-sm" id="logoutBtn" style="margin-left:16px">Déconnexion</button>
+          <button class="btn-ghost btn-sm" id="logoutBtn" style="margin-left:16px" data-i18n="dash.logout">Déconnexion</button>
         </div>
         <!-- Roue de la fortune -->
         <div class="wheel-section reveal-up">
-          <h4>🎡 Roue de la fortune</h4>
+          <h4 data-i18n="dash.wheel.title">🎡 Roue de la fortune</h4>
           <div class="desc" id="wheelDesc">Un tirage gratuit tous les 30 jours, sans obligation d'achat. Tentez de gagner des réductions, des boosters ou une display gratuite.</div>
           <div class="wheel-wrap">
             <div class="wheel-canvas-wrap">
@@ -1917,7 +1927,7 @@ loadAndRenderReviews();
               <div class="prize-label" id="prizeLabel">Tournez la roue !</div>
               <div class="prize-code" id="prizeCode"></div>
               <div class="wheel-cooldown" id="wheelCooldown"></div>
-              <button class="btn-primary wheel-spin-btn" id="spinBtn" style="margin-top:14px">
+              <button class="btn-primary wheel-spin-btn" id="spinBtn" style="margin-top:14px" data-i18n="dash.spin">
                 🎰 Tenter ma chance
               </button>
             </div>
@@ -1931,19 +1941,19 @@ loadAndRenderReviews();
         <!-- Stats -->
         <div class="dash-grid reveal-up">
           <div class="dash-card">
-            <div class="label">Valeur estimée portfolio</div>
+            <div class="label" data-i18n="dash.portfolio">Valeur estimée portfolio</div>
             <div class="value">—<span class="delta" id="dashDelta"></span></div>
           </div>
           <div class="dash-card">
-            <div class="label">Commandes passées</div>
+            <div class="label" data-i18n="dash.orders.count">Commandes passées</div>
             <div class="value" id="dashOrderCount">0</div>
           </div>
         </div>
         <!-- Historique commandes -->
         <div class="dash-orders reveal-up">
-          <h4>Historique des commandes</h4>
+          <h4 data-i18n="dash.orders.h4">Historique des commandes</h4>
           <div id="orderList">
-            <div style="color:var(--text-dim);font-size:13.5px;padding:16px 0;text-align:center">Aucune commande pour le moment.</div>
+            <div style="color:var(--text-dim);font-size:13.5px;padding:16px 0;text-align:center" data-i18n="dash.orders.empty">Aucune commande pour le moment.</div>
           </div>
         </div>
         <!-- Suppression compte -->
@@ -2055,13 +2065,13 @@ loadAndRenderReviews();
       <div class="check-circle">
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0a0a0c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
       </div>
-      <h2>Commande confirmée.</h2>
-      <p>Un e-mail de confirmation vient de partir. Vos displays seront emballés avec soin et expédiés sous 24h ouvrées.</p>
+      <h2 data-i18n="confirm.h2">Commande confirmée.</h2>
+      <p data-i18n="confirm.p">Un e-mail de confirmation vient de partir. Vos displays seront emballés avec soin et expédiés sous 24h ouvrées.</p>
       <div class="confirm-meta">
-        <div><div class="l">Référence</div><div class="v" id="confRef">EDN-000000</div></div>
-        <div><div class="l">Total</div><div class="v" id="confTot">—</div></div>
+        <div><div class="l" data-i18n="confirm.ref">Référence</div><div class="v" id="confRef">EDN-000000</div></div>
+        <div><div class="l" data-i18n="confirm.total">Total</div><div class="v" id="confTot">—</div></div>
       </div>
-      <button class="btn-ghost" data-page="catalog">Continuer mes achats</button>
+      <button class="btn-ghost" data-page="catalog" data-i18n="confirm.cta">Continuer mes achats</button>
     </div>
   </section>
 </div>
@@ -2070,8 +2080,8 @@ loadAndRenderReviews();
 <div class="page" id="page-graded">
   <section>
     <div class="sec-head reveal-up">
-      <h2>Cartes<br><em>— gradées.</em></h2>
-      <div class="sub">Sélection haut de gamme. Nouvelles pièces chaque mois.</div>
+      <h2 data-i18n-html="graded.h2">Cartes<br><em>— gradées.</em></h2>
+      <div class="sub" data-i18n="graded.sub">Sélection haut de gamme. Nouvelles pièces chaque mois.</div>
     </div>
     <div class="catalog-wrap">
       <div class="graded-accroche reveal-up">
@@ -2080,7 +2090,7 @@ loadAndRenderReviews();
       <div class="graded-grid">
         <div class="holo-card-wrap reveal-up">
           <div class="holo-card" id="hcard1">
-            <div class="soon-tag">Bientôt disponible</div>
+            <div class="soon-tag" data-i18n="graded.soon">Bientôt disponible</div>
             <div class="hcard-face"></div><div class="hcard-foil" id="hfoil1"></div>
             <div class="hcard-inner">
               <span class="hcard-tag">Illustration Rare · Holo</span>
@@ -2088,11 +2098,11 @@ loadAndRenderReviews();
               <div class="hcard-meta"><div class="hcard-name">Mew ex</div><div class="hcard-sub">151 · Pokémon Card 151</div><div class="hcard-price">189 €</div></div>
             </div>
           </div>
-          <div class="hcard-label">Mew ex · Full Art</div><div class="hcard-badge">Sur commande</div>
+          <div class="hcard-label">Mew ex · Full Art</div><div class="hcard-badge" data-i18n="graded.order">Sur commande</div>
         </div>
         <div class="holo-card-wrap reveal-up">
           <div class="holo-card" id="hcard2">
-            <div class="soon-tag">Bientôt disponible</div>
+            <div class="soon-tag" data-i18n="graded.soon">Bientôt disponible</div>
             <div class="hcard-face" style="background:linear-gradient(160deg,#1a1525,#0e0a13)"></div><div class="hcard-foil" id="hfoil2"></div>
             <div class="hcard-inner">
               <span class="hcard-tag">Special Art Rare · Holo</span>
@@ -2100,11 +2110,11 @@ loadAndRenderReviews();
               <div class="hcard-meta"><div class="hcard-name">Charizard ex</div><div class="hcard-sub">151 · Special Art Rare</div><div class="hcard-price">259 €</div></div>
             </div>
           </div>
-          <div class="hcard-label">Charizard ex · SAR</div><div class="hcard-badge">Sur commande</div>
+          <div class="hcard-label">Charizard ex · SAR</div><div class="hcard-badge" data-i18n="graded.order">Sur commande</div>
         </div>
         <div class="holo-card-wrap reveal-up">
           <div class="holo-card" id="hcard3">
-            <div class="soon-tag">Bientôt disponible</div>
+            <div class="soon-tag" data-i18n="graded.soon">Bientôt disponible</div>
             <div class="hcard-face" style="background:linear-gradient(160deg,#1a1a10,#0e0e08)"></div><div class="hcard-foil" id="hfoil3"></div>
             <div class="hcard-inner">
               <span class="hcard-tag">Rainbow Rare · PSA 10</span>
@@ -2116,7 +2126,7 @@ loadAndRenderReviews();
         </div>
         <div class="holo-card-wrap reveal-up">
           <div class="holo-card" id="hcard4">
-            <div class="soon-tag">Bientôt disponible</div>
+            <div class="soon-tag" data-i18n="graded.soon">Bientôt disponible</div>
             <div class="hcard-face" style="background:linear-gradient(160deg,#0d1a1a,#080e0e)"></div><div class="hcard-foil" id="hfoil4"></div>
             <div class="hcard-inner">
               <span class="hcard-tag">Alt Art · Holo</span>
@@ -2124,12 +2134,12 @@ loadAndRenderReviews();
               <div class="hcard-meta"><div class="hcard-name">Lugia V</div><div class="hcard-sub">Silver Tempest · Alt Art</div><div class="hcard-price">118 €</div></div>
             </div>
           </div>
-          <div class="hcard-label">Lugia V · Alt Art</div><div class="hcard-badge">Sur commande</div>
+          <div class="hcard-label">Lugia V · Alt Art</div><div class="hcard-badge" data-i18n="graded.order">Sur commande</div>
         </div>
       </div>
       <div class="graded-cta">
-        <p>Vous cherchez une carte spécifique ? Contactez-nous pour une recherche personnalisée.</p>
-        <a href="mailto:contact@edenprojecttcg.com" class="btn-ghost">📧 Demande personnalisée</a>
+        <p data-i18n="graded.cta_p">Vous cherchez une carte spécifique ? Contactez-nous pour une recherche personnalisée.</p>
+        <a href="mailto:contact@edenprojecttcg.com" class="btn-ghost" data-i18n="graded.contact">📧 Demande personnalisée</a>
       </div>
     </div>
   </section>
@@ -2139,8 +2149,8 @@ loadAndRenderReviews();
 <div class="page" id="page-news">
   <section>
     <div class="sec-head reveal-up">
-      <h2>Nouveautés<br><em>— du mois.</em></h2>
-      <div class="sub">Les sorties Pokémon TCG à surveiller. Mis à jour chaque mois.</div>
+      <h2 data-i18n-html="news.h2">Nouveautés<br><em>— du mois.</em></h2>
+      <div class="sub" data-i18n="news.sub">Les sorties Pokémon TCG à surveiller. Mis à jour chaque mois.</div>
     </div>
     <div class="news-grid">
       <article class="news-card news-featured reveal-up">
@@ -2204,14 +2214,14 @@ loadAndRenderReviews();
 <div class="page" id="page-help">
   <section>
     <div class="sec-head reveal-up">
-      <h2>Centre<br><em>d'aide.</em></h2>
-      <div class="sub">Tout ce que vous devez savoir avant de commander.</div>
+      <h2 data-i18n-html="help.h2">Centre<br><em>d'aide.</em></h2>
+      <div class="sub" data-i18n="help.sub">Tout ce que vous devez savoir avant de commander.</div>
     </div>
     <div class="help-wrap">
       <div class="help-tabs reveal-up">
-        <button class="help-tab active" data-help="faq">FAQ</button>
-        <button class="help-tab" data-help="livraison">Livraison</button>
-        <button class="help-tab" data-help="promos">Codes promo</button>
+        <button class="help-tab active" data-help="faq" data-i18n="help.tab.faq">FAQ</button>
+        <button class="help-tab" data-help="livraison" data-i18n="help.tab.shipping">Livraison</button>
+        <button class="help-tab" data-help="promos" data-i18n="help.tab.promos">Codes promo</button>
       </div>
       <!-- FAQ -->
       <div class="help-panel active" id="help-faq">
@@ -2477,7 +2487,7 @@ loadAndRenderReviews();
 <div class="cart-overlay" id="cartOverlay"></div>
 <aside class="cart-panel" id="cartPanel">
   <div class="cart-head">
-    <h3>Votre panier</h3>
+    <h3 data-i18n="cart.title">Votre panier</h3>
     <button class="cart-close" id="cartClose">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
@@ -2486,12 +2496,12 @@ loadAndRenderReviews();
   <div class="cart-foot">
     <div id="promoAutoBar"></div>
     <div class="cart-totals">
-      <div class="tot-row"><span>Sous-total</span><span id="cartSub">0 €</span></div>
-      <div class="tot-row promo" id="cartAutoPromoRow" style="display:none"><span id="cartAutoPromoLabel">Remise auto</span><span id="cartAutoPromoAmt"></span></div>
-      <div class="tot-row"><span>Livraison</span><span>dès 4,90 €</span></div>
-      <div class="tot-row grand"><span>Total</span><span id="cartTotal">0 €</span></div>
+      <div class="tot-row"><span data-i18n="cart.subtotal">Sous-total</span><span id="cartSub">0 €</span></div>
+      <div class="tot-row promo" id="cartAutoPromoRow" style="display:none"><span id="cartAutoPromoLabel" data-i18n="cart.auto_promo">Remise auto</span><span id="cartAutoPromoAmt"></span></div>
+      <div class="tot-row"><span data-i18n="cart.shipping">Livraison</span><span data-i18n="cart.shipping.from">dès 4,90 €</span></div>
+      <div class="tot-row grand"><span data-i18n="cart.total">Total</span><span id="cartTotal">0 €</span></div>
     </div>
-    <button class="btn-primary" id="goCheckout" style="width:100%">Finaliser la commande →</button>
+    <button class="btn-primary" id="goCheckout" style="width:100%" data-i18n="cart.checkout">Finaliser la commande →</button>
   </div>
 </aside>
 
@@ -2536,7 +2546,7 @@ loadAndRenderReviews();
         <span class="mark"></span>
         <span class="brand-eden">Eden Project</span> <span class="brand-tcg" style="margin-left:4px"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span>
       </div>
-      <p class="foot-desc">Marketplace dédiée aux cartes Pokémon japonaises et chinoises. Revendeur Pro &amp; Grossiste. Sélection rigoureuse, authentification garantie, expédition depuis Brest.</p>
+      <p class="foot-desc" data-i18n="footer.desc">Marketplace dédiée aux cartes Pokémon japonaises et chinoises. Revendeur Pro &amp; Grossiste. Sélection rigoureuse, authentification garantie, expédition depuis Brest.</p>
       <div class="foot-socials">
         <!-- Email -->
         <a href="mailto:contact@edenprojecttcg.com" class="foot-social" title="Email" style="background:#1a1a2e;border-color:rgba(127,217,255,.25)">
@@ -2555,25 +2565,25 @@ loadAndRenderReviews();
       </div>
     </div>
     <div class="foot-col">
-      <h5>Marketplace</h5>
-      <a data-page="catalog">Displays JP</a>
-      <a data-page="catalog">Displays CN</a>
-      <a data-page="case">Acheter en Case</a>
-      <a data-page="graded">Cartes Gradées</a>
+      <h5 data-i18n="footer.marketplace">Marketplace</h5>
+      <a data-page="catalog" data-i18n="footer.jp">Displays JP</a>
+      <a data-page="catalog" data-i18n="footer.cn">Displays CN</a>
+      <a data-page="case" data-i18n="footer.case">Acheter en Case</a>
+      <a data-page="graded" data-i18n="footer.graded">Cartes Gradées</a>
     </div>
     <div class="foot-col">
-      <h5>Compte</h5>
-      <a data-page="dashboard">Ma collection</a>
-      <a data-page="dashboard">Mes commandes</a>
-      <a data-page="auth">Créer un compte</a>
-      <a data-page="help">Codes promo</a>
+      <h5 data-i18n="footer.account">Compte</h5>
+      <a data-page="dashboard" data-i18n="footer.collection">Ma collection</a>
+      <a data-page="dashboard" data-i18n="footer.orders">Mes commandes</a>
+      <a data-page="auth" data-i18n="footer.register">Créer un compte</a>
+      <a data-page="help" data-i18n="footer.promo">Codes promo</a>
     </div>
     <div class="foot-col">
-      <h5>Aide</h5>
-      <a href="mailto:contact@edenprojecttcg.com">Contact</a>
-      <a data-page="help">FAQ</a>
-      <a data-page="help">Livraison</a>
-      <a data-page="news">Nouveautés</a>
+      <h5 data-i18n="footer.help">Aide</h5>
+      <a href="mailto:contact@edenprojecttcg.com" data-i18n="footer.contact">Contact</a>
+      <a data-page="help" data-i18n="footer.faq">FAQ</a>
+      <a data-page="help" data-i18n="footer.shipping">Livraison</a>
+      <a data-page="news" data-i18n="footer.news">Nouveautés</a>
     </div>
   </div>
   <div class="foot-base">
@@ -2683,6 +2693,220 @@ loadAndRenderReviews();
 </div>
 
 <script>
+/* ══ i18n FR / EN ══ */
+(function(){
+  var I18N = {
+    fr: {
+      'nav.marketplace':'Marketplace','nav.case':'Case','nav.graded':'Gradées',
+      'nav.news':'Nouveautés','nav.collection':'Ma collection','nav.help':'Aide',
+      'nav.account':'Mon compte','nav.search':'Rechercher…',
+      'hero.badge':'Revendeur Pro & Fournisseur','hero.eyebrow':'Édition Japonaise · Scellé d\'origine',
+      'hero.h1.line1':'Eden Project TCG,','hero.h1.grad':'l\'investissement réinventé.',
+      'hero.lede':'Displays japonaises et chinoises scellées, authentifiées, <strong>expédiées depuis la France</strong>. Tarifs grossiste, vérifiées une à une, expédiées depuis La France.',
+      'hero.cta1':'Explorer le catalogue','hero.cta2':'Acheter en Case',
+      'band.1.h4':'Authenticité certifiée','band.1.p':'Chaque produit vérifié avant expédition.',
+      'band.2.h4':'Logistique blindée','band.2.p':'Emballage sécurisé, suivi Mondial Relay.',
+      'band.3.h4':'Support privé','band.3.p':'Un accompagnement collectionneur dédié.',
+      'band.4.h4':'Revendeur Pro','band.4.p':'Tarifs fournisseurs & accès stock direct.',
+      'catalog.h2':'Marketplace<br><em>— sélection du mois.</em>',
+      'catalog.sub':'22 displays scellés, vérifiés par notre équipe à Brest. Prix fournisseur direct.',
+      'catalog.filter.all':'Tous','catalog.filter.jp':'🇯🇵 Japonais','catalog.filter.cn':'🇨🇳 Chinois',
+      'catalog.no_results':'Aucun produit trouvé.',
+      'mystery.title':'Eden Mystery Box',
+      'mystery.sub':'4 displays sélectionnées par nos experts · Valeur estimée supérieure au prix · Stock ultra-limité',
+      'mystery.add':'Ajouter',
+      'case.h2':'Acheter en<br><em>— Case.</em>',
+      'case.sub':'Prix grossiste réservés aux revendeurs et collectionneurs professionnels. Livraison entrepôt Asie disponible.',
+      'case.banner.h3':'Entrepôt Asie — Livraison directe',
+      'case.banner.p':'Commandez une case complète depuis notre entrepôt en Asie et recevez directement chez vous.',
+      'case.banner.cta':'Contacter pour devis',
+      'case.qty':'Case de','case.displays':'displays','case.save':'Économie :','case.vs':'vs prix unitaire','case.soon':'Bientôt',
+      'cart.title':'Votre panier','cart.subtotal':'Sous-total','cart.shipping':'Livraison',
+      'cart.shipping.from':'dès 4,90 €','cart.total':'Total','cart.checkout':'Finaliser la commande →',
+      'cart.auto_promo':'Remise auto','cart.empty':'Votre panier est vide.',
+      'product.price_on_demand':'Prix sur demande','product.per_box':'€/boîte',
+      'product.sealed':'SCELLÉ','product.soon':'Bientôt de retour','product.coming_soon':'Bientôt',
+      'product.last_boxes':'⚠️ Dernières','product.boxes':'boîtes !',
+      'product.more_than':'🔥 Plus que','product.dispo':'dispo','product.stock':'Stock:',
+      'modal.per_box':'/boîte','modal.on_demand':'Sur demande','modal.qty_label':'Choisir la quantité',
+      'modal.in_cart':'dans le panier','modal.add_cart':'Ajouter au panier','modal.update':'Mettre à jour',
+      'modal.close':'Fermer','modal.ask_price':'Demander un prix',
+      'modal.bundle':'🎁 Souvent achetés ensemble','modal.add_bundle':'+ Ajouter',
+      'modal.sealed':'SCELLÉ',
+      'modal.stock_warning':'⚠️ Attention — Plus que','modal.stock_box':'boîte','modal.stock_boxes':'boîtes',
+      'modal.stock_in_stock':'✓ En stock','modal.stock_available':'boîtes disponibles',
+      'modal.stock_hurry':'🔥 Seulement','modal.stock_available_2':'disponibles — commandez vite',
+      'auth.h2':'Un espace<br><em>taillé pour les passionnés.</em>',
+      'auth.p':'Suivez votre collection, accédez aux ventes privées et à la roue de la fortune mensuelle.',
+      'auth.tab.login':'Connexion','auth.tab.register':'Inscription',
+      'auth.name':'Nom complet','auth.email':'Adresse e-mail','auth.password':'Mot de passe',
+      'auth.login_btn':'Se connecter','auth.register_btn':'Créer mon compte',
+      'auth.forgot':'Mot de passe oublié ?','auth.forgot.send':'Envoyer le lien','auth.back':'← Retour à la connexion',
+      'dash.h2':'Mon espace<br><em>collection.</em>',
+      'dash.sub':'Connectez-vous pour voir votre portfolio.',
+      'dash.loyalty':'Points fidélité','dash.logout':'Déconnexion',
+      'dash.wheel.title':'🎡 Roue de la fortune','dash.spin':'🎰 Tenter ma chance',
+      'dash.orders.h4':'Historique des commandes','dash.orders.empty':'Aucune commande pour le moment.',
+      'dash.portfolio':'Valeur estimée portfolio','dash.orders.count':'Commandes passées',
+      'dash.coupons':'🎟️ Mes coupons',
+      'confirm.h2':'Commande confirmée.',
+      'confirm.p':'Un e-mail de confirmation vient de partir. Vos displays seront emballés avec soin et expédiés sous 24h ouvrées.',
+      'confirm.ref':'Référence','confirm.total':'Total','confirm.cta':'Continuer mes achats',
+      'graded.h2':'Cartes<br><em>— gradées.</em>',
+      'graded.sub':'Sélection haut de gamme. Nouvelles pièces chaque mois.',
+      'graded.soon':'Bientôt disponible','graded.order':'Sur commande',
+      'graded.cta_p':'Vous cherchez une carte spécifique ? Contactez-nous pour une recherche personnalisée.',
+      'graded.contact':'📧 Demande personnalisée',
+      'news.h2':'Nouveautés<br><em>— du mois.</em>',
+      'news.sub':'Les sorties Pokémon TCG à surveiller. Mis à jour chaque mois.',
+      'help.h2':'Centre<br><em>d\'aide.</em>',
+      'help.sub':'Tout ce que vous devez savoir avant de commander.',
+      'help.tab.faq':'FAQ','help.tab.shipping':'Livraison','help.tab.promos':'Codes promo',
+      'footer.desc':'Marketplace dédiée aux cartes Pokémon japonaises et chinoises. Revendeur Pro & Grossiste.',
+      'footer.marketplace':'Marketplace','footer.account':'Compte','footer.help':'Aide',
+      'footer.jp':'Displays JP','footer.cn':'Displays CN','footer.case':'Acheter en Case',
+      'footer.graded':'Cartes Gradées','footer.collection':'Ma collection','footer.orders':'Mes commandes',
+      'footer.register':'Créer un compte','footer.promo':'Codes promo',
+      'footer.contact':'Contact','footer.faq':'FAQ','footer.shipping':'Livraison','footer.news':'Nouveautés',
+      'ebay.label':'📈 eBay réf.','ebay.save':'% vs eBay',
+      'tier.from':'dès','tier.box':'boîte(s)',
+    },
+    en: {
+      'nav.marketplace':'Marketplace','nav.case':'Case','nav.graded':'Graded',
+      'nav.news':'New Releases','nav.collection':'My Collection','nav.help':'Help',
+      'nav.account':'My Account','nav.search':'Search…',
+      'hero.badge':'Pro Reseller & Wholesaler','hero.eyebrow':'Japanese Edition · Factory Sealed',
+      'hero.h1.line1':'Eden Project TCG,','hero.h1.grad':'investing, reimagined.',
+      'hero.lede':'Sealed Japanese & Chinese displays, authenticated, <strong>shipped from France</strong>. Wholesale pricing, verified one by one, dispatched from France.',
+      'hero.cta1':'Browse the catalogue','hero.cta2':'Buy a Case',
+      'band.1.h4':'Certified Authenticity','band.1.p':'Every product checked before shipping.',
+      'band.2.h4':'Secure Logistics','band.2.p':'Reinforced packaging, tracked delivery.',
+      'band.3.h4':'Private Support','band.3.p':'Dedicated collector assistance.',
+      'band.4.h4':'Pro Reseller','band.4.p':'Wholesale pricing & direct stock access.',
+      'catalog.h2':'Marketplace<br><em>— monthly selection.</em>',
+      'catalog.sub':'22 sealed displays, verified by our team. Direct wholesale pricing.',
+      'catalog.filter.all':'All','catalog.filter.jp':'🇯🇵 Japanese','catalog.filter.cn':'🇨🇳 Chinese',
+      'catalog.no_results':'No products found.',
+      'mystery.title':'Eden Mystery Box',
+      'mystery.sub':'4 displays selected by our experts · Estimated value above retail · Ultra-limited stock',
+      'mystery.add':'Add',
+      'case.h2':'Buy a<br><em>— Case.</em>',
+      'case.sub':'Wholesale pricing for professional resellers and collectors. Direct Asia warehouse delivery available.',
+      'case.banner.h3':'Asia Warehouse — Direct Delivery',
+      'case.banner.p':'Order a full case from our Asia warehouse and receive it directly at your door.',
+      'case.banner.cta':'Contact for a quote',
+      'case.qty':'Case of','case.displays':'displays','case.save':'Saving:','case.vs':'vs unit price','case.soon':'Coming Soon',
+      'cart.title':'Your cart','cart.subtotal':'Subtotal','cart.shipping':'Shipping',
+      'cart.shipping.from':'from €4.90','cart.total':'Total','cart.checkout':'Checkout →',
+      'cart.auto_promo':'Auto discount','cart.empty':'Your cart is empty.',
+      'product.price_on_demand':'Price on request','product.per_box':'€/box',
+      'product.sealed':'SEALED','product.soon':'Coming back soon','product.coming_soon':'Coming Soon',
+      'product.last_boxes':'⚠️ Last','product.boxes':'boxes!',
+      'product.more_than':'🔥 Only','product.dispo':'left','product.stock':'Stock:',
+      'modal.per_box':'/box','modal.on_demand':'Price on request','modal.qty_label':'Choose quantity',
+      'modal.in_cart':'in cart','modal.add_cart':'Add to cart','modal.update':'Update',
+      'modal.close':'Close','modal.ask_price':'Request a price',
+      'modal.bundle':'🎁 Frequently bought together','modal.add_bundle':'+ Add',
+      'modal.sealed':'SEALED',
+      'modal.stock_warning':'⚠️ Warning — Only','modal.stock_box':'box','modal.stock_boxes':'boxes',
+      'modal.stock_in_stock':'✓ In stock','modal.stock_available':'boxes available',
+      'modal.stock_hurry':'🔥 Only','modal.stock_available_2':'available — order fast',
+      'auth.h2':'A space<br><em>built for collectors.</em>',
+      'auth.p':'Track your collection, access private sales and the monthly fortune wheel.',
+      'auth.tab.login':'Sign in','auth.tab.register':'Register',
+      'auth.name':'Full name','auth.email':'Email address','auth.password':'Password',
+      'auth.login_btn':'Sign in','auth.register_btn':'Create my account',
+      'auth.forgot':'Forgot password?','auth.forgot.send':'Send reset link','auth.back':'← Back to sign in',
+      'dash.h2':'My<br><em>collection space.</em>',
+      'dash.sub':'Sign in to view your portfolio.',
+      'dash.loyalty':'Loyalty points','dash.logout':'Sign out',
+      'dash.wheel.title':'🎡 Fortune Wheel','dash.spin':'🎰 Try my luck',
+      'dash.orders.h4':'Order history','dash.orders.empty':'No orders yet.',
+      'dash.portfolio':'Estimated portfolio value','dash.orders.count':'Orders placed',
+      'dash.coupons':'🎟️ My coupons',
+      'confirm.h2':'Order confirmed.',
+      'confirm.p':'A confirmation email is on its way. Your displays will be carefully packed and shipped within 24 working hours.',
+      'confirm.ref':'Reference','confirm.total':'Total','confirm.cta':'Continue shopping',
+      'graded.h2':'Graded<br><em>— cards.</em>',
+      'graded.sub':'Premium selection. New pieces every month.',
+      'graded.soon':'Coming soon','graded.order':'On order',
+      'graded.cta_p':'Looking for a specific card? Contact us for a personalised search.',
+      'graded.contact':'📧 Custom request',
+      'news.h2':'New releases<br><em>— this month.</em>',
+      'news.sub':'Pokémon TCG releases to watch. Updated every month.',
+      'help.h2':'Help<br><em>centre.</em>',
+      'help.sub':'Everything you need to know before ordering.',
+      'help.tab.faq':'FAQ','help.tab.shipping':'Shipping','help.tab.promos':'Promo codes',
+      'footer.desc':'Marketplace dedicated to Japanese & Chinese Pokémon cards. Pro Reseller & Wholesaler.',
+      'footer.marketplace':'Marketplace','footer.account':'Account','footer.help':'Help',
+      'footer.jp':'JP Displays','footer.cn':'CN Displays','footer.case':'Buy a Case',
+      'footer.graded':'Graded Cards','footer.collection':'My Collection','footer.orders':'My Orders',
+      'footer.register':'Create an account','footer.promo':'Promo codes',
+      'footer.contact':'Contact','footer.faq':'FAQ','footer.shipping':'Shipping','footer.news':'New Releases',
+      'ebay.label':'📈 eBay ref.','ebay.save':'% vs eBay',
+      'tier.from':'from','tier.box':'box(es)',
+    }
+  };
+
+  var saved = localStorage.getItem('edn_lang');
+  var auto  = (navigator.language||'').startsWith('en') ? 'en' : 'fr';
+  window._lang = saved || auto;
+
+  window.t = function(key){ return (I18N[window._lang]||I18N.fr)[key] || I18N.fr[key] || key; };
+
+  function applyLang(){
+    document.documentElement.lang = window._lang;
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var val = window.t(el.dataset.i18n);
+      if(el.tagName === 'INPUT') el.placeholder = val;
+      else el.textContent = val;
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(function(el){
+      el.innerHTML = window.t(el.dataset.i18nHtml);
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
+      el.placeholder = window.t(el.dataset.i18nPlaceholder);
+    });
+    // Mettre à jour les filtres avec le bon comptage
+    if(window._filterCounts){
+      var fc = window._filterCounts;
+      document.querySelectorAll('.chip[data-filter="all"]').forEach(function(c){ c.textContent = window.t('catalog.filter.all')+' ('+fc.total+')'; });
+      document.querySelectorAll('.chip[data-filter="jp"]').forEach(function(c){ c.innerHTML = window.t('catalog.filter.jp')+' ('+fc.jp+')'; });
+      document.querySelectorAll('.chip[data-filter="cn"]').forEach(function(c){ c.innerHTML = window.t('catalog.filter.cn')+' ('+fc.cn+')'; });
+    }
+    // État du bouton toggle
+    document.querySelectorAll('.lt-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === window._lang);
+    });
+  }
+
+  window._applyLang = applyLang;
+  window.setLang = function(lang){
+    if(!I18N[lang]) return;
+    window._lang = lang;
+    localStorage.setItem('edn_lang', lang);
+    applyLang();
+    // Re-render les sections dynamiques
+    if(window._renderGrid)  window._renderGrid(window._currentFilter||'all', window._searchQuery||'');
+    if(window._renderCases) window._renderCases();
+    if(window._renderCart)  window._renderCart();
+  };
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('.lt-btn');
+    if(btn && btn.dataset.lang) window.setLang(btn.dataset.lang);
+  });
+
+  // Appliquer au chargement initial
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', applyLang);
+  } else {
+    applyLang();
+  }
+})();
+</script>
+
+<script>
 /* ── INIT après chargement GSAP (defer) ── */
 window.addEventListener('load', () => {
   const hasGSAP = typeof gsap !== 'undefined';
@@ -2751,9 +2975,10 @@ window.addEventListener('load', () => {
     const total = products.filter(p=>p.price!==null).length;
     const jp = products.filter(p=>p.lang==='jp'&&p.price!==null).length;
     const cn = products.filter(p=>p.lang==='cn'&&p.price!==null).length;
-    document.querySelectorAll('.chip[data-filter="all"]').forEach(c=>c.textContent=`Tous (${total})`);
-    document.querySelectorAll('.chip[data-filter="jp"]').forEach(c=>c.innerHTML=`🇯🇵 Japonais (${jp})`);
-    document.querySelectorAll('.chip[data-filter="cn"]').forEach(c=>c.innerHTML=`🇨🇳 Chinois (${cn})`);
+    window._filterCounts = {total, jp, cn};
+    document.querySelectorAll('.chip[data-filter="all"]').forEach(c=>c.textContent=`${t('catalog.filter.all')} (${total})`);
+    document.querySelectorAll('.chip[data-filter="jp"]').forEach(c=>c.innerHTML=`${t('catalog.filter.jp')} (${jp})`);
+    document.querySelectorAll('.chip[data-filter="cn"]').forEach(c=>c.innerHTML=`${t('catalog.filter.cn')} (${cn})`);
   })();
 
   /* ══ UTILITAIRES SÉCURITÉ ══ */
@@ -3174,23 +3399,23 @@ window.addEventListener('load', () => {
     // Si adminPrice override, scaler tous les prix des tiers proportionnellement
     const baseT0 = p.tiers[0].p;
     const ratio = (p.adminPrice!=null && baseT0) ? p.adminPrice/baseT0 : 1;
-    return `<div class="tiers-wrap">${p.tiers.map((t,i)=>{
-      const displayPrice = t.p!==null ? Math.round(t.p*ratio) : null;
+    return `<div class="tiers-wrap">${p.tiers.map((tier,i)=>{
+      const displayPrice = tier.p!==null ? Math.round(tier.p*ratio) : null;
       const isLast = i===p.tiers.length-1;
       const prev = i>0 ? p.tiers[i-1] : null;
       let label;
       if(isLast){
-        label=`${t.q} boîtes et + · 🏆`;
+        label=`${tier.q}+ · 🏆`;
       } else {
         const start = prev ? prev.q : 1;
         const next = p.tiers[i+1];
-        const end = next ? next.q - 1 : t.q;
-        label=`${start} à ${end} boîte${end>1?'s':''}`;
+        const end = next ? next.q - 1 : tier.q;
+        label=`${start}–${end} ${t('tier.box')}`;
       }
       return `
       <div class="tier-row ${i===0?'tier-first':''} ${activeTierIdx===i?'tier-active':''}" data-pid="${p.id}" data-tidx="${i}">
         <span class="tier-qty">${label}</span>
-        <span class="tier-price">${displayPrice!==null?displayPrice+'€':'Sur dem.'}</span>
+        <span class="tier-price">${displayPrice!==null?displayPrice+'€':t('product.price_on_demand')}</span>
       </div>`;
     }).join('')}</div>`;
   }
@@ -3198,7 +3423,7 @@ window.addEventListener('load', () => {
     if(!p.ebay||!p.price) return '';
     const diff=p.ebay-p.price; if(diff<=0) return '';
     const pct=Math.round(diff/p.ebay*100);
-    return `<div class="ebay-cmp"><span class="ebay-lbl">📈 eBay réf.</span><span class="ebay-val">${p.ebay}€</span><span class="ebay-save">-${pct}% vs eBay</span></div>`;
+    return `<div class="ebay-cmp"><span class="ebay-lbl">${t('ebay.label')}</span><span class="ebay-val">${p.ebay}€</span><span class="ebay-save">-${pct}${t('ebay.save')}</span></div>`;
   }
   function renderGrid(filter='all',query=''){
     currentFilter=filter;
@@ -3209,19 +3434,19 @@ window.addEventListener('load', () => {
       const ms=!q||p.name.toLowerCase().includes(q)||p.sub.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q);
       return mf&&ms;
     });
-    if(!list.length){grid.innerHTML='<div class="no-results">Aucun produit trouvé.</div>';return;}
+    if(!list.length){grid.innerHTML=`<div class="no-results">${t('catalog.no_results')}</div>`;return;}
     grid.innerHTML=list.map(p=>{
       const hasPrice=p.price!==null;
       const outOfStock=p.stock!=null&&p.stock===0;
       const flashBadge=p.flashSale?`<span class="badge-flash">⚡ Flash</span>`:'';
       const stockBadge=(!outOfStock&&p.stock!=null)
-        ?(p.stock<=3?`<span class="badge-stock-urgent">⚠️ Dernières ${p.stock} boîtes !</span>`
-          :p.stock<=8?`<span class="badge-stock-urgent" style="background:rgba(255,179,51,.15);border-color:rgba(255,179,51,.4);color:#ffb333;animation:none">🔥 Plus que ${p.stock} dispo</span>`
-          :`<span class="badge-stock">Stock: ${p.stock}</span>`)
+        ?(p.stock<=3?`<span class="badge-stock-urgent">${t('product.last_boxes')} ${p.stock} ${t('product.boxes')}</span>`
+          :p.stock<=8?`<span class="badge-stock-urgent" style="background:rgba(255,179,51,.15);border-color:rgba(255,179,51,.4);color:#ffb333;animation:none">${t('product.more_than')} ${p.stock} ${t('product.dispo')}</span>`
+          :`<span class="badge-stock">${t('product.stock')} ${p.stock}</span>`)
         :'';
       const sealBadge=outOfStock
-        ?`<span class="badge-soon">Bientôt de retour</span>`
-        :(p.price!==null&&!p.flashSale?`<span class="badge-rare ${p.lang==='cn'?'badge-cn':'badge-jp'}">SCELLÉ</span>`:'');
+        ?`<span class="badge-soon">${t('product.soon')}</span>`
+        :(p.price!==null&&!p.flashSale?`<span class="badge-rare ${p.lang==='cn'?'badge-cn':'badge-jp'}">${t('product.sealed')}</span>`:'');
       return `<article class="product${outOfStock?' card-disabled':''}" data-id="${p.id}" tabindex="0" role="button" style="opacity:0;transition:opacity .35s ease,border-color .4s ease,box-shadow .4s ease,transform .25s ease">
         <div class="product-img">
           ${p.flashSale&&!outOfStock?flashBadge:''}
@@ -3242,15 +3467,15 @@ window.addEventListener('load', () => {
           <div class="product-foot">
             ${hasPrice
               ?outOfStock
-                ?`<div class="product-price" style="color:#8a8a93">${getBasePrice(p)}<span class="price-unit">€/boîte</span></div>
-                  <button class="add-btn btn-soon" disabled>Bientôt</button>`
-                :`<div class="product-price" id="cprice-${p.id}">${getBasePrice(p)}<span class="price-unit">€/boîte</span></div>
+                ?`<div class="product-price" style="color:#8a8a93">${getBasePrice(p)}<span class="price-unit">${t('product.per_box')}</span></div>
+                  <button class="add-btn btn-soon" disabled>${t('product.coming_soon')}</button>`
+                :`<div class="product-price" id="cprice-${p.id}">${getBasePrice(p)}<span class="price-unit">${t('product.per_box')}</span></div>
                   <div class="card-qty" id="cqc-${p.id}">
                     <button class="cq-btn cq-minus" onclick="event.stopPropagation();cardChangeQty(${p.id},-1)" aria-label="Retirer">−</button>
                     <input class="cq-input" id="cqn-${p.id}" type="number" min="1" max="999" value="0" onchange="event.stopPropagation();cardSetQty(${p.id},this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                     <button class="cq-btn cq-plus" onclick="event.stopPropagation();cardChangeQty(${p.id},1)" aria-label="Ajouter">+</button>
                   </div>`
-              :'<div class="price-on-demand">Prix sur demande</div>'
+              :`<div class="price-on-demand">${t('product.price_on_demand')}</div>`
             }
           </div>
         </div>
@@ -3311,21 +3536,21 @@ window.addEventListener('load', () => {
       const caseOutOfStock=caseStocks['case_'+p.id]!=null&&caseStocks['case_'+p.id]===0;
       return `<div class="case-card${caseOutOfStock?' card-disabled':''}" data-id="${p.id}" role="button" tabindex="0" style="cursor:pointer" onclick="if(!event.target.closest('.card-qty')&&!event.target.closest('.add-btn'))openCaseModal(${p.id},${caseQty},${caseTotal},${tierPrice},${saving})">
         <div class="case-img">
-          ${caseOutOfStock?`<span class="badge-soon" style="position:absolute;top:12px;right:12px;z-index:2">Bientôt de retour</span>`:''}
+          ${caseOutOfStock?`<span class="badge-soon" style="position:absolute;top:12px;right:12px;z-index:2">${t('product.soon')}</span>`:''}
           <img src="${IMG_BASE}${p.img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
           <div class="foil"></div>
         </div>
         <div class="case-body">
-          <div class="case-qty">📦 Case de ${caseQty} displays · <span class="lang-badge ${p.lang==='cn'?'b-cn':'b-jp'}">${p.lang==='cn'?'CN':'JPN'}</span></div>
+          <div class="case-qty">📦 ${t('case.qty')} ${caseQty} ${t('case.displays')} · <span class="lang-badge ${p.lang==='cn'?'b-cn':'b-jp'}">${p.lang==='cn'?'CN':'JPN'}</span></div>
           <div class="case-name">${p.name}</div>
           <div class="case-sub">${p.sub}</div>
           <div class="case-foot">
             <div>
               <div class="case-price">${caseTotal}<span class="case-unit">€/case</span></div>
-              ${saving>0?`<div class="case-save">Économie : ${saving}€ vs prix unitaire</div>`:''}
+              ${saving>0?`<div class="case-save">${t('case.save')} ${saving}€ ${t('case.vs')}</div>`:''}
             </div>
             ${caseOutOfStock
-              ?`<button class="add-btn btn-soon" disabled>Bientôt</button>`
+              ?`<button class="add-btn btn-soon" disabled>${t('case.soon')}</button>`
               :`<div class="card-qty" id="cqc-case-${p.id}">
                   <button class="cq-btn cq-minus" onclick="event.stopPropagation();changeCaseQtyCard('case_${p.id}',-1,${p.id},${caseQty},${caseTotal})">−</button>
                   <input class="cq-input" id="cqn-case-${p.id}" type="number" min="0" max="50" value="0" onchange="event.stopPropagation();setCaseQtyCard('case_${p.id}',this.value,${p.id},${caseQty},${caseTotal})">
@@ -3342,6 +3567,12 @@ window.addEventListener('load', () => {
   window.addToCart = addToCart;
   window.renderCases = renderCases;
   window.openModal = openModal;
+  // Expose pour le switch de langue
+  window._renderGrid  = renderGrid;
+  window._renderCases = renderCases;
+  window._renderCart  = renderCart;
+  Object.defineProperty(window, '_currentFilter', { get: ()=>currentFilter });
+  Object.defineProperty(window, '_searchQuery',   { get: ()=>searchQuery });
 
   /* ══ SUPPRESSION COMPTE ══ */
   document.getElementById('deleteAccountBtn')?.addEventListener('click',async()=>{
@@ -3476,7 +3707,7 @@ window.addEventListener('load', () => {
     const productBundles = BUNDLES.filter(b => b.ids.includes(p.id));
     const bundleHtml = productBundles.length ? `
       <div class="bundle-section">
-        <h5>🎁 Souvent achetés ensemble</h5>
+        <h5>${t('modal.bundle')}</h5>
         ${productBundles.map(b => {
           const other = products.find(x => x.id === b.ids.find(oid => oid !== p.id));
           if(!other) return '';
@@ -3485,25 +3716,25 @@ window.addEventListener('load', () => {
             <img src="${IMG_BASE}${other.img}" alt="${other.name}" style="width:44px;height:44px;object-fit:contain;border-radius:8px;background:var(--glass);flex-shrink:0;padding:2px" onerror="this.style.display='none'">
             <div style="flex:1;min-width:0">
               <div class="bi-names" style="font-weight:600;margin-bottom:2px">${other.name}</div>
-              <div style="font-size:11px;color:var(--text-dim)">${other.sub}${otherPrice?` · ${otherPrice}€/boîte`:''}</div>
+              <div style="font-size:11px;color:var(--text-dim)">${other.sub}${otherPrice?` · ${otherPrice}${t('modal.per_box')}`:''}</div>
             </div>
-            <button style="font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);cursor:pointer;white-space:nowrap">+ Ajouter</button>
+            <button style="font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);cursor:pointer;white-space:nowrap">${t('modal.add_bundle')}</button>
           </div>`;
         }).join('')}
       </div>` : '';
 
     const stockLine = p.stock!=null
       ? (p.stock<=3
-          ? `<div class="modal-stock-line">⚠️ Attention — Plus que ${p.stock} boîte${p.stock>1?'s':''} en stock !</div>`
+          ? `<div class="modal-stock-line">${t('modal.stock_warning')} ${p.stock} ${p.stock>1?t('modal.stock_boxes'):t('modal.stock_box')} en stock !</div>`
           : p.stock<=8
-            ? `<div class="modal-stock-line" style="background:rgba(255,179,51,.08);border-color:rgba(255,179,51,.3);color:#ffb333">🔥 Seulement ${p.stock} disponibles — commandez vite</div>`
-            : `<div class="modal-stock-line modal-stock-ok">✓ En stock (${p.stock} boîtes disponibles)</div>`)
+            ? `<div class="modal-stock-line" style="background:rgba(255,179,51,.08);border-color:rgba(255,179,51,.3);color:#ffb333">${t('modal.stock_hurry')} ${p.stock} ${t('modal.stock_available_2')}</div>`
+            : `<div class="modal-stock-line modal-stock-ok">${t('modal.stock_in_stock')} (${p.stock} ${t('modal.stock_available')})</div>`)
       : '';
     const cartItem=cart.find(c=>c.id===id);
     const cartQty=cartItem?cartItem.qty:0;
     const displayPrice=cartQty>0&&cartItem?cartItem.unitPrice:fp;
     modalBody.innerHTML=`
-      <div class="modal-tag"><span class="lang-badge ${p.lang==='cn'?'b-cn':'b-jp'}">${p.lang==='cn'?'CN':'JPN'}</span> ${p.tag}${p.price!==null?' · SCELLÉ':''}</div>
+      <div class="modal-tag"><span class="lang-badge ${p.lang==='cn'?'b-cn':'b-jp'}">${p.lang==='cn'?'CN':'JPN'}</span> ${p.tag}${p.price!==null?` · ${t('modal.sealed')}`:''}</div>
       <div class="modal-name">${p.name}</div>
       <div class="modal-sub">${p.sub}</div>
       <div class="modal-desc">${p.desc}</div>
@@ -3512,19 +3743,19 @@ window.addEventListener('load', () => {
       ${buildTiersHtml(p,cartQty)}${buildEbayHtml(p)}
       ${bundleHtml}
       <div class="modal-price-row">
-        <div class="modal-price"><span id="modal-live-price" data-pid="${p.id}">${displayPrice!==null?displayPrice+'€':'Sur demande'}</span><span>/boîte</span></div>
+        <div class="modal-price"><span id="modal-live-price" data-pid="${p.id}">${displayPrice!==null?displayPrice+'€':t('modal.on_demand')}</span><span>${t('modal.per_box')}</span></div>
       </div>
       ${fp!==null?`
       <div style="display:flex;align-items:center;gap:10px;margin:10px 0 4px;justify-content:center">
         <button class="cq-btn cq-minus ${cartQty>0?'visible':''}" id="mQtyMinus">−</button>
         <input class="cq-input ${cartQty>0?'visible':''}" id="mQtyInput" type="number" min="0" max="999" value="${cartQty}" style="width:52px;font-size:15px;padding:5px 4px">
         <button class="cq-btn cq-plus" id="mQtyPlus">+</button>
-        <span id="mQtyLabel" style="font-size:12px;color:var(--text-dim)">${cartQty>0?cartQty+' dans le panier':'Choisir la quantité'}</span>
+        <span id="mQtyLabel" style="font-size:12px;color:var(--text-dim)">${cartQty>0?cartQty+' '+t('modal.in_cart'):t('modal.qty_label')}</span>
       </div>`:''
       }
       <div class="modal-actions">
-        ${fp!==null?`<button class="btn-primary" id="mAddBtn">${cartQty>0?'Mettre à jour':'Ajouter au panier'}</button>`:`<a href="mailto:contact@edenprojecttcg.com" class="btn-ghost" style="flex:1;text-align:center">Demander un prix</a>`}
-        <button class="btn-ghost" id="mCloseBtn">Fermer</button>
+        ${fp!==null?`<button class="btn-primary" id="mAddBtn">${cartQty>0?t('modal.update'):t('modal.add_cart')}</button>`:`<a href="mailto:contact@edenprojecttcg.com" class="btn-ghost" style="flex:1;text-align:center">${t('modal.ask_price')}</a>`}
+        <button class="btn-ghost" id="mCloseBtn">${t('modal.close')}</button>
       </div>`;
     modalOverlay.classList.add('open'); document.body.style.overflow='hidden';
     if(p.flashSale) startFlashTimers();
@@ -3539,8 +3770,8 @@ window.addEventListener('load', () => {
       if(inp&&document.activeElement!==inp) inp.value=mQty;
       if(minus) minus.classList.toggle('visible',mQty>0);
       if(inp) inp.classList.toggle('visible',mQty>0);
-      if(lbl) lbl.textContent=mQty>0?mQty+' dans le panier':'Choisir la quantité';
-      if(btn) btn.textContent=mQty>0?'Mettre à jour':'Ajouter au panier';
+      if(lbl) lbl.textContent=mQty>0?mQty+' '+t('modal.in_cart'):t('modal.qty_label');
+      if(btn) btn.textContent=mQty>0?t('modal.update'):t('modal.add_cart');
     }
     document.getElementById('mQtyPlus')?.addEventListener('click',()=>{mQty++;cardSetQty(id,mQty);refreshModal();});
     document.getElementById('mQtyMinus')?.addEventListener('click',()=>{if(mQty>0){mQty--;cardSetQty(id,mQty);refreshModal();}});
@@ -3796,7 +4027,7 @@ window.addEventListener('load', () => {
     const count=cart.reduce((s,i)=>s+i.qty,0);
     document.getElementById('cartCount').textContent=count;
     if(!cart.length){
-      wrap.innerHTML='<div class="cart-empty">Votre panier est vide.<br>Découvrez la sélection du mois.</div>';
+      wrap.innerHTML=`<div class="cart-empty">${t('cart.empty')}</div>`;
       document.getElementById('cartSub').textContent='0 €';
       document.getElementById('cartTotal').textContent='0 €';
       document.getElementById('promoAutoBar').innerHTML='';
@@ -3941,15 +4172,15 @@ window.addEventListener('load', () => {
     } else {
       btn.title='Se connecter';
       btn.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>';
-      document.getElementById('mobileAuthLink').textContent='Mon compte';
+      document.getElementById('mobileAuthLink').textContent=t('nav.account');
     }
   }
-  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    const isReg=t.dataset.tab==='register';
+    tab.classList.add('active');
+    const isReg=tab.dataset.tab==='register';
     document.getElementById('f-name').style.display=isReg?'block':'none';
-    document.getElementById('authSubmitBtn').textContent=isReg?'Créer mon compte':'Se connecter';
+    document.getElementById('authSubmitBtn').textContent=isReg?t('auth.register_btn'):t('auth.login_btn');
   }));
   document.getElementById('authForm').addEventListener('submit',async e=>{
     e.preventDefault();
@@ -3981,7 +4212,7 @@ window.addEventListener('load', () => {
       } else { go('dashboard'); }
     }catch(err){
       msg.className='auth-msg error'; msg.textContent=err.message; msg.style.display='block';
-    }finally{btn.disabled=false;btn.textContent=isReg?'Créer mon compte':'Se connecter';}
+    }finally{btn.disabled=false;btn.textContent=isReg?t('auth.register_btn'):t('auth.login_btn');}
   });
   document.getElementById('logoutBtn')?.addEventListener('click',()=>{clearAuth();go('home');});
 
@@ -4675,11 +4906,11 @@ window.addEventListener('load', () => {
   }
 
   /* ══ HELP TABS ══ */
-  document.querySelectorAll('.help-tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.help-tab').forEach(tab=>tab.addEventListener('click',()=>{
     document.querySelectorAll('.help-tab').forEach(x=>x.classList.remove('active'));
     document.querySelectorAll('.help-panel').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById('help-'+t.dataset.help)?.classList.add('active');
+    tab.classList.add('active');
+    document.getElementById('help-'+tab.dataset.help)?.classList.add('active');
   }));
   document.querySelectorAll('.faq-item .faq-q').forEach(q=>q.addEventListener('click',()=>{
     q.parentElement.classList.toggle('open');
@@ -4720,12 +4951,12 @@ window.addEventListener('load', () => {
       msgEl.className='admin-msg err'; msgEl.textContent='Code incorrect ou serveur indisponible';
     }
   });
-  document.querySelectorAll('.admin-tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.admin-tab').forEach(atab=>atab.addEventListener('click',()=>{
     document.querySelectorAll('.admin-tab').forEach(x=>x.classList.remove('active'));
     document.querySelectorAll('.admin-section').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById('atab-'+t.dataset.atab)?.classList.add('active');
-    const tab=t.dataset.atab;
+    atab.classList.add('active');
+    document.getElementById('atab-'+atab.dataset.atab)?.classList.add('active');
+    const tab=atab.dataset.atab;
     if(tab==='commandes') loadAdminOrders();
     if(tab==='stats') loadAdminStats();
     if(tab==='live') loadLiveVisitors();
@@ -5372,6 +5603,8 @@ window.addEventListener('load', () => {
     const heroCard=document.getElementById('heroCard');
     if(heroCard) gsap.to(heroCard,{y:-10,repeat:-1,yoyo:true,duration:3,ease:'sine.inOut'});
   }
+  // Appliquer les traductions sur les éléments statiques après rendu complet
+  if(window._applyLang) window._applyLang();
 }); /* end window.load */
 
 /* ══ SYSTÈME D'AVIS ══ */
