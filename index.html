@@ -2687,7 +2687,7 @@ window.addEventListener('load', () => {
         }
       }catch{}
     }
-    try{cart=(JSON.parse(raw||'[]')).filter(s=>s.id===0||products.find(p=>p.id===s.id&&p.price!==null));}catch{cart=[];}
+    try{cart=(JSON.parse(raw||'[]')).filter(s=>{const found=products.find(p=>p.id===s.id&&p.price!==null);console.log('LC',s.id,typeof s.id,'found:',!!found,'pprice:',products.find(p=>p.id===s.id)?.price,'raw_len:',raw?.length);return s.id===0||!!found;});}catch(e){console.error('LC_ERR',e.message);cart=[];}
   }
   // Sync panier entre onglets (ex : paiement Stripe nouvel onglet vide le panier)
   window.addEventListener('storage',e=>{
