@@ -2687,9 +2687,14 @@ window.addEventListener('load', () => {
         }
       }catch{}
     }
-    console.log('[DEBUG] loadCart raw=',raw?raw.substring(0,80):'null');
-    try{cart=(JSON.parse(raw||'[]')).filter(s=>s.id===0||products.find(p=>p.id===s.id&&p.price!==null));}catch(e){console.error('[DEBUG] loadCart filter error',e);cart=[];}
-    console.log('[DEBUG] loadCart cart.length=',cart.length);
+    const _dbg={raw:raw?raw.substring(0,100):'null',products_len:products.length};
+    try{cart=(JSON.parse(raw||'[]')).filter(s=>{
+      const p=products.find(x=>x.id===s.id);
+      _dbg['id_'+s.id]={price:p?.price,found:!!p,pass:s.id===0||(!!(p&&p.price!==null))};
+      return s.id===0||(p&&p.price!==null);
+    });}catch(e){_dbg.error=e.message;cart=[];}
+    _dbg.cart_final=cart.length;
+    try{sessionStorage.setItem('_dbg_lc',JSON.stringify(_dbg));}catch{}
   }
   // Sync panier entre onglets (ex : paiement Stripe nouvel onglet vide le panier)
   window.addEventListener('storage',e=>{
@@ -3595,7 +3600,7 @@ window.addEventListener('load', () => {
     renderCart();
   };
   function renderCart(){
-    console.log('[DEBUG] renderCart cart.length=',cart.length, new Error().stack.split('\n')[2]);
+    try{const d=JSON.parse(sessionStorage.getItem('_dbg_lc')||'{}');d.renderCart_len=cart.length;d.renderCart_stack=new Error().stack.split('\n')[2];sessionStorage.setItem('_dbg_lc',JSON.stringify(d));}catch{}
     // Recalculer les prix avec le pool actuel AVANT d'afficher
     recomputeCartPrices();
     const wrap=document.getElementById('cartItems');
