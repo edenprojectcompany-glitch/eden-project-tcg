@@ -2770,6 +2770,14 @@ loadAndRenderReviews();
       'footer.contact':'Contact','footer.faq':'FAQ','footer.shipping':'Livraison','footer.news':'Nouveautés',
       'ebay.label':'📈 eBay réf.','ebay.save':'% vs eBay',
       'tier.from':'dès','tier.box':'boîte(s)',
+      'case.modal.qty_label':'Case de','case.modal.displays_sealed':'displays scellées',
+      'case.modal.group_order':'commande groupée au meilleur prix',
+      'case.modal.case_price':'Prix de la case :','case.modal.saving':'économie de',
+      'case.modal.saving_vs':'vs achat unitaire',
+      'case.modal.price_per_display':'Prix/display dans la case :',
+      'case.modal.shipping':'Livraison :','case.modal.shipping_detail':'Expédition directe depuis l\'Asie · livraison incluse',
+      'case.modal.delay':'Délai :','case.modal.delay_detail':'14 jours en moyenne',
+      'modal.stock_in_stock_label':'en stock !',
     },
     en: {
       'nav.marketplace':'Marketplace','nav.case':'Case','nav.graded':'Graded',
@@ -2845,6 +2853,14 @@ loadAndRenderReviews();
       'footer.contact':'Contact','footer.faq':'FAQ','footer.shipping':'Shipping','footer.news':'New Releases',
       'ebay.label':'📈 eBay ref.','ebay.save':'% vs eBay',
       'tier.from':'from','tier.box':'box(es)',
+      'case.modal.qty_label':'Case of','case.modal.displays_sealed':'sealed displays',
+      'case.modal.group_order':'bulk order at the best price',
+      'case.modal.case_price':'Case price:','case.modal.saving':'saving',
+      'case.modal.saving_vs':'vs unit price',
+      'case.modal.price_per_display':'Price/display in case:',
+      'case.modal.shipping':'Shipping:','case.modal.shipping_detail':'Direct shipment from Asia · shipping included',
+      'case.modal.delay':'Lead time:','case.modal.delay_detail':'14 days on average',
+      'modal.stock_in_stock_label':'in stock!',
     }
   };
 
@@ -3658,12 +3674,12 @@ window.addEventListener('load', () => {
     const p=products.find(x=>x.id===id); if(!p) return;
     // Override temporairement la desc et le tag pour afficher les infos case
     const origDesc=p.desc, origTag=p.tag;
-    const caseDesc=`📦 <strong>Case de ${caseQty} displays scellées</strong> — commande groupée au meilleur prix.<br><br>`
-      +`<strong>💰 Prix de la case :</strong> ${caseTotal.toFixed(2).replace('.',',')} € TTC`
-      +(saving>0?` <span style="color:var(--foil-4);font-size:11px">(économie de ${saving.toFixed(0)}€ vs achat unitaire)</span>`:'')+`<br>`
-      +`<strong>📊 Prix/display dans la case :</strong> ${tierPrice.toFixed(0)}€/boîte<br>`
-      +`<strong>🚢 Livraison :</strong> Expédition directe depuis l'Asie · livraison incluse<br>`
-      +`<strong>📅 Délai :</strong> 14 jours en moyenne<br><br>`
+    const caseDesc=`📦 <strong>${t('case.modal.qty_label')} ${caseQty} ${t('case.modal.displays_sealed')}</strong> — ${t('case.modal.group_order')}<br><br>`
+      +`<strong>💰 ${t('case.modal.case_price')}</strong> ${caseTotal.toFixed(2).replace('.',',')} € TTC`
+      +(saving>0?` <span style="color:var(--foil-4);font-size:11px">(${t('case.modal.saving')} ${saving.toFixed(0)}€ ${t('case.modal.saving_vs')})</span>`:'')+`<br>`
+      +`<strong>📊 ${t('case.modal.price_per_display')}</strong> ${tierPrice.toFixed(0)}${t('modal.per_box')}<br>`
+      +`<strong>🚢 ${t('case.modal.shipping')}</strong> ${t('case.modal.shipping_detail')}<br>`
+      +`<strong>📅 ${t('case.modal.delay')}</strong> ${t('case.modal.delay_detail')}<br><br>`
       +p.desc;
     p.desc=caseDesc; p.tag='CASE '+p.tag;
     openModal(id);
@@ -3725,7 +3741,7 @@ window.addEventListener('load', () => {
 
     const stockLine = p.stock!=null
       ? (p.stock<=3
-          ? `<div class="modal-stock-line">${t('modal.stock_warning')} ${p.stock} ${p.stock>1?t('modal.stock_boxes'):t('modal.stock_box')} en stock !</div>`
+          ? `<div class="modal-stock-line">${t('modal.stock_warning')} ${p.stock} ${p.stock>1?t('modal.stock_boxes'):t('modal.stock_box')} ${t('modal.stock_in_stock_label')}</div>`
           : p.stock<=8
             ? `<div class="modal-stock-line" style="background:rgba(255,179,51,.08);border-color:rgba(255,179,51,.3);color:#ffb333">${t('modal.stock_hurry')} ${p.stock} ${t('modal.stock_available_2')}</div>`
             : `<div class="modal-stock-line modal-stock-ok">${t('modal.stock_in_stock')} (${p.stock} ${t('modal.stock_available')})</div>`)
