@@ -80,6 +80,6 @@ module.exports = async (req, res) => {
     return res.status(200).json({ prices: Object.fromEntries(results.map(r => [r.id, r.price])) });
   } catch (err) {
     console.error('eBay error:', err.message);
-    return res.status(500).json({ error: 'Erreur serveur eBay', detail: err.message });
+    return res.status(500).json({ error: 'Erreur serveur eBay' });
   }
 };
