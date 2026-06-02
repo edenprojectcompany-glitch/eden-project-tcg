@@ -5058,10 +5058,10 @@ window.addEventListener('load', () => {
   gridObs.observe(document.getElementById('grid')||document.body,{childList:true,subtree:false});
 
   /* ══ INIT ══ */
-  loadAuth();
-  loadCart();
+  try{loadAuth();}catch(e){sessionStorage.setItem('_err_auth',e.message+'|'+e.stack?.split('\n')[1]);}
+  try{loadCart();}catch(e){sessionStorage.setItem('_err_lc',e.message+'|'+e.stack?.split('\n')[1]);cart=[];}
   loadProductOverrides().then(()=>renderGrid('all'));
-  renderCart();
+  try{renderCart();}catch(e){sessionStorage.setItem('_err_rc',e.message+'|'+e.stack?.split('\n')[1]);}
   initJackpot();
   (()=>{
     let startPage='home';
