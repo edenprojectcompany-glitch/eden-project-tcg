@@ -553,37 +553,60 @@ h1 span{display:block}
   border:1px solid var(--glass-border);display:grid;place-items:center;
   font-family:'Manrope',sans-serif;font-size:11px;font-weight:600;color:var(--text-dim)}
 /* Halo Mondial Relay */
-/* Holo ring rotatif autour du widget MR — style lucioles dorées */
-@keyframes holoSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-@keyframes mrAura{0%,100%{opacity:.7}50%{opacity:1}}
-#mr-widget-glow-wrap{position:relative;background:#0a0a0c;border-radius:16px;padding:2px;overflow:hidden}
-#mr-widget-glow-wrap::before{
-  content:'';position:absolute;inset:-2px;border-radius:18px;z-index:0;
-  background:conic-gradient(from 0deg,
-    transparent 0%,
-    rgba(240,192,96,.15) 5%,
-    rgba(255,217,127,.9) 15%,
-    rgba(255,240,180,1) 22%,
-    rgba(255,217,127,.9) 30%,
-    rgba(240,192,96,.15) 40%,
-    transparent 50%,
-    transparent 100%);
-  animation:holoSpin 5s linear infinite;
-  filter:blur(1px);
+/* === LED strip doré autour du widget Mondial Relay === */
+@keyframes ledTravel{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+#mr-widget-glow-wrap{
+  position:relative;
+  border-radius:14px;
+  padding:2px;
+  overflow:hidden;
+  background:rgba(240,192,96,.18); /* bande dorée constante */
+  box-shadow:0 0 12px rgba(240,192,96,.25),0 0 28px rgba(240,192,96,.1);
 }
+/* Point lumineux LED qui défile sur tout le pourtour */
+#mr-widget-glow-wrap::before{
+  content:'';
+  position:absolute;
+  width:250%;
+  height:250%;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(0deg);
+  background:conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 340deg,
+    rgba(240,192,96,.2) 345deg,
+    rgba(255,217,127,.7) 350deg,
+    rgba(255,240,180,1) 354deg,
+    rgba(255,255,230,1) 357deg,
+    rgba(255,240,180,1) 360deg,
+    transparent 360deg
+  );
+  animation:ledTravel 2.5s linear infinite;
+  z-index:0;
+}
+/* Halo diffus derrière le point LED */
 #mr-widget-glow-wrap::after{
-  content:'';position:absolute;inset:-4px;border-radius:20px;z-index:0;
-  background:conic-gradient(from 180deg,
-    transparent 0%,
-    rgba(240,192,96,.08) 5%,
-    rgba(255,217,127,.4) 15%,
-    rgba(255,240,180,.5) 22%,
-    rgba(255,217,127,.4) 30%,
-    rgba(240,192,96,.08) 40%,
-    transparent 50%,
-    transparent 100%);
-  animation:holoSpin 5s linear infinite;
-  filter:blur(4px);
+  content:'';
+  position:absolute;
+  width:260%;
+  height:260%;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(0deg);
+  background:conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 330deg,
+    rgba(240,192,96,.05) 335deg,
+    rgba(255,217,127,.3) 350deg,
+    rgba(255,240,180,.5) 357deg,
+    rgba(255,217,127,.3) 364deg,
+    transparent 370deg,
+    transparent 360deg
+  );
+  animation:ledTravel 2.5s linear infinite;
+  filter:blur(5px);
+  z-index:0;
 }
 
 /* Widget Mondial Relay — fond sombre, couleurs d'origine conservées */
