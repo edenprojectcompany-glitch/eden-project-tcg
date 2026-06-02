@@ -2633,63 +2633,19 @@ window.addEventListener('load', () => {
   // Codes réservés à la roue (miroir de WHEEL_ONLY_CODES backend)
   const WHEEL_ONLY_CODES_FRONT = { SHIP0:{minAmount:50}, BOOSTER:{minAmount:0}, FREE_DISPLAY:{minAmount:0} };
 
-  /* ── Helpers stockage (localStorage → sessionStorage → cookie) ── */
-  function _ckSet(k,v,d){try{const e=d?';expires='+new Date(Date.now()+d*864e5).toUTCString():'';document.cookie=encodeURIComponent(k)+'='+encodeURIComponent(v)+e+';path=/;samesite=lax';}catch{}}
-  function _ckGet(k){try{const m=document.cookie.match('(?:^|; )'+encodeURIComponent(k)+'=([^;]*)');return m?decodeURIComponent(m[1]):null;}catch{return null;}}
-  function _ckDel(k){try{document.cookie=encodeURIComponent(k)+'=;path=/;max-age=0';}catch{}}
-  function _read(key,sKey,cKey){
-    let v=null;
-    try{v=localStorage.getItem(key);}catch{}
-    if(!v||v==='[]'||v==='null') try{const s=sessionStorage.getItem(sKey);if(s&&s!=='[]'&&s!=='null')v=s;}catch{}
-    if(!v||v==='[]'||v==='null') try{const c=_ckGet(cKey);if(c&&c!=='[]'&&c!=='null')v=c;}catch{}
-    return v;
-  }
-  function _write(key,sKey,cKey,val,ckDays){
-    try{localStorage.setItem(key,val);}catch{}
-    try{sessionStorage.setItem(sKey,val);}catch{}
-    if(cKey){const s=val||'';if(s.length<3500)_ckSet(cKey,s,ckDays||30);else _ckDel(cKey);}
-  }
-  function _del(key,sKey,cKey){
-    try{localStorage.removeItem(key);}catch{}
-    try{sessionStorage.removeItem(sKey);}catch{}
-    if(cKey)_ckDel(cKey);
-  }
-
   /* ── Persistance panier ── */
   function saveCart(){
     const d=JSON.stringify(cart);
-    console.log('SC',cart.length,new Error().stack.split('\n')[2]);
     try{localStorage.setItem('edn_cart',d);}catch{}
     try{sessionStorage.setItem('edn_cart_ss',d);}catch{}
-    try{
-      const compact=cart.map(function(i){
-        const o={i:i.id,q:i.qty,up:i.unitPrice};
-        if(i.isCaseItem){o.ic=1;o.ck=i._caseKey;o.cq=i.caseQty;}
-        return o;
-      });
-      const cd=JSON.stringify(compact);
-      if(cd.length<3500)_ckSet('edn_cc',cd,30);else _ckDel('edn_cc');
-    }catch{}
   }
   function loadCart(){
-    let raw=null;
-    try{raw=localStorage.getItem('edn_cart');}catch{}
-    console.log('LCS',raw?raw.length:0);
-    if(!raw||raw==='[]') try{const s=sessionStorage.getItem('edn_cart_ss');if(s&&s!=='[]')raw=s;}catch{}
-    if(!raw||raw==='[]'){
-      try{
-        const cc=_ckGet('edn_cc');
-        if(cc&&cc!=='[]'){
-          const comp=JSON.parse(cc);
-          raw=JSON.stringify(comp.map(c=>{
-            const p=c.i===0?MYSTERY_BOX:products.find(x=>x.id===c.i);
-            if(!p||(c.i!==0&&p.price===null))return null;
-            return c.ic?{...p,_caseKey:c.ck,qty:c.q,unitPrice:c.up,isCaseItem:true,caseQty:c.cq}:{...p,qty:c.q,unitPrice:c.up};
-          }).filter(Boolean));
-        }
-      }catch{}
-    }
-    try{cart=(JSON.parse(raw||'[]')).filter(s=>{const found=products.find(p=>p.id===s.id&&p.price!==null);console.log('LC',s.id,typeof s.id,'found:',!!found,'pprice:',products.find(p=>p.id===s.id)?.price,'raw_len:',raw?.length);return s.id===0||!!found;});}catch(e){console.error('LC_ERR',e.message);cart=[];}
+    try{
+      const ls=localStorage.getItem('edn_cart');
+      const ss=sessionStorage.getItem('edn_cart_ss');
+      const raw=(ls&&ls!=='[]')?ls:((ss&&ss!=='[]')?ss:'[]');
+      cart=(JSON.parse(raw)).filter(s=>s.id===0||products.find(p=>p.id===s.id&&p.price!==null));
+    }catch{cart=[];}
   }
   // Sync panier entre onglets (ex : paiement Stripe nouvel onglet vide le panier)
   window.addEventListener('storage',e=>{
@@ -3706,28 +3662,33 @@ window.addEventListener('load', () => {
   document.getElementById('goCheckout').addEventListener('click',()=>{if(!cart.length)return;closeCart();go('checkout');});
 
   /* ══ AUTH ══ */
+  function _lsGet(k){try{return localStorage.getItem(k);}catch{return null;}}
+  function _ssGet(k){try{return sessionStorage.getItem(k);}catch{return null;}}
+  function _lsSet(k,v){try{localStorage.setItem(k,v);}catch{}}
+  function _ssSet(k,v){try{sessionStorage.setItem(k,v);}catch{}}
+  function _lsDel(k){try{localStorage.removeItem(k);}catch{}}
+  function _ssDel(k){try{sessionStorage.removeItem(k);}catch{}}
   function loadAuth(){
-    authToken=_read('edn_token','edn_token_ss','edn_tk');
-    const raw=_read('edn_user','edn_user_ss','edn_u');
-    try{authUser=JSON.parse(raw||'null');}catch{authUser=null;}
+    try{
+      authToken=_lsGet('edn_token')||_ssGet('edn_token_ss');
+      const raw=_lsGet('edn_user')||_ssGet('edn_user_ss');
+      authUser=JSON.parse(raw||'null');
+    }catch{authToken=null;authUser=null;}
     if(!authToken)authUser=null;
     if(authUser) updateAuthUI();
     updateReviewBtn();
   }
   function saveAuth(user,token){
     authUser=user;authToken=token;
-    const userJson=JSON.stringify(user);
-    _write('edn_token','edn_token_ss','edn_tk',token,30);
-    // Cookie user compact (juste les champs d'affichage)
-    const cu=JSON.stringify({id:user.id,name:user.name,email:user.email,loyalty:user.loyalty||0});
-    _write('edn_user','edn_user_ss','edn_u',userJson);
-    _ckSet('edn_u',cu,30);
+    const j=JSON.stringify(user);
+    _lsSet('edn_token',token);_lsSet('edn_user',j);
+    _ssSet('edn_token_ss',token);_ssSet('edn_user_ss',j);
     updateAuthUI(); updateReviewBtn();
   }
   function clearAuth(){
     authUser=null;authToken=null;
-    _del('edn_token','edn_token_ss','edn_tk');
-    _del('edn_user','edn_user_ss','edn_u');
+    _lsDel('edn_token');_lsDel('edn_user');
+    _ssDel('edn_token_ss');_ssDel('edn_user_ss');
     updateAuthUI(); updateReviewBtn();
   }
   function updateAuthUI(){
@@ -5052,12 +5013,10 @@ window.addEventListener('load', () => {
   gridObs.observe(document.getElementById('grid')||document.body,{childList:true,subtree:false});
 
   /* ══ INIT ══ */
-  try{loadAuth();}catch{}
-  try{loadCart();}catch{cart=[];}
-  try{_ckSet('_d1','lc:'+cart.length+',ls:'+(localStorage.getItem('edn_cart')||'').length,1/24);}catch{}
+  loadAuth();
+  loadCart();
   loadProductOverrides().then(()=>renderGrid('all'));
-  try{renderCart();}catch(e){try{_ckSet('_d2','rc_err:'+e.message,1/24);}catch{}}
-  try{_ckSet('_d3','badge:'+document.getElementById('cartCount').textContent+',cl:'+cart.length,1/24);}catch{}
+  renderCart();
   initJackpot();
   (()=>{
     let startPage='home';
