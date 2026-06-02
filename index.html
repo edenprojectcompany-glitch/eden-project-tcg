@@ -2558,11 +2558,7 @@ window.addEventListener('load', () => {
     BOOSTER:{pct:0,type:'info',msg:'🎁 Un booster sera joint à votre commande !'},
     FREE_DISPLAY:{pct:0,type:'info',msg:'🎁 Contactez-nous pour réclamer votre display gratuite !'},
   };
-  const AUTO_PROMOS = [
-    {min:500,pct:8,label:'-8% automatique (≥500€)'},
-    {min:300,pct:5,label:'-5% automatique (≥300€)'},
-    {min:150,pct:3,label:'-3% automatique (≥150€)'},
-  ];
+  const AUTO_PROMOS = [];
   const DEFAULT_WHEEL = [
     {label:'-5%  EDEN5',         prob:35,  code:'EDEN5',        color:'#5ec4ef'},
     {label:'-10% EDEN10',        prob:28,  code:'EDEN10',       color:'#b08fe8'},
@@ -2586,28 +2582,28 @@ window.addEventListener('load', () => {
   ];
 
   const products = [
-    {id:1, name:'CN151 Vol.3',           sub:'Pokémon CN · Gengar Edition',     price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'SCELLÉ',   urgent:false,img:'151c-vol3.png',    ebay:78, tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:55}],desc:'Collection 151 Vol.3 — Gengar Edition. 15 boosters/boîte · 5 cartes/booster · 1 holo garanti.'},
-    {id:2, name:'CN151 Vol.4',           sub:'Pokémon CN · Pikachu Jungle',     price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'SCELLÉ',   urgent:false,img:'151c-vol4.png',    ebay:76, tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:58}],desc:'Collection 151 Vol.4 — Pikachu Jungle Edition. 15 boosters/boîte · 5 cartes/booster.'},
-    {id:3, name:'CN151 Vol.1',           sub:'Pokémon CN · Journey Edition',    price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'SCELLÉ',   urgent:false,img:'151c-vol1.png',    ebay:70, tiers:[{q:10,p:65},{q:20,p:55},{q:60,p:55}],desc:'Collection 151 Vol.1 — la première vague iconique. 15 boosters/boîte · 5 cartes/booster.'},
-    {id:4, name:'CN151 Vol.2',           sub:'Pokémon CN · Hope Edition',       price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'SCELLÉ',   urgent:false,img:'151c-vol2.png',    ebay:72, tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:55}],desc:'Collection 151 Vol.2 — Psyduck en vedette. 15 boosters/boîte.'},
-    {id:5, name:'Gempack Vol.3',         sub:'Pokémon CN · Gengar Orange',      price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'',         urgent:false,img:'gem-pack-vol3.png',ebay:74, tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:55}],desc:'Gempack Vol.3 — Gengar Orange Edition. 18 boosters/boîte · 4 cartes holo · 1★ garanti.'},
-    {id:6, name:'Gempack Vol.2',         sub:'Pokémon CN · Sylveon Edition',    price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'',         urgent:false,img:'gem-pack-vol2.png',ebay:75, tiers:[{q:10,p:65},{q:20,p:60},{q:60,p:60}],desc:'Gempack Vol.2 — Sylveon aquarelle. 15 boosters/boîte · 4 cartes holo/booster.'},
+    {id:1, name:'CN151 Vol.3',           sub:'Pokémon CN · Gengar Edition',     price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'SCELLÉ',   urgent:false,img:'151c-vol3.png',    ebay:78, tiers:[{q:10,p:65},{q:10,p:60},{q:20,p:55}],desc:'Collection 151 Vol.3 — Gengar Edition. 15 boosters/boîte · 5 cartes/booster · 1 holo garanti.'},
+    {id:2, name:'CN151 Vol.4',           sub:'Pokémon CN · Pikachu Jungle',     price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'SCELLÉ',   urgent:false,img:'151c-vol4.png',    ebay:76, tiers:[{q:10,p:65},{q:10,p:60},{q:20,p:58}],desc:'Collection 151 Vol.4 — Pikachu Jungle Edition. 15 boosters/boîte · 5 cartes/booster.'},
+    {id:3, name:'CN151 Vol.1',           sub:'Pokémon CN · Journey Edition',    price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'SCELLÉ',   urgent:false,img:'151c-vol1.png',    ebay:70, tiers:[{q:10,p:65},{q:10,p:55},{q:20,p:55}],desc:'Collection 151 Vol.1 — la première vague iconique. 15 boosters/boîte · 5 cartes/booster.'},
+    {id:4, name:'CN151 Vol.2',           sub:'Pokémon CN · Hope Edition',       price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'SCELLÉ',   urgent:false,img:'151c-vol2.png',    ebay:72, tiers:[{q:10,p:65},{q:10,p:60},{q:20,p:55}],desc:'Collection 151 Vol.2 — Psyduck en vedette. 15 boosters/boîte.'},
+    {id:5, name:'Gempack Vol.3',         sub:'Pokémon CN · Gengar Orange',      price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'',         urgent:false,img:'gem-pack-vol3.png',ebay:74, tiers:[{q:10,p:65},{q:10,p:60},{q:20,p:55}],desc:'Gempack Vol.3 — Gengar Orange Edition. 18 boosters/boîte · 4 cartes holo · 1★ garanti.'},
+    {id:6, name:'Gempack Vol.2',         sub:'Pokémon CN · Sylveon Edition',    price:65,  tag:'Display CN',cat:'display',lang:'cn',rare:'',         urgent:false,img:'gem-pack-vol2.png',ebay:75, tiers:[{q:10,p:65},{q:10,p:60},{q:20,p:60}],desc:'Gempack Vol.2 — Sylveon aquarelle. 15 boosters/boîte · 4 cartes holo/booster.'},
     {id:7, name:'Gempack Vol.1',         sub:'Pokémon CN · Sprigatito Edition', price:null,tag:'Display CN',cat:'display',lang:'cn',rare:'',         urgent:false,img:'gem-pack-vol1.png',ebay:null,tiers:[{q:10,p:null}],desc:'Gempack Vol.1 — Sprigatito Edition. Prix sur demande.'},
-    {id:8, name:'Gempack Vol.4',         sub:'Pokémon CN · Ponyta Edition',     price:50,  tag:'Display CN',cat:'display',lang:'cn',rare:'',         urgent:false,img:'gem-pack-vol4.png',ebay:58, tiers:[{q:10,p:50},{q:20,p:45},{q:60,p:43}],desc:'Gempack Vol.4 — Ponyta pastel. 15 boosters/boîte · 4 cartes holo/booster.'},
-    {id:9, name:'Gempack Vol.5',         sub:'Pokémon CN · Sprigatito Violet',  price:50,  tag:'Display CN',cat:'display',lang:'cn',rare:'',         urgent:false,img:'gem-pack-vol5.png',ebay:58, tiers:[{q:10,p:50},{q:20,p:45},{q:60,p:43}],desc:'Gempack Vol.5 — Sprigatito Violet Edition. 15 boosters/boîte.'},
-    {id:10,name:'M2a — Méga Dream EX',  sub:'High Class Pack JP',              price:85,  tag:'Display JP',cat:'display',lang:'jp',rare:'HIGH CLASS',urgent:true, img:'mega-dream-ex-m2a.png', ebay:92, tiers:[{q:10,p:85},{q:20,p:80},{q:60,p:75}],desc:'M2a — Mega Dragonite, Mega Gengar, Mewtwo Rocket. 10 boosters · 10 cartes/booster · 1 SR garanti.'},
-    {id:11,name:'M2 — Méga Inferno X',  sub:'Display JP · 30 boosters',        price:110, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'inferno-x-m2.png',       ebay:115,tiers:[{q:6,p:110},{q:12,p:105},{q:36,p:99}],desc:'M2 — Mega Charizard X ex, Zacian, Toxtricity. 30 boosters · 5 cartes/booster.'},
-    {id:12,name:'M1L — Méga Brave',     sub:'Display JP · 30 boosters',        price:89,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'mega-brave-m1l.png',      ebay:110,tiers:[{q:6,p:89},{q:12,p:85},{q:36,p:79}],desc:'M1L — Mega Lucario ex, Wally, Lillie. Nouvelle rareté MUR. 30 boosters · 5 cartes.'},
-    {id:13,name:'M1s — Méga Symphonia', sub:'Display JP · 30 boosters',        price:80,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'mega-symphonia-m1s.png',   ebay:83, tiers:[{q:6,p:80},{q:12,p:75},{q:36,p:73}],desc:'M1s — Mega Gardevoir ex avec Acerola. 30 boosters · 5 cartes/booster.'},
-    {id:14,name:'M3 — Nihil Zero',      sub:'Display JP · 30 boosters',        price:80,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'munikis-zero-m3.png',      ebay:82, tiers:[{q:6,p:80},{q:12,p:75},{q:36,p:73}],desc:'M3 — Munikis Zero (Dragapult Mega). Artworks sombres très populaires.'},
-    {id:15,name:'SV8a — Terastal Fest', sub:'High Class Pack JP',              price:100, tag:'Display JP',cat:'display',lang:'jp',rare:'HIGH CLASS',urgent:false,img:'terastal-fest-sv8a.png',  ebay:105,tiers:[{q:10,p:100},{q:20,p:95},{q:60,p:90}],desc:'SV8a — Les 9 Évolitions d\'Eevee en Tera ex. God Pack possible. 10 boosters · 10 cartes.'},
-    {id:16,name:'SV9 — Battle Partners',sub:'Display JP · 30 boosters',        price:80,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'battle-partners-sv9.png',  ebay:82, tiers:[{q:6,p:80},{q:12,p:75},{q:36,p:73}],desc:'SV9 — Pikachu de Sacha, Squirtle de Misty. 30 boosters · 5 cartes/booster.'},
-    {id:17,name:'SV9a — Heat Wave Arena',sub:'Display JP · 30 boosters',       price:99,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'heat-wave-sv9a.png',       ebay:105,tiers:[{q:6,p:99},{q:12,p:95},{q:36,p:89}],desc:'SV9a — Ethan\'s Ho-Oh, Cynthia\'s Garchomp. 92 cartes · 29 secret rares.'},
-    {id:18,name:'SV10 — Glory Rocket',  sub:'Display JP · 30 boosters',        price:130, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',urgent:false,img:'glory-rocket-sv10.png',     ebay:142,tiers:[{q:6,p:130},{q:12,p:125},{q:36,p:120}],desc:'SV10 — Giovanni\'s Mewtwo ex SIR, Persian ex. 132 cartes dont 34 secret rares.'},
-    {id:19,name:'SV11b — Black Bolt',   sub:'Display JP · 20 boosters',        price:115, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',urgent:false,img:'black-bolt-sv11b.png',      ebay:118,tiers:[{q:6,p:115},{q:12,p:110},{q:36,p:99}],desc:'SV11b — Zekrom ex BWR, célébration Unova. 20 boosters · 7 cartes/booster.'},
-    {id:20,name:'SV11w — White Flare',  sub:'Display JP · 20 boosters',        price:110, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',urgent:false,img:'white-flare-sv11w.png',     ebay:112,tiers:[{q:6,p:110},{q:12,p:105},{q:36,p:99}],desc:'SV11w — Reshiram ex BWR. Pendant de Black Bolt. 20 boosters · 7 cartes/booster.'},
-    {id:21,name:'SV2a — Pokémon 151',   sub:'Display JP · 20 boosters',        price:299, tag:'Display JP',cat:'display',lang:'jp',rare:'RÉFÉRENCE',urgent:false,img:'pokemon-151-sv2a.png',      ebay:310,tiers:[{q:1,p:299},{q:12,p:295},{q:36,p:280}],desc:'Pokémon 151 JP (SV2a) — Charizard ex, Mewtwo ex, retour Kadabra. 165+ cartes.'},
-    {id:22,name:'M5 — Mega Abyss Eye', sub:'Display JP · 30 boosters',         price:120, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'abyss-eye-m5.png',         ebay:128,tiers:[{q:1,p:120},{q:12,p:110},{q:36,p:105}],desc:'M5 — Dragapult en Mega Évolution. Nouvelle rareté MUR. 30 boosters.'},
+    {id:8, name:'Gempack Vol.4',         sub:'Pokémon CN · Ponyta Edition',     price:50,  tag:'Display CN',cat:'display',lang:'cn',rare:'',         urgent:false,img:'gem-pack-vol4.png',ebay:58, tiers:[{q:10,p:50},{q:10,p:45},{q:20,p:43}],desc:'Gempack Vol.4 — Ponyta pastel. 15 boosters/boîte · 4 cartes holo/booster.'},
+    {id:9, name:'Gempack Vol.5',         sub:'Pokémon CN · Sprigatito Violet',  price:50,  tag:'Display CN',cat:'display',lang:'cn',rare:'',         urgent:false,img:'gem-pack-vol5.png',ebay:58, tiers:[{q:10,p:50},{q:10,p:45},{q:20,p:43}],desc:'Gempack Vol.5 — Sprigatito Violet Edition. 15 boosters/boîte.'},
+    {id:10,name:'M2a — Méga Dream EX',  sub:'High Class Pack JP',              price:85,  tag:'Display JP',cat:'display',lang:'jp',rare:'HIGH CLASS',urgent:true, img:'mega-dream-ex-m2a.png', ebay:92, tiers:[{q:10,p:85},{q:10,p:80},{q:20,p:75}],desc:'M2a — Mega Dragonite, Mega Gengar, Mewtwo Rocket. 10 boosters · 10 cartes/booster · 1 SR garanti.'},
+    {id:11,name:'M2 — Méga Inferno X',  sub:'Display JP · 30 boosters',        price:110, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'inferno-x-m2.png',       ebay:115,tiers:[{q:6,p:110},{q:6,p:105},{q:12,p:99}],desc:'M2 — Mega Charizard X ex, Zacian, Toxtricity. 30 boosters · 5 cartes/booster.'},
+    {id:12,name:'M1L — Méga Brave',     sub:'Display JP · 30 boosters',        price:89,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'mega-brave-m1l.png',      ebay:110,tiers:[{q:6,p:89},{q:6,p:85},{q:12,p:79}],desc:'M1L — Mega Lucario ex, Wally, Lillie. Nouvelle rareté MUR. 30 boosters · 5 cartes.'},
+    {id:13,name:'M1s — Méga Symphonia', sub:'Display JP · 30 boosters',        price:80,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'mega-symphonia-m1s.png',   ebay:83, tiers:[{q:6,p:80},{q:6,p:75},{q:12,p:73}],desc:'M1s — Mega Gardevoir ex avec Acerola. 30 boosters · 5 cartes/booster.'},
+    {id:14,name:'M3 — Nihil Zero',      sub:'Display JP · 30 boosters',        price:80,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'munikis-zero-m3.png',      ebay:82, tiers:[{q:6,p:80},{q:6,p:75},{q:12,p:73}],desc:'M3 — Munikis Zero (Dragapult Mega). Artworks sombres très populaires.'},
+    {id:15,name:'SV8a — Terastal Fest', sub:'High Class Pack JP',              price:100, tag:'Display JP',cat:'display',lang:'jp',rare:'HIGH CLASS',urgent:false,img:'terastal-fest-sv8a.png',  ebay:105,tiers:[{q:10,p:100},{q:10,p:95},{q:20,p:90}],desc:'SV8a — Les 9 Évolitions d\'Eevee en Tera ex. God Pack possible. 10 boosters · 10 cartes.'},
+    {id:16,name:'SV9 — Battle Partners',sub:'Display JP · 30 boosters',        price:80,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'battle-partners-sv9.png',  ebay:82, tiers:[{q:6,p:80},{q:6,p:75},{q:12,p:73}],desc:'SV9 — Pikachu de Sacha, Squirtle de Misty. 30 boosters · 5 cartes/booster.'},
+    {id:17,name:'SV9a — Heat Wave Arena',sub:'Display JP · 30 boosters',       price:99,  tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'heat-wave-sv9a.png',       ebay:105,tiers:[{q:6,p:99},{q:6,p:95},{q:12,p:89}],desc:'SV9a — Ethan\'s Ho-Oh, Cynthia\'s Garchomp. 92 cartes · 29 secret rares.'},
+    {id:18,name:'SV10 — Glory Rocket',  sub:'Display JP · 30 boosters',        price:130, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',urgent:false,img:'glory-rocket-sv10.png',     ebay:142,tiers:[{q:6,p:130},{q:6,p:125},{q:12,p:120}],desc:'SV10 — Giovanni\'s Mewtwo ex SIR, Persian ex. 132 cartes dont 34 secret rares.'},
+    {id:19,name:'SV11b — Black Bolt',   sub:'Display JP · 20 boosters',        price:115, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',urgent:false,img:'black-bolt-sv11b.png',      ebay:118,tiers:[{q:6,p:115},{q:6,p:110},{q:12,p:99}],desc:'SV11b — Zekrom ex BWR, célébration Unova. 20 boosters · 7 cartes/booster.'},
+    {id:20,name:'SV11w — White Flare',  sub:'Display JP · 20 boosters',        price:110, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',urgent:false,img:'white-flare-sv11w.png',     ebay:112,tiers:[{q:6,p:110},{q:6,p:105},{q:12,p:99}],desc:'SV11w — Reshiram ex BWR. Pendant de Black Bolt. 20 boosters · 7 cartes/booster.'},
+    {id:21,name:'SV2a — Pokémon 151',   sub:'Display JP · 20 boosters',        price:299, tag:'Display JP',cat:'display',lang:'jp',rare:'RÉFÉRENCE',urgent:false,img:'pokemon-151-sv2a.png',      ebay:310,tiers:[{q:12,p:299},{q:12,p:295},{q:36,p:280}],desc:'Pokémon 151 JP (SV2a) — Charizard ex, Mewtwo ex, retour Kadabra. 165+ cartes.'},
+    {id:22,name:'M5 — Mega Abyss Eye', sub:'Display JP · 30 boosters',         price:120, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'abyss-eye-m5.png',         ebay:128,tiers:[{q:12,p:120},{q:12,p:110},{q:36,p:105}],desc:'M5 — Dragapult en Mega Évolution. Nouvelle rareté MUR. 30 boosters.'},
   ];
 
   /* ── Mise à jour dynamique des compteurs de filtres ── */
@@ -3044,13 +3040,11 @@ window.addEventListener('load', () => {
       const prev = i>0 ? p.tiers[i-1] : null;
       let label;
       if(isLast){
-        // Dernier palier : partir du seuil précédent pour rendre le meilleur prix accessible
-        const bestStart = prev ? prev.q : t.q;
-        label=`${bestStart} boîtes et + · 🏆`;
+        label=`${t.q} boîtes et + · 🏆`;
       } else {
-        // Palier intermédiaire/premier : "start à (tiers[i].q - 1) boîtes"
         const start = prev ? prev.q : 1;
-        const end = t.q - 1;
+        const next = p.tiers[i+1];
+        const end = next ? next.q - 1 : t.q;
         label=`${start} à ${end} boîte${end>1?'s':''}`;
       }
       return `
@@ -3167,8 +3161,8 @@ window.addEventListener('load', () => {
     const caseProducts=CASE_CATALOG.map(c=>({...products.find(p=>p.id===c.id),_caseQty:c.qty})).filter(p=>p.id&&p.price!==null);
     grid.innerHTML=caseProducts.map(p=>{
       const caseQty=p._caseQty;
-      let tierPrice=p.tiers?p.tiers[0].p:p.price;
-      if(p.tiers) for(const t of p.tiers){if(caseQty>=t.q&&t.p!==null)tierPrice=t.p;}
+      const caseCatalogItem=CASE_CATALOG.find(c2=>c2.id===p.id);
+      let tierPrice=caseCatalogItem?.basePrice||(p.tiers?p.tiers[0].p:p.price);
       if(p.adminPrice!=null) tierPrice=p.adminPrice;
       const caseTotal=+(tierPrice*caseQty+CASE_SURCHARGE).toFixed(2);
       const baseTotal=+((p.tiers?p.tiers[0].p:p.price)*caseQty+CASE_SURCHARGE).toFixed(2);
