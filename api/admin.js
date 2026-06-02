@@ -63,11 +63,15 @@ module.exports = async (req, res) => {
         if (typeof data !== 'object' || Array.isArray(data)) {
           return res.status(400).json({ error: 'Format invalide' });
         }
-        const validated = {};
+        // Lire les prix existants pour merger (ne pas écraser les clés case_X)
+        const existing = await kv.get('admin:prices') || {};
+        const validated = { ...existing };
         for (const [k, v] of Object.entries(data)) {
           const price = parseFloat(v);
           if (!isNaN(price) && price >= 0 && price <= 10000) {
-            validated[String(parseInt(k))] = +price.toFixed(2);
+            // Préserver les clés "case_X" telles quelles, convertir les numériques
+            const key = k.startsWith('case_') ? k : String(parseInt(k));
+            if (key !== 'NaN') validated[key] = +price.toFixed(2);
           }
         }
         await kv.set('admin:prices', validated);
@@ -78,11 +82,15 @@ module.exports = async (req, res) => {
         if (typeof data !== 'object' || Array.isArray(data)) {
           return res.status(400).json({ error: 'Format invalide' });
         }
-        const validated = {};
+        // Lire les stocks existants pour merger (ne pas écraser les clés case_X)
+        const existing = await kv.get('admin:stocks') || {};
+        const validated = { ...existing };
         for (const [k, v] of Object.entries(data)) {
           const stock = parseInt(v);
           if (!isNaN(stock) && stock >= 0 && stock <= 100000) {
-            validated[String(parseInt(k))] = stock;
+            // Préserver les clés "case_X" telles quelles, convertir les numériques
+            const key = k.startsWith('case_') ? k : String(parseInt(k));
+            if (key !== 'NaN') validated[key] = stock;
           }
         }
         await kv.set('admin:stocks', validated);

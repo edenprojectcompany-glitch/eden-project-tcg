@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
       kv.get('admin:shipping'),
       kv.get('admin:graded'),
     ]);
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     return res.status(200).json({
       prices: prices || {},
       stocks: stocks || {},
