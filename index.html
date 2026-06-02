@@ -2633,18 +2633,55 @@ window.addEventListener('load', () => {
   // Codes réservés à la roue (miroir de WHEEL_ONLY_CODES backend)
   const WHEEL_ONLY_CODES_FRONT = { SHIP0:{minAmount:50}, BOOSTER:{minAmount:0}, FREE_DISPLAY:{minAmount:0} };
 
+  /* ── Helpers stockage (localStorage → sessionStorage → cookie) ── */
+  function _ckSet(k,v,d){try{const e=d?';expires='+new Date(Date.now()+d*864e5).toUTCString():'';document.cookie=encodeURIComponent(k)+'='+encodeURIComponent(v)+e+';path=/;samesite=lax';}catch{}}
+  function _ckGet(k){try{const m=document.cookie.match('(?:^|; )'+encodeURIComponent(k)+'=([^;]*)');return m?decodeURIComponent(m[1]):null;}catch{return null;}}
+  function _ckDel(k){try{document.cookie=encodeURIComponent(k)+'=;path=/;max-age=0';}catch{}}
+  function _read(key,sKey,cKey){
+    let v=null;
+    try{v=localStorage.getItem(key);}catch{}
+    if(!v||v==='[]'||v==='null') try{const s=sessionStorage.getItem(sKey);if(s&&s!=='[]'&&s!=='null')v=s;}catch{}
+    if(!v||v==='[]'||v==='null') try{const c=_ckGet(cKey);if(c&&c!=='[]'&&c!=='null')v=c;}catch{}
+    return v;
+  }
+  function _write(key,sKey,cKey,val,ckDays){
+    try{localStorage.setItem(key,val);}catch{}
+    try{sessionStorage.setItem(sKey,val);}catch{}
+    if(cKey){const s=val||'';if(s.length<3500)_ckSet(cKey,s,ckDays||30);else _ckDel(cKey);}
+  }
+  function _del(key,sKey,cKey){
+    try{localStorage.removeItem(key);}catch{}
+    try{sessionStorage.removeItem(sKey);}catch{}
+    if(cKey)_ckDel(cKey);
+  }
+
   /* ── Persistance panier ── */
   function saveCart(){
     const d=JSON.stringify(cart);
-    try{localStorage.setItem('edn_cart',d);}catch{}
-    try{sessionStorage.setItem('edn_cart_ss',d);}catch{}
+    // Cookie compact : juste les champs essentiels pour rester sous 3.5KB
+    let compact='[]';
+    try{compact=JSON.stringify(cart.map(i=>({i:i.id,q:i.qty,up:i.unitPrice,...(i.isCaseItem?{ic:1,ck:i._caseKey,cq:i.caseQty}:{})}})));}catch{}
+    _write('edn_cart','edn_cart_ss','edn_cc',d);
+    if(compact!==d)_ckSet('edn_cc',compact,30);
   }
   function loadCart(){
-    try{
-      const raw=localStorage.getItem('edn_cart')||sessionStorage.getItem('edn_cart_ss');
-      // Filtrer les articles invalides (produit supprimé du catalogue)
-      cart=(JSON.parse(raw||'[]')).filter(s=>s.id===0||products.find(p=>p.id===s.id&&p.price!==null));
-    }catch{cart=[];}
+    let raw=null;
+    try{raw=localStorage.getItem('edn_cart');}catch{}
+    if(!raw||raw==='[]') try{const s=sessionStorage.getItem('edn_cart_ss');if(s&&s!=='[]')raw=s;}catch{}
+    if(!raw||raw==='[]'){
+      try{
+        const cc=_ckGet('edn_cc');
+        if(cc&&cc!=='[]'){
+          const comp=JSON.parse(cc);
+          raw=JSON.stringify(comp.map(c=>{
+            const p=c.i===0?MYSTERY_BOX:products.find(x=>x.id===c.i);
+            if(!p||(c.i!==0&&p.price===null))return null;
+            return c.ic?{...p,_caseKey:c.ck,qty:c.q,unitPrice:c.up,isCaseItem:true,caseQty:c.cq}:{...p,qty:c.q,unitPrice:c.up};
+          }).filter(Boolean));
+        }
+      }catch{}
+    }
+    try{cart=(JSON.parse(raw||'[]')).filter(s=>s.id===0||products.find(p=>p.id===s.id&&p.price!==null));}catch{cart=[];}
   }
   // Sync panier entre onglets (ex : paiement Stripe nouvel onglet vide le panier)
   window.addEventListener('storage',e=>{
@@ -3662,24 +3699,27 @@ window.addEventListener('load', () => {
 
   /* ══ AUTH ══ */
   function loadAuth(){
-    try{
-      authToken=localStorage.getItem('edn_token')||sessionStorage.getItem('edn_token_ss');
-      const raw=localStorage.getItem('edn_user')||sessionStorage.getItem('edn_user_ss');
-      authUser=JSON.parse(raw||'null');
-    }catch(e){authToken=null;authUser=null;}
+    authToken=_read('edn_token','edn_token_ss','edn_tk');
+    const raw=_read('edn_user','edn_user_ss','edn_u');
+    try{authUser=JSON.parse(raw||'null');}catch{authUser=null;}
+    if(!authToken)authUser=null;
     if(authUser) updateAuthUI();
     updateReviewBtn();
   }
   function saveAuth(user,token){
     authUser=user;authToken=token;
-    try{localStorage.setItem('edn_token',token);localStorage.setItem('edn_user',JSON.stringify(user));}catch{}
-    try{sessionStorage.setItem('edn_token_ss',token);sessionStorage.setItem('edn_user_ss',JSON.stringify(user));}catch{}
+    const userJson=JSON.stringify(user);
+    _write('edn_token','edn_token_ss','edn_tk',token,30);
+    // Cookie user compact (juste les champs d'affichage)
+    const cu=JSON.stringify({id:user.id,name:user.name,email:user.email,loyalty:user.loyalty||0});
+    _write('edn_user','edn_user_ss','edn_u',userJson);
+    _ckSet('edn_u',cu,30);
     updateAuthUI(); updateReviewBtn();
   }
   function clearAuth(){
     authUser=null;authToken=null;
-    try{localStorage.removeItem('edn_token');localStorage.removeItem('edn_user');}catch{}
-    try{sessionStorage.removeItem('edn_token_ss');sessionStorage.removeItem('edn_user_ss');}catch{}
+    _del('edn_token','edn_token_ss','edn_tk');
+    _del('edn_user','edn_user_ss','edn_u');
     updateAuthUI(); updateReviewBtn();
   }
   function updateAuthUI(){
