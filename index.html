@@ -1803,7 +1803,7 @@ loadAndRenderReviews();
             </div>
             <span id="mr-point-addr" style="color:var(--text-dim);padding-left:21px;display:block;"></span>
           </div>
-          <div id="Zone_Widget" style="border-radius:12px;overflow:hidden;border:1px solid var(--glass-border);"></div>
+          <div id="Zone_Widget" style="border-radius:12px;overflow:hidden;border:1px solid rgba(127,217,255,.4);box-shadow:0 0 0 1px rgba(127,217,255,.15),0 0 18px rgba(127,217,255,.12);transition:box-shadow .3s;"></div>
           <input type="hidden" id="Retour_Widget">
         </div>
       </div>
@@ -1821,7 +1821,7 @@ loadAndRenderReviews();
         <div class="co-line grand"><span>Total</span><span id="coTotal">0 €</span></div>
         <button class="btn-primary" id="payBtn" style="width:100%;margin-top:18px">💳 Payer par carte bancaire</button>
         <div style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:8px">TVA non applicable, art. 293 B du CGI</div>
-        <button class="btn-ghost" id="paypalBtn" style="width:100%;margin-top:10px">🅿 Payer avec PayPal</button>
+        <button class="btn-ghost" id="paypalBtn" style="width:100%;margin-top:10px;display:none">🅿 Payer avec PayPal</button>
         <div id="payErrorMsg" style="display:none;margin-top:12px;padding:10px 13px;border-radius:9px;font-size:12px;background:rgba(255,122,122,.1);border:1px solid rgba(255,122,122,.3);color:var(--danger)"></div>
         <!-- Trust signals -->
         <div style="margin-top:18px;padding:14px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);display:flex;flex-direction:column;gap:8px">
@@ -2689,7 +2689,14 @@ window.addEventListener('load', () => {
       if(!document.hidden) requestAnimationFrame(draw);
     }
 
-    document.addEventListener('visibilitychange',()=>{if(!document.hidden) draw();});
+    document.addEventListener('visibilitychange',()=>{
+      if(!document.hidden){
+        draw();
+        // Reset bouton Stripe si l'utilisateur revient de la page de paiement
+        const pb=document.getElementById('payBtn');
+        if(pb&&pb.disabled){pb.textContent='💳 Payer par carte bancaire';pb.disabled=false;}
+      }
+    });
     window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
     window.addEventListener('touchmove',e=>{if(e.touches[0]){mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;}},{passive:true});
     window.addEventListener('mouseleave',()=>{mouse.x=-9999;mouse.y=-9999;});
