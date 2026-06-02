@@ -1258,10 +1258,15 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   /* Grilles produits */
   .grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
   .case-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
-  .case-body { padding: 12px 14px 14px !important; }
-  .case-name { font-size: 14px !important; }
-  .case-sub { font-size: 11px !important; margin-bottom: 8px !important; }
-  .case-price { font-size: 15px !important; }
+  .case-body { padding: 10px 12px 14px !important; }
+  .case-name { font-size: 13px !important; }
+  .case-sub { font-size: 10px !important; margin-bottom: 6px !important; }
+  .case-qty { font-size: 9px !important; margin-bottom: 4px !important; }
+  .case-foot { flex-direction: column !important; align-items: center !important; gap: 8px !important; }
+  .case-foot > div:first-child { text-align: center !important; width: 100% !important; }
+  .case-price { font-size: 16px !important; }
+  .case-save { margin-top: 3px !important; font-size: 10px !important; }
+  .case-foot .card-qty { width: 100% !important; justify-content: center !important; }
   .graded-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
   .help-ship-grid { grid-template-columns: 1fr; gap: 16px; }
   .news-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
