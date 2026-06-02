@@ -3877,8 +3877,15 @@ window.addEventListener('load', () => {
       const data=await res.json();
       if(!res.ok) throw new Error(data.error||'Erreur serveur');
       saveAuth(data.user,data.token);
-      if(isReg){ setTimeout(showWelcomePopup, 350); }
-      else { go('dashboard'); }
+      if(isReg){
+        // Inscription : montrer message "vérifie ton email" au lieu du welcome popup direct
+        go('dashboard');
+        setTimeout(()=>{
+          const cd=document.getElementById('wheelCooldown');
+          const prizeLabel=document.getElementById('prizeLabel');
+          if(prizeLabel) prizeLabel.innerHTML='📧 <strong>Vérifie ton email !</strong><br><span style="font-size:13px;color:var(--text-dim)">Un email de confirmation t\'a été envoyé à '+data.user.email+'. Clique sur le lien pour activer ton compte et débloquer ton code WELCOME10 🎁</span>';
+        },400);
+      } else { go('dashboard'); }
     }catch(err){
       msg.className='auth-msg error'; msg.textContent=err.message; msg.style.display='block';
     }finally{btn.disabled=false;btn.textContent=isReg?'Créer mon compte':'Se connecter';}
@@ -3947,6 +3954,31 @@ window.addEventListener('load', () => {
     sessionStorage.setItem('eden_reset_token',token);
     history.replaceState({},'',location.pathname);
     go('reset-pwd');
+  })();
+
+  // Vérification email depuis le lien (?verify_token=TOKEN)
+  (function checkVerifyToken(){
+    const p=new URLSearchParams(location.search);
+    const token=p.get('verify_token');
+    if(!token) return;
+    history.replaceState({},'',location.pathname);
+    fetch('/api/verify-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})})
+      .then(r=>r.json())
+      .then(data=>{
+        if(data.ok){
+          // Email vérifié — mise à jour du compte local et popup welcome
+          if(authUser){authUser.emailVerified=true;saveAuth(authUser,authToken);}
+          showWelcomePopup();
+        } else {
+          // Token invalide ou expiré
+          go('auth');
+          setTimeout(()=>{
+            const msg=document.getElementById('authMsg');
+            if(msg){msg.className='auth-msg error';msg.textContent=data.error||'Lien invalide ou expiré.';msg.style.display='block';}
+          },300);
+        }
+      })
+      .catch(()=>{});
   })();
 
   /* ══ VIP TIER ══ */

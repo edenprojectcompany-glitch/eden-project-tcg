@@ -95,6 +95,10 @@ module.exports = async (req, res) => {
       if (existingOrders > 0) {
         return res.status(403).json({ error: `Le code ${code} est réservé à votre première commande` });
       }
+      // Email doit être vérifié (emailVerified undefined = ancien compte, toujours autorisé)
+      if (verifiedUser && verifiedUser.emailVerified === false) {
+        return res.status(403).json({ error: 'Confirmez votre adresse email pour utiliser ce code. Vérifiez votre boîte mail.' });
+      }
     }
 
     // Palier groupé par langue : les produits CN s'additionnent entre eux, JP entre eux
