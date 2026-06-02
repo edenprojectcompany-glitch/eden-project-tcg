@@ -365,19 +365,30 @@ tr:hover td{background:rgba(255,255,255,.015)}
 const PAGE_LABELS={home:'🏠 Accueil',catalog:'🛍️ Catalogue',case:'📦 Case',checkout:'🛒 Checkout',dashboard:'👤 Mon compte',graded:'🏅 Gradées',news:'📰 News',help:'❓ Aide'};
 let _code='', _orders=[], _liveTimer=null, _adminData=null;
 
+/* Prix de référence = tier[0].p de lib/prices.js — SOURCE DE VÉRITÉ */
 const PRODUCTS=[
-  {id:1,name:'CN151 Vol.3',lang:'cn',price:49},{id:2,name:'CN151 Vol.4',lang:'cn',price:65},
-  {id:3,name:'CN151 Vol.1',lang:'cn',price:45},{id:4,name:'CN151 Vol.2',lang:'cn',price:49},
-  {id:5,name:'Gempack Vol.3',lang:'cn',price:39},{id:6,name:'Gempack Vol.2',lang:'cn',price:35},
-  {id:7,name:'Gempack Vol.1',lang:'cn',price:null},{id:8,name:'Gempack Vol.4',lang:'cn',price:42},
-  {id:9,name:'Gempack Vol.5',lang:'cn',price:45},
-  {id:10,name:'M2a — Méga Dream EX',lang:'jp',price:85},{id:11,name:'M2 — Méga Inferno X',lang:'jp',price:90},
-  {id:12,name:'M1L — Méga Brave',lang:'jp',price:75},{id:13,name:'M1s — Méga Symphonia',lang:'jp',price:80},
-  {id:14,name:'M3 — Nihil Zero',lang:'jp',price:95},{id:15,name:'SV8a — Terastal Festival',lang:'jp',price:85},
-  {id:16,name:'SV9 — Battle Partners',lang:'jp',price:90},{id:17,name:'SV9a — Heat Wave Arena',lang:'jp',price:88},
-  {id:18,name:'SV10 — Glory Team Rocket',lang:'jp',price:92},{id:19,name:'SV11b — Black Bolt',lang:'jp',price:95},
-  {id:20,name:'SV11w — White Flare',lang:'jp',price:95},{id:21,name:'SV2a — Pokémon 151',lang:'jp',price:299},
-  {id:22,name:'M5 — Mega Abyss Eye',lang:'jp',price:110},
+  {id:1, name:'CN151 Vol.3',            lang:'cn',price:65},
+  {id:2, name:'CN151 Vol.4',            lang:'cn',price:65},
+  {id:3, name:'CN151 Vol.1',            lang:'cn',price:65},
+  {id:4, name:'CN151 Vol.2',            lang:'cn',price:65},
+  {id:5, name:'Gempack Vol.3',          lang:'cn',price:65},
+  {id:6, name:'Gempack Vol.2',          lang:'cn',price:65},
+  {id:7, name:'Gempack Vol.1',          lang:'cn',price:null},
+  {id:8, name:'Gempack Vol.4',          lang:'cn',price:50},
+  {id:9, name:'Gempack Vol.5',          lang:'cn',price:50},
+  {id:10,name:'M2a — Méga Dream EX',   lang:'jp',price:85},
+  {id:11,name:'M2 — Méga Inferno X',   lang:'jp',price:110},
+  {id:12,name:'M1L — Méga Brave',      lang:'jp',price:89},
+  {id:13,name:'M1s — Méga Symphonia',  lang:'jp',price:80},
+  {id:14,name:'M3 — Nihil Zero',       lang:'jp',price:80},
+  {id:15,name:'SV8a — Terastal Festival',lang:'jp',price:100},
+  {id:16,name:'SV9 — Battle Partners', lang:'jp',price:80},
+  {id:17,name:'SV9a — Heat Wave Arena',lang:'jp',price:99},
+  {id:18,name:'SV10 — Glory Team Rocket',lang:'jp',price:130},
+  {id:19,name:'SV11b — Black Bolt',    lang:'jp',price:115},
+  {id:20,name:'SV11w — White Flare',   lang:'jp',price:110},
+  {id:21,name:'SV2a — Pokémon 151',   lang:'jp',price:299},
+  {id:22,name:'M5 — Mega Abyss Eye',  lang:'jp',price:120},
 ];
 
 /* Cases — expédition directe Asie, pas de stock */
@@ -634,18 +645,24 @@ function buildProduits(prices,stocks){
   </tr>`).join('');
 }
 document.getElementById('resetAllBtn').addEventListener('click',async()=>{
-  if(!confirm('Réinitialiser TOUS les prix, stocks et flash sales aux valeurs par défaut ? Cette action est irréversible.')) return;
+  if(!confirm('Restaurer TOUS les prix aux valeurs correctes (tableau admin) et supprimer les flash sales ?')) return;
   const msg=document.getElementById('priceMsg');
-  msg.style.color='var(--dim)';msg.textContent='Réinitialisation en cours…';
+  msg.style.color='var(--dim)';msg.textContent='Restauration en cours…';
   try{
-    // Vider complètement prices, stocks et flashsale dans KV
+    // 1. Construire les prix corrects depuis le tableau PRODUCTS de l'admin
+    const correctPrices={};
+    PRODUCTS.forEach(p=>{if(p.price!==null)correctPrices[p.id]=p.price;});
+    // 2. Reset complet puis sauvegarder les prix corrects
     await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_prices',data:{__reset:true}})});
-    await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_stocks',data:{__reset:true}})});
+    // KV vide = produits utilisent les prix statiques de index.html (= lib/prices.js)
+    // Pas besoin de ré-enregistrer — les tiers de index.html sont la source
+    // 3. Vider les flash sales et stocks erronés
     await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_flashsale',data:{}})});
-    // Recharger les données
+    await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_stocks',data:{__reset:true}})});
+    // 4. Recharger
     await loadAdminData();
-    msg.style.color='var(--success)';msg.textContent='✓ Tout réinitialisé aux prix par défaut';
-  }catch{msg.style.color='var(--danger)';msg.textContent='Erreur lors de la réinitialisation';}
+    msg.style.color='var(--success)';msg.textContent='✓ Prix restaurés aux valeurs correctes, flash sales supprimées';
+  }catch{msg.style.color='var(--danger)';msg.textContent='Erreur lors de la restauration';}
   setTimeout(()=>msg.textContent='',4000);
 });
 
