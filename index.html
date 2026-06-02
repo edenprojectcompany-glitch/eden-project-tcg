@@ -554,10 +554,10 @@ h1 span{display:block}
   font-family:'Manrope',sans-serif;font-size:11px;font-weight:600;color:var(--text-dim)}
 /* Halo Mondial Relay */
 @keyframes mrGlowPulse{
-  0%,100%{box-shadow:0 0 8px rgba(127,217,255,.2),0 0 24px rgba(127,217,255,.08),0 0 0 0 rgba(240,192,96,.15)}
-  50%{box-shadow:0 0 16px rgba(127,217,255,.35),0 0 40px rgba(127,217,255,.15),0 0 0 4px rgba(240,192,96,.08)}
+  0%,100%{box-shadow:0 0 8px rgba(240,192,96,.3),0 0 24px rgba(240,192,96,.12),0 0 40px rgba(240,192,96,.06)}
+  50%{box-shadow:0 0 16px rgba(240,192,96,.55),0 0 36px rgba(240,192,96,.22),0 0 60px rgba(240,192,96,.1),0 0 0 3px rgba(240,192,96,.08)}
 }
-#mr-widget-glow-wrap{box-shadow:0 0 8px rgba(127,217,255,.2),0 0 24px rgba(127,217,255,.08)}
+#mr-widget-glow-wrap{box-shadow:0 0 8px rgba(240,192,96,.3),0 0 24px rgba(240,192,96,.12)}
 
 /* Bouton paiement Stripe — thème site */
 #payBtn{
@@ -1822,8 +1822,8 @@ loadAndRenderReviews();
             </div>
             <span id="mr-point-addr" style="color:var(--text-dim);padding-left:21px;display:block;"></span>
           </div>
-          <div id="mr-widget-glow-wrap" style="position:relative;border-radius:14px;padding:2px;background:linear-gradient(135deg,rgba(127,217,255,.25),rgba(201,168,255,.15),rgba(127,217,255,.25));animation:mrGlowPulse 3s ease-in-out infinite;">
-            <div id="Zone_Widget" style="border-radius:12px;overflow:hidden;filter:invert(1) hue-rotate(180deg) brightness(.85) saturate(.9);"></div>
+          <div id="mr-widget-glow-wrap" style="position:relative;border-radius:14px;padding:2px;background:linear-gradient(135deg,rgba(240,192,96,.35),rgba(255,217,127,.2),rgba(240,192,96,.35));animation:mrGlowPulse 3s ease-in-out infinite;">
+            <div id="Zone_Widget" style="border-radius:12px;overflow:hidden;filter:invert(1) brightness(0.88);"></div>
           </div>
           <input type="hidden" id="Retour_Widget">
         </div>
@@ -3061,14 +3061,11 @@ window.addEventListener('load', () => {
             </div>
             ${caseOutOfStock
               ?`<button class="add-btn btn-soon" disabled>Bientôt</button>`
-              :`<div class="card-qty" id="cqc-case-${p.id}" style="display:none">
-                  <button class="cq-btn cq-minus" onclick="event.stopPropagation();(function(){var k='case_${p.id}';var it=cart.find(c=>c._caseKey===k);if(it){changeCaseQty(k,-1);}else{document.getElementById('cqc-case-${p.id}').style.display='none';document.getElementById('cadd-${p.id}').style.display='flex';}})()">−</button>
-                  <input class="cq-input" id="cqn-case-${p.id}" type="number" min="1" max="50" value="1" onchange="event.stopPropagation();(function(){var k='case_${p.id}';var it=cart.find(c=>c._caseKey===k);if(it){setCaseQty(k,document.getElementById('cqn-case-${p.id}').value);}})()">
-                  <button class="cq-btn cq-plus" onclick="event.stopPropagation();(function(){var k='case_${p.id}';addCaseToCart(${p.id},${caseQty},${caseTotal});document.getElementById('cqn-case-${p.id}').value=(cart.find(c=>c._caseKey===k)||{qty:1}).qty;})()">+</button>
-                </div>
-                <button class="add-btn" id="cadd-${p.id}" onclick="event.stopPropagation();addCaseToCart(${p.id},${caseQty},${caseTotal});document.getElementById('cadd-${p.id}').style.display='none';document.getElementById('cqc-case-${p.id}').style.display='flex';document.getElementById('cqn-case-${p.id}').value=1;" aria-label="Ajouter">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                </button>`
+              :`<div class="card-qty" id="cqc-case-${p.id}">
+                  <button class="cq-btn cq-minus" onclick="event.stopPropagation();changeCaseQtyCard('case_${p.id}',-1,${p.id},${caseQty},${caseTotal})">−</button>
+                  <input class="cq-input" id="cqn-case-${p.id}" type="number" min="0" max="50" value="0" onchange="event.stopPropagation();setCaseQtyCard('case_${p.id}',this.value,${p.id},${caseQty},${caseTotal})">
+                  <button class="cq-btn cq-plus" onclick="event.stopPropagation();changeCaseQtyCard('case_${p.id}',1,${p.id},${caseQty},${caseTotal})">+</button>
+                </div>`
             }
           </div>
         </div>
@@ -3287,8 +3284,15 @@ window.addEventListener('load', () => {
   }
   /* ── Contrôles quantité sur les cartes catalogue ── */
   function updateCardQtys(){
+    // Synchroniser les inputs des cartes cases
+    CASE_CATALOG.forEach(c=>{
+      const key='case_'+c.id;
+      const caseItem=cart.find(x=>x._caseKey===key);
+      const cqInput=document.getElementById('cqn-case-'+c.id);
+      if(cqInput&&document.activeElement!==cqInput) cqInput.value=caseItem?caseItem.qty:0;
+    });
     products.forEach(p=>{
-      const item=cart.find(c=>c.id===p.id);
+      const item=cart.find(c=>c.id===p.id&&!c.isCaseItem);
       const qty=item?item.qty:0;
       const minus=document.querySelector(`#cqc-${p.id} .cq-minus`);
       const input=document.getElementById(`cqn-${p.id}`);
@@ -3351,6 +3355,31 @@ window.addEventListener('load', () => {
   };
   window.removeFromCart=function(id){cart=cart.filter(c=>c.id!==id);renderCart();};
   /* ══ CASE CART ══ */
+  window.removeCaseItem=function(key){cart=cart.filter(c=>c._caseKey!==key);renderCart();};
+
+  window.changeCaseQtyCard=function(key,delta,productId,caseQty,caseTotal){
+    const input=document.getElementById('cqn-case-'+productId);
+    const cur=parseInt(input?.value)||0;
+    const nv=Math.max(0,cur+delta);
+    if(input) input.value=nv;
+    if(nv===0){cart=cart.filter(c=>c._caseKey!==key);renderCart();}
+    else{
+      const it=cart.find(c=>c._caseKey===key);
+      if(it){setCaseQty(key,nv);}
+      else{addCaseToCart(productId,caseQty,caseTotal);}
+    }
+  };
+  window.setCaseQtyCard=function(key,val,productId,caseQty,caseTotal){
+    const v=parseInt(val)||0;
+    const input=document.getElementById('cqn-case-'+productId);
+    if(v===0){cart=cart.filter(c=>c._caseKey!==key);renderCart();if(input)input.value=0;}
+    else{
+      const it=cart.find(c=>c._caseKey===key);
+      if(it){setCaseQty(key,v);}
+      else{addCaseToCart(productId,caseQty,caseTotal);if(v>1)setCaseQty(key,v);}
+    }
+  };
+
   window.addCaseToCart=function(productId,caseQty,caseTotal){
     const p=products.find(x=>x.id===productId); if(!p||p.price===null) return;
     const key='case_'+productId;
@@ -3446,7 +3475,7 @@ window.addEventListener('load', () => {
               <button onclick="changeCaseQty('${safeKey}',1)">+</button>
             </div>
           </div>
-          <button class="cart-rm" onclick="cart=cart.filter(c=>c._caseKey!=='${safeKey}');renderCart();" aria-label="Retirer">
+          <button class="cart-rm" onclick="removeCaseItem('${safeKey}')" aria-label="Retirer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
           </button>
         </div>`;
