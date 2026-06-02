@@ -3207,6 +3207,7 @@ window.addEventListener('load', () => {
   // Expose pour debug + inline onclick
   window.addToCart = addToCart;
   window.renderCases = renderCases;
+  window.openModal = openModal;
   window.debugCases = function() {
     const cc = CASE_CATALOG.map(c=>({...products.find(p=>p.id===c.id),_caseQty:c.qty}));
     const filtered = cc.filter(p=>p.id&&p.price!==null);
