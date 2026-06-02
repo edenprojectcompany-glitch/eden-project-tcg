@@ -2885,6 +2885,7 @@ window.addEventListener('load', () => {
   function go(page) {
     if(!PAGES.includes(page)) return;
     _currentPage=page; pingVisitor(page);
+    try{if(!['checkout','confirm','reset-pwd'].includes(page))sessionStorage.setItem('eden_page',page);}catch{}
     const cur = document.querySelector('.page.active');
     const nxt = document.getElementById('page-'+page);
     if(!nxt||cur===nxt) return;
@@ -5007,7 +5008,17 @@ window.addEventListener('load', () => {
   loadProductOverrides().then(()=>renderGrid('all'));
   renderCart();
   initJackpot();
-  go('home');
+  (()=>{
+    let startPage='home';
+    try{
+      const saved=sessionStorage.getItem('eden_page');
+      if(saved&&PAGES.includes(saved)&&!['checkout','confirm','reset-pwd'].includes(saved)){
+        if(saved==='dashboard'&&!authUser) startPage='home';
+        else startPage=saved;
+      }
+    }catch{}
+    go(startPage);
+  })();
   // Hero tilt via GSAP
   if(hasGSAP){
     const heroCard=document.getElementById('heroCard');
