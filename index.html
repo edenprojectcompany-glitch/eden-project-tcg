@@ -4391,8 +4391,8 @@ window.addEventListener('load', () => {
   let adminUnlocked=false;
   function openAdmin(){window.open('/admin','_blank');}
   function closeAdmin(){}
-  document.getElementById('adminClose').onclick=closeAdmin;
-  document.getElementById('adminOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('adminOverlay'))closeAdmin();});
+  if(document.getElementById('adminClose')) document.getElementById('adminClose').onclick=closeAdmin;
+  document.getElementById('adminOverlay')?.addEventListener('click',e=>{if(e.target===document.getElementById('adminOverlay'))closeAdmin();});
   document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openAdmin();}});
   let adminClicks=0,adminTimer;
   document.getElementById('adminHint')?.addEventListener('click',()=>{
@@ -4400,7 +4400,7 @@ window.addEventListener('load', () => {
     adminTimer=setTimeout(()=>adminClicks=0,700);
     if(adminClicks>=3){adminClicks=0;openAdmin();}
   });
-  document.getElementById('adminUnlockBtn').addEventListener('click',async()=>{
+  document.getElementById('adminUnlockBtn')?.addEventListener('click',async()=>{
     const code=document.getElementById('adminCodeInput').value;
     const msgEl=document.getElementById('adminLockMsg');
     try{
@@ -4581,8 +4581,8 @@ window.addEventListener('load', () => {
 
   /* ══ CHARGEMENT AUTO AU DÉVERROUILLAGE ══ */
   // Charger les commandes dès que l'admin se déverrouille
-  const _origAdminUnlock=document.getElementById('adminUnlockBtn').onclick;
-  document.getElementById('adminUnlockBtn').addEventListener('click',()=>{
+  const _origAdminUnlock=document.getElementById('adminUnlockBtn')?.onclick;
+  document.getElementById('adminUnlockBtn')?.addEventListener('click',()=>{
     setTimeout(()=>{if(document.getElementById('atab-commandes')?.classList.contains('active')) loadAdminOrders();},600);
   });
   function buildAdminProducts(prices,stocks){
@@ -5013,10 +5013,10 @@ window.addEventListener('load', () => {
   gridObs.observe(document.getElementById('grid')||document.body,{childList:true,subtree:false});
 
   /* ══ INIT ══ */
-  try{loadAuth();}catch(e){sessionStorage.setItem('_ie',e?.message||'loadAuth');}
-  try{loadCart();}catch(e){cart=[];sessionStorage.setItem('_ie',e?.message||'loadCart');}
+  try{loadAuth();}catch{}
+  try{loadCart();}catch{cart=[];}
   loadProductOverrides().then(()=>renderGrid('all'));
-  try{renderCart();}catch(e){sessionStorage.setItem('_ie',e?.message||'renderCart');}
+  renderCart();
   initJackpot();
   (()=>{
     let startPage='home';
