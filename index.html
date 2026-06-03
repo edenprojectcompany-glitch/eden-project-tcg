@@ -2051,6 +2051,8 @@ loadAndRenderReviews();
                 <input id="coAddr_city" type="text" placeholder="Ville *" maxlength="60" autocomplete="address-level2"
                   style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
               </div>
+              <input id="coAddr_tel" type="tel" placeholder="Téléphone *" maxlength="15" inputmode="tel" autocomplete="tel"
+                style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
             </div>
             <div id="coAddr_err" style="display:none;margin-top:8px;font-size:12px;color:var(--danger)"></div>
           </div>
@@ -4830,6 +4832,7 @@ window.addEventListener('load', () => {
       line2: document.getElementById('coAddr_line2')?.value.trim() || '',
       postal_code: document.getElementById('coAddr_cp')?.value.trim()   || '',
       city:  document.getElementById('coAddr_city')?.value.trim()  || '',
+      tel:   document.getElementById('coAddr_tel')?.value.trim()   || '',
       country: 'FR',
     };
   }
@@ -4837,7 +4840,7 @@ window.addEventListener('load', () => {
   function validateColissimoAddress(){
     const a = getColissimoAddress();
     const errEl = document.getElementById('coAddr_err');
-    if(!a.name || !a.line1 || !a.postal_code || !a.city){
+    if(!a.name || !a.line1 || !a.postal_code || !a.city || !a.tel){
       if(errEl){ errEl.textContent='Veuillez remplir tous les champs obligatoires (*)'; errEl.style.display='block'; }
       return false;
     }

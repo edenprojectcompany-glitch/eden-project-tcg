@@ -192,8 +192,8 @@ module.exports = async (req, res) => {
 
         // Format exact ColiShip FMT :
         // Séparateur ; | Délimiteur vide | CRLF Windows | Poids en Grammes
-        // Colonnes : Nom ; Adresse1 ; CP ; Commune ; Pays ; Poids(g) ; Email
-        // L'email est obligatoire pour les notifications de livraison Colissimo
+        // Colonnes : Nom ; Adresse1 ; CP ; Commune ; Pays ; Poids(g) ; Email ; Téléphone
+        // Email ou téléphone obligatoire pour les notifications de livraison Colissimo
         // Pas de ligne d'entête (ColiShip lit le FMT pour connaître l'ordre)
         const SEP = ';';
         const CRLF = '\r\n';
@@ -215,7 +215,8 @@ module.exports = async (req, res) => {
             clean(a.city).toUpperCase(),
             clean(a.country || 'FR').toUpperCase(),
             poids,
-            clean(o.customerEmail || ''),  // Email obligatoire pour notifications Colissimo
+            clean(o.customerEmail || ''),    // Email pour notifications Colissimo
+            clean(a.tel || ''),             // Téléphone pour notifications Colissimo
           ].join(SEP);
         });
 
