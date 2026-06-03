@@ -226,8 +226,7 @@ module.exports = async (req, res) => {
             clean(a.email || o.customerEmail || ''),   // Mail (formulaire ou compte)
             poidsKg,                                 // Poids en kg
             '',                                      // Code point retrait
-            contreSignature,                         // Contre signature O/N
-            '',                                      // Assurance
+            contreSignature,                         // Livraison avec signature O/N
           ].join(SEP);
         });
 
