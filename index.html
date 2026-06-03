@@ -3319,7 +3319,7 @@ window.addEventListener('load', () => {
       closeMobileMenu(); updateNavLinks(page);
       if(page==='catalog'){renderGrid(currentFilter);startFlashTimers();loadProductOverrides().then(()=>{renderGrid(currentFilter);startFlashTimers();});}
       if(page==='case') renderCases();
-      if(page==='checkout'){renderCheckout();document.getElementById('coStep3Num')?.classList.remove('active');}
+      if(page==='checkout'){loadProductOverrides().then(renderCheckout);document.getElementById('coStep3Num')?.classList.remove('active');}
       if(page==='graded') setTimeout(initHoloCards,80);
       if(page==='dashboard') renderDashboard();
       if(page==='home') initJackpot();
@@ -5356,7 +5356,7 @@ window.addEventListener('load', () => {
 
   function applyShippingConfig(cfg){
     const opts=document.querySelectorAll('.ship-opt');
-    const keys=['mr','dom','exp'];
+    const keys=['mr','colissimo','express'];
     const vals=cfg.freeForAll?[0,0,0]:[cfg.relay,cfg.colissimo,cfg.express];
     opts.forEach(o=>{
       const idx=keys.indexOf(o.dataset.ship);
