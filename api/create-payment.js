@@ -220,7 +220,8 @@ module.exports = async (req, res) => {
         mrPoint: mondialRelayPoint ? JSON.stringify(mondialRelayPoint).slice(0, 490) : '',
         coAddr: colissimoAddress ? JSON.stringify(colissimoAddress).slice(0, 490) : '',
       },
-      shipping_address_collection: { allowed_countries: ['FR', 'BE', 'CH', 'LU', 'MC'] },
+      // Adresse collectée directement sur le site (formulaire Colissimo) — pas besoin de Stripe
+      // shipping_address_collection supprimé pour éviter la double saisie
       locale: 'fr',
     });
 
