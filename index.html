@@ -1134,6 +1134,12 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 .lt-btn{padding:7px 11px;color:rgba(255,255,255,.45);transition:all .3s ease;background:none;border:none;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:.04em}
 .lt-btn.active{background:rgba(127,217,255,.14);color:var(--foil-1)}
 .lt-btn:hover:not(.active){color:rgba(255,255,255,.75)}
+/* Caché dans la nav sur mobile — visible dans le menu hamburger */
+@media(max-width:880px){.lang-toggle{display:none}}
+/* Version menu mobile */
+.mobile-lang{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--glass-border)}
+.mobile-lang span{font-size:13px;color:var(--text-dim)}
+.mobile-lang .lang-toggle{display:flex;animation:none}
 
 /* ── SCROLL TO TOP ── */
 .scroll-top{position:fixed;bottom:60px;right:20px;width:42px;height:42px;z-index:89;
@@ -1575,6 +1581,13 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   <a data-page="dashboard" data-i18n="nav.collection">Ma collection</a>
   <a data-page="help" data-i18n="nav.help">Aide</a>
   <a id="mobileAuthLink" data-page="auth" data-i18n="nav.account">Mon compte</a>
+  <div class="mobile-lang">
+    <span>Langue</span>
+    <div class="lang-toggle">
+      <button class="lt-btn active" data-lang="fr">FR</button>
+      <button class="lt-btn" data-lang="en">EN</button>
+    </div>
+  </div>
 </div>
 
 <main>
