@@ -2057,6 +2057,8 @@ loadAndRenderReviews();
               </div>
               <input id="coAddr_tel" type="tel" placeholder="Téléphone *" maxlength="15" inputmode="tel" autocomplete="tel"
                 style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
+              <input id="coAddr_email" type="email" placeholder="Email de livraison *" maxlength="100" autocomplete="email"
+                style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
             </div>
             <div id="coAddr_err" style="display:none;margin-top:8px;font-size:12px;color:var(--danger)"></div>
           </div>
@@ -4839,7 +4841,14 @@ window.addEventListener('load', () => {
     const mrSection = document.getElementById('mr-widget-section');
     const coSection = document.getElementById('colissimo-address-section');
     if(mrSection) mrSection.style.display = isMR ? 'block' : 'none';
-    if(coSection) coSection.style.display = isColissimoOrExpress ? 'block' : 'none';
+    if(coSection) {
+      coSection.style.display = isColissimoOrExpress ? 'block' : 'none';
+      // Pré-remplir l'email avec celui du compte si vide
+      if(isColissimoOrExpress && authUser?.email) {
+        const emailField = document.getElementById('coAddr_email');
+        if(emailField && !emailField.value) emailField.value = authUser.email;
+      }
+    }
     if(!isMR){ selectedMRPoint=null; const sp=document.getElementById('mr-selected-point'); if(sp) sp.style.display='none'; }
   }
 
@@ -4851,6 +4860,7 @@ window.addEventListener('load', () => {
       postal_code: document.getElementById('coAddr_cp')?.value.trim()   || '',
       city:  document.getElementById('coAddr_city')?.value.trim()  || '',
       tel:   document.getElementById('coAddr_tel')?.value.trim()   || '',
+      email: document.getElementById('coAddr_email')?.value.trim() || '',
       country: 'FR',
     };
   }
@@ -4858,7 +4868,7 @@ window.addEventListener('load', () => {
   function validateColissimoAddress(){
     const a = getColissimoAddress();
     const errEl = document.getElementById('coAddr_err');
-    if(!a.name || !a.line1 || !a.postal_code || !a.city || !a.tel){
+    if(!a.name || !a.line1 || !a.postal_code || !a.city || !a.tel || !a.email){
       if(errEl){ errEl.textContent='Veuillez remplir tous les champs obligatoires (*)'; errEl.style.display='block'; }
       return false;
     }

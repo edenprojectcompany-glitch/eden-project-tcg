@@ -223,7 +223,7 @@ module.exports = async (req, res) => {
             clean(a.country || 'FR').toUpperCase(),  // Code pays
             clean(a.tel || ''),                      // Portable
             '',                                      // Téléphone fixe
-            clean(o.customerEmail || ''),            // Mail
+            clean(a.email || o.customerEmail || ''),   // Mail (formulaire ou compte)
             poidsKg,                                 // Poids en kg
             '',                                      // Code point retrait
             contreSignature,                         // Contre signature O/N
