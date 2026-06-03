@@ -195,38 +195,39 @@ module.exports = async (req, res) => {
           return res.status(200).json({ ok: true, csv: '', count: 0 });
         }
 
-        // Format exact ColiShip FMT :
-        // Séparateur ; | Délimiteur vide | CRLF Windows | Poids en Grammes
-        // Colonnes : Type produit ; Nom ; Adresse1 ; CP ; Commune ; Pays ; Poids(g) ; Email ; Téléphone
-        // Email ou téléphone obligatoire pour les notifications de livraison Colissimo
-        // Pas de ligne d'entête (ColiShip lit le FMT pour connaître l'ordre)
+        // Format officiel ColiShip (gabarit Colissimo) — séparateur ; | poids en kg virgule | CRLF Windows
+        // Raison sociale;Nom;Prénom;Adresse1;Adresse2;CP;Commune;Pays;Portable;Téléphone;Mail;Poids;Code PR;Contre sig;Assurance
         const SEP = ';';
         const CRLF = '\r\n';
-        const POIDS_PAR_DISPLAY = 500; // grammes par display (estimation)
+        const POIDS_PAR_DISPLAY_KG = 0.5; // kg par display
 
         const rows = toExport.map(o => {
           const a = o.shippingAddress;
-          const nom = (a.name || o.customerName || '').trim().toUpperCase();
+          const fullName = (a.name || o.customerName || '').trim().toUpperCase();
+          const spIdx = fullName.indexOf(' ');
+          const nom    = spIdx > 0 ? fullName.slice(spIdx + 1) : fullName;
+          const prenom = spIdx > 0 ? fullName.slice(0, spIdx) : '';
           const nbDisplays = (o.items || []).reduce((s, i) => s + (parseInt(i.q) || 1), 0) || 1;
-          const poids = nbDisplays * POIDS_PAR_DISPLAY;
-
-          // Nettoyer les champs (retirer les ; éventuels dans les valeurs)
+          const poidsKg = (nbDisplays * POIDS_PAR_DISPLAY_KG).toFixed(2).replace('.', ',');
+          const contreSignature = (o.shippingMode||'').toLowerCase() === 'express' ? 'O' : 'N';
           const clean = v => String(v || '').replace(/;/g, ',').trim();
 
-          // DOM = Colissimo domicile France | DOS = avec signature (Express) | COM = Outre-mer
-          const mode = (o.shippingMode||'').toLowerCase();
-          const produitCode = mode==='express' ? 'DOS' : mode==='outremer' ? 'COM' : 'DOM';
-
           return [
-            produitCode,
-            clean(nom),
-            clean(a.line1),
-            clean(a.postal_code),
-            clean(a.city).toUpperCase(),
-            clean(a.country || 'FR').toUpperCase(),
-            poids,
-            clean(o.customerEmail || ''),    // Email pour notifications Colissimo
-            clean(a.tel || ''),             // Téléphone pour notifications Colissimo
+            '',                                      // Raison sociale
+            clean(nom),                              // Nom
+            clean(prenom),                           // Prénom
+            clean(a.line1),                          // Adresse 1
+            clean(a.line2 || ''),                    // Adresse 2
+            clean(a.postal_code),                    // Code postal
+            clean(a.city).toUpperCase(),             // Commune
+            clean(a.country || 'FR').toUpperCase(),  // Code pays
+            clean(a.tel || ''),                      // Portable
+            '',                                      // Téléphone fixe
+            clean(o.customerEmail || ''),            // Mail
+            poidsKg,                                 // Poids en kg
+            '',                                      // Code point retrait
+            contreSignature,                         // Contre signature O/N
+            '',                                      // Assurance
           ].join(SEP);
         });
 
