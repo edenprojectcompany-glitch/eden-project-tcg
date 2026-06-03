@@ -177,6 +177,65 @@ module.exports = async (req, res) => {
         return res.status(200).json({ ok: true });
       }
 
+      if (action === 'export_colissimo_csv') {
+        const orders = await kv.get('orders:global') || [];
+        // Commandes en attente avec adresse + mode Colissimo ou Express
+        const toExport = orders.filter(o =>
+          o.shippingAddress &&
+          ['colissimo','express','exp'].includes((o.shippingMode||'').toLowerCase()) &&
+          o.status !== 'shipped'
+        );
+
+        if (!toExport.length) {
+          return res.status(200).json({ ok: true, csv: '', count: 0 });
+        }
+
+        // Format exact ColiShip FMT :
+        // Séparateur ; | Délimiteur vide | CRLF Windows | Poids en Grammes
+        // Colonnes : Nom ; Adresse1 ; CP ; Commune ; Pays ; Poids(g)
+        // Pas de ligne d'entête (ColiShip lit le FMT pour connaître l'ordre)
+        const SEP = ';';
+        const CRLF = '\r\n';
+        const POIDS_PAR_DISPLAY = 500; // grammes par display (estimation)
+
+        const rows = toExport.map(o => {
+          const a = o.shippingAddress;
+          const nom = (a.name || o.customerName || '').trim().toUpperCase();
+          const nbDisplays = (o.items || []).reduce((s, i) => s + (parseInt(i.q) || 1), 0) || 1;
+          const poids = nbDisplays * POIDS_PAR_DISPLAY;
+
+          // Nettoyer les champs (retirer les ; éventuels dans les valeurs)
+          const clean = v => String(v || '').replace(/;/g, ',').trim();
+
+          return [
+            clean(nom),
+            clean(a.line1),
+            clean(a.postal_code),
+            clean(a.city).toUpperCase(),
+            clean(a.country || 'FR').toUpperCase(),
+            poids,
+          ].join(SEP);
+        });
+
+        const csv = rows.join(CRLF) + CRLF;
+        return res.status(200).json({ ok: true, csv, count: toExport.length });
+      }
+
+      if (action === 'update_order_status') {
+        const { ref, status } = data || {};
+        if (!ref || !status) return res.status(400).json({ error: 'ref et status requis' });
+        const orders = await kv.get('orders:global') || [];
+        const idx = orders.findIndex(o => o.ref === ref);
+        if (idx === -1) return res.status(404).json({ error: 'Commande introuvable' });
+        orders[idx].status = String(status).slice(0, 20);
+        if (status === 'shipped' && data.trackingNumber) {
+          orders[idx].trackingNumber = String(data.trackingNumber).slice(0, 50);
+          orders[idx].shippedAt = new Date().toISOString();
+        }
+        await kv.set('orders:global', orders);
+        return res.status(200).json({ ok: true });
+      }
+
       return res.status(400).json({ error: 'Action inconnue' });
     }
 

@@ -88,6 +88,16 @@ async function handler(req, res) {
           let mrPoint = null;
           try { if (session.metadata?.mrPoint) mrPoint = JSON.parse(session.metadata.mrPoint); } catch {}
           const globalOrders = await kv.get('orders:global') || [];
+          // Adresse de livraison collectée par Stripe Checkout
+          const shipDet = session.shipping_details;
+          const shippingAddress = shipDet ? {
+            name:        shipDet.name || customerName,
+            line1:       shipDet.address?.line1 || '',
+            line2:       shipDet.address?.line2 || '',
+            city:        shipDet.address?.city || '',
+            postal_code: shipDet.address?.postal_code || '',
+            country:     shipDet.address?.country || 'FR',
+          } : null;
           globalOrders.unshift({
             ref: order.ref,
             customerEmail: email || '',
@@ -96,6 +106,7 @@ async function handler(req, res) {
             provider: 'stripe',
             items: orderItems,
             shippingMode: session.metadata?.shippingMode || '',
+            shippingAddress,
             mrPoint,
             status: 'pending',
             createdAt: order.createdAt,

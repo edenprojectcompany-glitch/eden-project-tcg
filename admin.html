@@ -222,8 +222,12 @@ tr:hover td{background:rgba(255,255,255,.015)}
     <div class="tab active" id="tab-commandes">
       <div class="sec-head">
         <div class="sec-title">Commandes <span class="sec-meta" id="orderMeta"></span></div>
-        <button class="btn-sm" id="refreshOrdersBtn">↻ Actualiser</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn-sm" id="refreshOrdersBtn">↻ Actualiser</button>
+          <button class="btn-sm" id="exportColissimoBtn" style="background:rgba(255,179,0,.15);border-color:rgba(255,179,0,.4);color:#ffb300" title="Exporte les commandes Colissimo/Express en attente au format ColiShip">📦 Export CSV Colissimo</button>
+        </div>
       </div>
+      <div id="colissimoBanner" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;background:rgba(127,255,170,.07);border:1px solid rgba(127,255,170,.25);font-size:12.5px;color:var(--success)"></div>
       <div class="table-wrap">
         <table>
           <thead><tr>
@@ -514,6 +518,46 @@ async function setStatus(ref,status){
     toast(status==='shipped'?'📦 Marqué expédié':status==='label_printed'?'🖨️ Étiquette confirmée':'⏳ Remis en attente');
   }catch{toast('Erreur mise à jour','err');}
 }
+async function exportColissimoCSV(){
+  const btn=document.getElementById('exportColissimoBtn');
+  const banner=document.getElementById('colissimoBanner');
+  btn.disabled=true; btn.textContent='⏳ Export en cours…';
+  try{
+    const r=await fetch('/api/admin',{method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Code':_code},
+      body:JSON.stringify({action:'export_colissimo_csv'})});
+    const d=await r.json();
+    if(!r.ok||!d.ok) throw new Error(d.error||'Erreur serveur');
+    if(!d.count||!d.csv){
+      banner.style.display='block';
+      banner.style.background='rgba(255,122,122,.07)';
+      banner.style.borderColor='rgba(255,122,122,.25)';
+      banner.style.color='var(--danger)';
+      banner.textContent='⚠️ Aucune commande Colissimo/Express en attente avec adresse disponible.';
+      return;
+    }
+    // Téléchargement du fichier CSV
+    const blob=new Blob([d.csv],{type:'text/csv;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const now=new Date();
+    const stamp=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+    a.href=url; a.download=`eden_colissimo_${stamp}.csv`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    banner.style.display='block';
+    banner.style.background='rgba(127,255,170,.07)';
+    banner.style.borderColor='rgba(127,255,170,.25)';
+    banner.style.color='var(--success)';
+    banner.innerHTML=`✅ <strong>${d.count} commande${d.count>1?'s':''}</strong> exportée${d.count>1?'s':''} — Glisse le fichier dans <code style="background:rgba(255,255,255,.08);padding:2px 6px;border-radius:4px">C:\\Documents\\Coliship\\Repertoire-a-scruter</code> pour générer les étiquettes automatiquement.`;
+  }catch(e){
+    toast('Erreur export CSV : '+e.message,'err');
+  }finally{
+    btn.disabled=false; btn.textContent='📦 Export CSV Colissimo';
+  }
+}
+document.getElementById('exportColissimoBtn')?.addEventListener('click',exportColissimoCSV);
+
 async function genLabel(ref){
   toast('Génération étiquette…');
   try{
