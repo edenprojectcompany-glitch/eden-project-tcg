@@ -81,7 +81,9 @@ module.exports = async (req, res) => {
     if (!validShipping.some(v => Math.abs(v - parsedShip) < 0.01)) {
       return res.status(400).json({ error: 'Frais de livraison invalides' });
     }
-    if (parsedShip === 0 && !isShipFree && !isFreeForAll) {
+    // Autoriser 0€ si l'admin a configuré un tarif à 0 (ex: Colissimo offert temporairement)
+    const anyAdminShipFree = [shippingCfg.relay, shippingCfg.colissimo, shippingCfg.express].some(v => v === 0);
+    if (parsedShip === 0 && !isShipFree && !isFreeForAll && !anyAdminShipFree) {
       return res.status(400).json({ error: 'Code promo livraison requis' });
     }
     const ship = parsedShip;
