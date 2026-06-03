@@ -182,7 +182,7 @@ module.exports = async (req, res) => {
         // Commandes en attente avec adresse + mode Colissimo ou Express
         const toExport = orders.filter(o =>
           o.shippingAddress &&
-          ['colissimo','express','exp'].includes((o.shippingMode||'').toLowerCase()) &&
+          ['colissimo','express','exp','dom'].includes((o.shippingMode||'').toLowerCase()) &&
           o.status !== 'shipped'
         );
 

@@ -491,7 +491,9 @@ function renderOrders(){
     const date=new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
     const items=(o.items||[]).map(i=>`${i.n||i.name||'?'} ×${i.q||i.qty||1}`).join(', ').slice(0,55)||'—';
     const isMR=o.shippingMode==='mr';
-    const ship=isMR?'📦 MR'+(o.mrPoint?` <span style="color:var(--c1);font-size:10px">${o.mrPoint.ville||''}</span>`:''):o.shippingMode==='colissimo'?'🏠 Colissimo':o.shippingMode==='exp'?'⚡ Express':'—';
+    const isColissimo=['colissimo','dom'].includes(o.shippingMode);
+    const isExpress=['express','exp'].includes(o.shippingMode);
+    const ship=isMR?'📦 MR'+(o.mrPoint?` <span style="color:var(--c1);font-size:10px">${o.mrPoint.ville||''}</span>`:''):isColissimo?'🏠 Colissimo':isExpress?'⚡ Express':'—';
     const badge=o.status==='shipped'?'<span class="badge b-shipped">📦 Expédié</span>':o.status==='label_printed'?'<span class="badge b-label">🖨️ Étiquette imprimée</span>':'<span class="badge b-pending">⏳ En attente</span>';
     const prov=o.provider==='paypal'?'🅿 PayPal':'💳 CB';
     const labelBtn=isMR&&o.mrPoint?.id
