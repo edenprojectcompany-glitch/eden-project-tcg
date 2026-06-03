@@ -42,15 +42,18 @@ module.exports = async (req, res) => {
     let adminPrices = {};
     let verifiedUser = null;
     let shippingCfg = { relay: 4.90, colissimo: 7.90, express: 14.90, freeForAll: false };
+    let adminStocks = {};
     let kvFailed = false;
     try {
       const { kv } = require('@vercel/kv');
-      const [prices, flashsale, userFromKv, shippingFromKv] = await Promise.all([
+      const [prices, stocks, flashsale, userFromKv, shippingFromKv] = await Promise.all([
         kv.get('admin:prices'),
+        kv.get('admin:stocks'),
         kv.get('admin:flashsale'),
         kv.get(`user:${verifiedUserEmail}`),
         kv.get('admin:shipping'),
       ]);
+      adminStocks = stocks || {};
       if (shippingFromKv) shippingCfg = shippingFromKv;
       verifiedUser = userFromKv || null;
       // Vérification tokenVersion : rejeter les sessions révoquées (ex: après reset mot de passe)
@@ -117,6 +120,15 @@ module.exports = async (req, res) => {
       const pooledQty = lang && langPools[lang] ? langPools[lang] : qty;
       const serverPrice = getServerPrice(item.id, qty, adminPrices, pooledQty);
       if (serverPrice === null) continue;
+      // Vérification stock côté serveur
+      const stockKey = String(item.id);
+      const availableStock = adminStocks[stockKey];
+      if (availableStock != null && availableStock > 0 && qty > availableStock) {
+        return res.status(400).json({ error: `Stock insuffisant pour ${item.name || 'article'} — ${availableStock} disponible${availableStock > 1 ? 's' : ''}` });
+      }
+      if (availableStock != null && availableStock === 0) {
+        return res.status(400).json({ error: `${item.name || 'Article'} n'est plus en stock` });
+      }
       rawSubtotal += serverPrice * qty;
       rawItems.push({ item, qty, serverPrice, pooledQty });
     }

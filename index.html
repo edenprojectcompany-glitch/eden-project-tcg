@@ -3906,6 +3906,11 @@ window.addEventListener('load', () => {
     }
     const p=products.find(x=>x.id===id); if(!p||p.price===null) return;
     const ex=cart.find(c=>c.id===id);
+    // Vérification stock
+    if(p.stock!=null && p.stock>0){
+      const newQty=(ex?ex.qty:0)+1;
+      if(newQty>p.stock){ showNotif(`⚠️ Stock limité à ${p.stock} boîte${p.stock>1?'s':''}`, 'info'); return; }
+    }
     // Détecter changement de palier avant d'ajouter
     const prevPrice=ex?ex.unitPrice:null;
     if(ex){ex.qty++;ex.unitPrice=getActivePrice(p,ex.qty);}
@@ -3977,7 +3982,12 @@ window.addEventListener('load', () => {
     if(!item&&d>0){addToCart(id);return;}
     const p=products.find(x=>x.id===id);
     const prevPrice=item.unitPrice;
-    item.qty+=d;
+    const newQty=item.qty+d;
+    // Vérification stock
+    if(d>0&&p&&p.stock!=null&&p.stock>0&&newQty>p.stock){
+      showNotif(`⚠️ Stock limité à ${p.stock} boîte${p.stock>1?'s':''}`, 'info'); return;
+    }
+    item.qty=newQty;
     if(item.qty<=0){cart=cart.filter(c=>c.id!==id);renderCart();return;}
     if(p) item.unitPrice=getActivePrice(p,item.qty);
     if(p&&item.unitPrice<prevPrice) showTierBadge(p,item.unitPrice,prevPrice);
@@ -3995,7 +4005,10 @@ window.addEventListener('load', () => {
       return;
     }
     const prevPrice=item.unitPrice;
-    item.qty=Math.min(qty,999);
+    // Vérification stock
+    const maxQty=(p&&p.stock!=null&&p.stock>0)?Math.min(qty,p.stock):Math.min(qty,999);
+    if(p&&p.stock!=null&&p.stock>0&&qty>p.stock) showNotif(`⚠️ Stock limité à ${p.stock} boîte${p.stock>1?'s':''}`, 'info');
+    item.qty=maxQty;
     if(p) item.unitPrice=getActivePrice(p,item.qty);
     if(p&&item.unitPrice<prevPrice) showTierBadge(p,item.unitPrice,prevPrice);
     renderCart();

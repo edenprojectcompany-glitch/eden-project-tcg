@@ -807,11 +807,20 @@ document.getElementById('saveFlashBtn').addEventListener('click',async()=>{
 });
 
 /* ══ ROUE ══ */
+const DEFAULT_WHEEL=[
+  {label:'-5%  EDEN5',        prob:35, code:'EDEN5',        color:'#5ec4ef'},
+  {label:'-10% EDEN10',       prob:28, code:'EDEN10',       color:'#b08fe8'},
+  {label:'Livraison offerte', prob:15, code:'SHIP0',        color:'#7ecfb0'},
+  {label:'-15% TCG15',        prob:10, code:'TCG15',        color:'#d98ec8'},
+  {label:'Booster offert',    prob:7,  code:'BOOSTER',      color:'#c8a848'},
+  {label:'-20% EDEN20',       prob:4,  code:'EDEN20',       color:'#d07070'},
+  {label:'Display gratuite!', prob:1,  code:'FREE_DISPLAY', color:'#e84040'},
+];
 let _wheel=[];
 function buildRoue(wheel){
-  _wheel=wheel;
+  _wheel=(wheel&&wheel.length)?wheel:DEFAULT_WHEEL;
   const wrap=document.getElementById('wheelRows'); if(!wrap) return;
-  wrap.innerHTML=wheel.map((p,i)=>`
+  wrap.innerHTML=_wheel.map((p,i)=>`
     <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:var(--glass)">
       <div style="width:16px;height:16px;border-radius:50%;background:${p.color};flex-shrink:0"></div>
       <div style="flex:1;font-size:13px">${p.label}${p.code?` <span style="font-size:11px;color:var(--dim)">(${p.code})</span>`:''}</div>
