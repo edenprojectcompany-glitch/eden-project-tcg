@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
     // 1 seul appel KV — inclut flash sale prices + user + shipping config
     let adminPrices = {};
     let verifiedUser = null;
-    let shippingCfg = { relay: 4.90, colissimo: 7.90, express: 14.90, freeForAll: false };
+    let shippingCfg = { relay: 4.90, colissimo: 7.90, express: 14.90, outremer: 20.00, freeForAll: false };
     let adminStocks = {};
     let kvFailed = false;
     try {
@@ -80,7 +80,7 @@ module.exports = async (req, res) => {
     const isFreeForAll = !!shippingCfg.freeForAll;
     const validShipping = isFreeForAll
       ? [0]
-      : [0, shippingCfg.relay, shippingCfg.colissimo, shippingCfg.express];
+      : [0, shippingCfg.relay, shippingCfg.colissimo, shippingCfg.express, shippingCfg.outremer ?? 20];
     if (!validShipping.some(v => Math.abs(v - parsedShip) < 0.01)) {
       return res.status(400).json({ error: 'Frais de livraison invalides' });
     }

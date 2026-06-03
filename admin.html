@@ -346,6 +346,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
         <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">📦 Mondial Relay · Point relais (€)</label><input type="number" id="shipRelay" step="0.01" min="0" max="100" style="width:100%;padding:10px 14px;background:var(--glass);border:1px solid var(--gb);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none"></div>
         <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">📬 Colissimo domicile (€)</label><input type="number" id="shipColissimo" step="0.01" min="0" max="100" style="width:100%;padding:10px 14px;background:var(--glass);border:1px solid var(--gb);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none"></div>
         <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">⚡ Express sécurisé (€)</label><input type="number" id="shipExpress" step="0.01" min="0" max="100" style="width:100%;padding:10px 14px;background:var(--glass);border:1px solid var(--gb);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none"></div>
+        <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">🌴 Colissimo Outre-mer (€)</label><input type="number" id="shipOutremer" step="0.01" min="0" max="200" style="width:100%;padding:10px 14px;background:var(--glass);border:1px solid var(--gb);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none"></div>
       </div>
       <button class="btn-sm" id="saveShipBtn" style="margin-top:20px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer les tarifs</button>
       <div id="shipMsg" style="margin-top:10px;font-size:12.5px"></div>
@@ -846,11 +847,12 @@ function buildLivraison(cfg){
   document.getElementById('shipRelay').value=cfg.relay??4.90;
   document.getElementById('shipColissimo').value=cfg.colissimo??7.90;
   document.getElementById('shipExpress').value=cfg.express??14.90;
+  document.getElementById('shipOutremer').value=cfg.outremer??20.00;
   document.getElementById('shipFreeAll').checked=!!cfg.freeForAll;
 }
 document.getElementById('saveShipBtn').addEventListener('click',async()=>{
   const msg=document.getElementById('shipMsg');
-  const data={relay:parseFloat(document.getElementById('shipRelay').value),colissimo:parseFloat(document.getElementById('shipColissimo').value),express:parseFloat(document.getElementById('shipExpress').value),freeForAll:document.getElementById('shipFreeAll').checked};
+  const data={relay:parseFloat(document.getElementById('shipRelay').value),colissimo:parseFloat(document.getElementById('shipColissimo').value),express:parseFloat(document.getElementById('shipExpress').value),outremer:parseFloat(document.getElementById('shipOutremer').value),freeForAll:document.getElementById('shipFreeAll').checked};
   try{
     const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_shipping',data})});
     if(!r.ok) throw new Error();

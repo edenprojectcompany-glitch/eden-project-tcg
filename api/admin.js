@@ -149,13 +149,18 @@ module.exports = async (req, res) => {
         const relay = parseFloat(data?.relay);
         const colissimo = parseFloat(data?.colissimo);
         const express = parseFloat(data?.express);
+        const outremer = parseFloat(data?.outremer ?? 20);
         if ([relay, colissimo, express].some(v => isNaN(v) || v < 0 || v > 100)) {
           return res.status(400).json({ error: 'Tarifs invalides (0–100€)' });
+        }
+        if (isNaN(outremer) || outremer < 0 || outremer > 200) {
+          return res.status(400).json({ error: 'Tarif outre-mer invalide (0–200€)' });
         }
         await kv.set('admin:shipping', {
           relay: +relay.toFixed(2),
           colissimo: +colissimo.toFixed(2),
           express: +express.toFixed(2),
+          outremer: +outremer.toFixed(2),
           freeForAll: data?.freeForAll === true,
         });
         return res.status(200).json({ ok: true });
@@ -182,7 +187,7 @@ module.exports = async (req, res) => {
         // Commandes en attente avec adresse + mode Colissimo ou Express
         const toExport = orders.filter(o =>
           o.shippingAddress &&
-          ['colissimo','express','exp','dom'].includes((o.shippingMode||'').toLowerCase()) &&
+          ['colissimo','express','exp','dom','outremer'].includes((o.shippingMode||'').toLowerCase()) &&
           o.status !== 'shipped'
         );
 
@@ -208,8 +213,9 @@ module.exports = async (req, res) => {
           // Nettoyer les champs (retirer les ; éventuels dans les valeurs)
           const clean = v => String(v || '').replace(/;/g, ',').trim();
 
-          // DOM = Colissimo Domicile sans signature | DOS = avec signature
-          const produitCode = (o.shippingMode||'').toLowerCase()==='express' ? 'DOS' : 'DOM';
+          // DOM = Colissimo domicile France | DOS = avec signature (Express) | COM = Outre-mer
+          const mode = (o.shippingMode||'').toLowerCase();
+          const produitCode = mode==='express' ? 'DOS' : mode==='outremer' ? 'COM' : 'DOM';
 
           return [
             produitCode,

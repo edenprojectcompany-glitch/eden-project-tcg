@@ -2011,6 +2011,10 @@ loadAndRenderReviews();
               <div class="l"><div class="n">Express sécurisé</div><div class="s">24h · Signature obligatoire</div></div>
               <div class="p">14,90 €</div>
             </div>
+            <div class="ship-opt" data-ship="outremer" data-price="20.00">
+              <div class="l"><div class="n">🌴 Colissimo Outre-mer</div><div class="s">Guadeloupe, Martinique, Réunion, Guyane… · 5–8 jours</div></div>
+              <div class="p">20,00 €</div>
+            </div>
           </div>
         </div>
         <!-- ══ WIDGET MONDIAL RELAY ══ -->
@@ -4831,7 +4835,7 @@ window.addEventListener('load', () => {
   function updateMRWidget(){
     const selectedMode = document.querySelector('.ship-opt.selected')?.dataset.ship;
     const isMR = selectedMode === 'mr';
-    const isColissimoOrExpress = ['colissimo','express'].includes(selectedMode);
+    const isColissimoOrExpress = ['colissimo','express','outremer'].includes(selectedMode);
     const mrSection = document.getElementById('mr-widget-section');
     const coSection = document.getElementById('colissimo-address-section');
     if(mrSection) mrSection.style.display = isMR ? 'block' : 'none';
@@ -4957,7 +4961,7 @@ window.addEventListener('load', () => {
       showPayError('📍 Veuillez sélectionner un point Mondial Relay avant de payer.');
       return;
     }
-    if(['colissimo','express'].includes(currentShipMode) && !validateColissimoAddress()){
+    if(['colissimo','express','outremer'].includes(currentShipMode) && !validateColissimoAddress()){
       document.getElementById('colissimo-address-section')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
@@ -4967,7 +4971,7 @@ window.addEventListener('load', () => {
       if(authToken) headers['Authorization']='Bearer '+authToken;
       const mrPoint=selectedMRPoint?{id:selectedMRPoint.ID,nom:selectedMRPoint.Nom,adresse:selectedMRPoint.Adresse1,cp:selectedMRPoint.CP,ville:selectedMRPoint.Ville}:null;
       const shipMode=document.querySelector('.ship-opt.selected')?.dataset.ship||'';
-      const colissimoAddress=['colissimo','express'].includes(shipMode)?getColissimoAddress():null;
+      const colissimoAddress=['colissimo','express','outremer'].includes(shipMode)?getColissimoAddress():null;
       const res=await fetch('/api/create-payment',{method:'POST',headers,
         body:JSON.stringify({
           items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',sub:i.sub,img:i.img,qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,sub:i.sub,img:i.img,unitPrice:i.unitPrice,qty:i.qty})),
@@ -5386,8 +5390,8 @@ window.addEventListener('load', () => {
 
   function applyShippingConfig(cfg){
     const opts=document.querySelectorAll('.ship-opt');
-    const keys=['mr','colissimo','express'];
-    const vals=cfg.freeForAll?[0,0,0]:[cfg.relay,cfg.colissimo,cfg.express];
+    const keys=['mr','colissimo','express','outremer'];
+    const vals=cfg.freeForAll?[0,0,0,0]:[cfg.relay,cfg.colissimo,cfg.express,cfg.outremer??20];
     opts.forEach(o=>{
       const idx=keys.indexOf(o.dataset.ship);
       if(idx===-1) return;
