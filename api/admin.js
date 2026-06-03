@@ -199,7 +199,7 @@ module.exports = async (req, res) => {
         // Raison sociale;Nom;Prénom;Adresse1;Adresse2;CP;Commune;Pays;Portable;Téléphone;Mail;Poids;Code PR;Contre sig;Assurance
         const SEP = ';';
         const CRLF = '\r\n';
-        const POIDS_PAR_DISPLAY_G = 500; // grammes par display (FMT ColiShip réglé sur G)
+        const POIDS_PAR_DISPLAY_KG = 0.5; // kg par display (FMT ModeleImport.FMT = KG)
 
         const rows = toExport.map(o => {
           const a = o.shippingAddress;
@@ -208,26 +208,28 @@ module.exports = async (req, res) => {
           const nom    = spIdx > 0 ? fullName.slice(spIdx + 1) : fullName;
           const prenom = spIdx > 0 ? fullName.slice(0, spIdx) : '';
           const nbDisplays = (o.items || []).reduce((s, i) => s + (parseInt(i.q) || 1), 0) || 1;
-          const poidsKg = String(nbDisplays * POIDS_PAR_DISPLAY_G);
+          const poidsKg = (nbDisplays * POIDS_PAR_DISPLAY_KG).toFixed(2).replace('.', ',');
           const contreSignature = (o.shippingMode||'').toLowerCase() === 'express' ? 'O' : 'N';
           const clean = v => String(v || '').replace(/;/g, ',').trim();
 
+          // Format ModeleImport.FMT officiel ColiShip — 15 colonnes, poids en KG
+          // EXP = identifiant interne ColiShip (pas dans le CSV, géré par EntetLigneColis)
           return [
-            'EXP',                                   // Identifiant ligne colis (requis ColiShip)
-            '',                                      // Raison sociale
-            clean(nom),                              // Nom
-            clean(prenom),                           // Prénom
-            clean(a.line1),                          // Adresse 1
-            clean(a.line2 || ''),                    // Adresse 2
-            clean(a.postal_code),                    // Code postal
-            clean(a.city).toUpperCase(),             // Commune
-            clean(a.country || 'FR').toUpperCase(),  // Code pays
-            clean(a.tel || ''),                      // Portable
-            '',                                      // Téléphone fixe
-            clean(a.email || o.customerEmail || ''),   // Mail (formulaire ou compte)
-            poidsKg,                                 // Poids en kg
-            '',                                      // Code point retrait
-            contreSignature,                         // Livraison avec signature O/N
+            '',                                      // col1  RaisonSociale
+            clean(nom),                              // col2  NomDestinataire
+            clean(prenom),                           // col3  Prénom
+            clean(a.line1),                          // col4  Adresse1
+            clean(a.line2 || ''),                    // col5  Adresse4 (complément)
+            clean(a.postal_code),                    // col6  CodePostal
+            clean(a.city).toUpperCase(),             // col7  Commune
+            clean(a.country || 'FR').toUpperCase(), // col8  CodePays
+            clean(a.tel || ''),                      // col9  Portable
+            '',                                      // col10 Telephone fixe
+            clean(a.email || o.customerEmail || ''),// col11 Mail
+            poidsKg,                                 // col12 Poids (KG virgule)
+            '',                                      // col13 CodePointRetrait
+            contreSignature,                         // col14 LivraisonAvecSignature O/N
+            '',                                      // col15 MontantADV (assurance)
           ].join(SEP);
         });
 
