@@ -213,6 +213,7 @@ module.exports = async (req, res) => {
           const clean = v => String(v || '').replace(/;/g, ',').trim();
 
           return [
+            'EXP',                                   // Identifiant ligne colis (requis ColiShip)
             '',                                      // Raison sociale
             clean(nom),                              // Nom
             clean(prenom),                           // Prénom
