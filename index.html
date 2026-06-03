@@ -4055,23 +4055,35 @@ window.addEventListener('load', () => {
   };
   window.changeCaseQty=function(key,d){
     const item=cart.find(c=>c._caseKey===key); if(!item) return;
-    item.qty+=d;
+    const caseStock=caseStocks[key];
+    const newQty=item.qty+d;
+    if(d>0&&caseStock!=null&&caseStock>0&&newQty>caseStock){
+      showNotif(`⚠️ Stock case limité à ${caseStock}`, 'info'); return;
+    }
+    item.qty=newQty;
     if(item.qty<=0){cart=cart.filter(c=>c._caseKey!==key);renderCart();return;}
     renderCart();
   };
   window.setCaseQty=function(key,val){
     const qty=parseInt(val); if(isNaN(qty)||qty<1){renderCart();return;}
     const item=cart.find(c=>c._caseKey===key); if(!item) return;
-    item.qty=Math.min(qty,50);
+    const caseStock=caseStocks[key];
+    const maxQty=(caseStock!=null&&caseStock>0)?Math.min(qty,caseStock):Math.min(qty,50);
+    if(caseStock!=null&&caseStock>0&&qty>caseStock) showNotif(`⚠️ Stock case limité à ${caseStock}`, 'info');
+    item.qty=maxQty;
     renderCart();
   };
 
   window.changeQty=function(id,d){
     const item=cart.find(c=>c.id===id&&!c.isCaseItem);if(!item) return;
-    const prevPrice=item.unitPrice;
-    item.qty+=d;
-    if(item.qty<=0){removeFromCart(id);return;}
     const p=products.find(x=>x.id===id);
+    const newQty=item.qty+d;
+    if(d>0&&p&&p.stock!=null&&p.stock>0&&newQty>p.stock){
+      showNotif(`⚠️ Stock limité à ${p.stock} boîte${p.stock>1?'s':''}`, 'info'); return;
+    }
+    const prevPrice=item.unitPrice;
+    item.qty=newQty;
+    if(item.qty<=0){removeFromCart(id);return;}
     item.unitPrice=getActivePrice(p,item.qty);
     if(p&&item.unitPrice<prevPrice) showTierBadge(p,item.unitPrice,prevPrice);
     renderCart();
@@ -4079,9 +4091,11 @@ window.addEventListener('load', () => {
   window.setQty=function(id,val){
     const qty=parseInt(val);if(isNaN(qty)||qty<1){renderCart();return;}
     const item=cart.find(c=>c.id===id&&!c.isCaseItem); if(!item) return;
-    const prevPrice=item.unitPrice;
-    item.qty=Math.min(qty,999);
     const p=products.find(x=>x.id===id);
+    const maxQty=(p&&p.stock!=null&&p.stock>0)?Math.min(qty,p.stock):Math.min(qty,999);
+    if(p&&p.stock!=null&&p.stock>0&&qty>p.stock) showNotif(`⚠️ Stock limité à ${p.stock} boîte${p.stock>1?'s':''}`, 'info');
+    const prevPrice=item.unitPrice;
+    item.qty=maxQty;
     if(p) item.unitPrice=getActivePrice(p,item.qty);
     if(p&&item.unitPrice<prevPrice) showTierBadge(p,item.unitPrice,prevPrice);
     renderCart();
