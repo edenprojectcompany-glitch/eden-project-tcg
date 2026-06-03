@@ -192,7 +192,7 @@ module.exports = async (req, res) => {
 
         // Format exact ColiShip FMT :
         // Séparateur ; | Délimiteur vide | CRLF Windows | Poids en Grammes
-        // Colonnes : Nom ; Adresse1 ; CP ; Commune ; Pays ; Poids(g) ; Email ; Téléphone
+        // Colonnes : Type produit ; Nom ; Adresse1 ; CP ; Commune ; Pays ; Poids(g) ; Email ; Téléphone
         // Email ou téléphone obligatoire pour les notifications de livraison Colissimo
         // Pas de ligne d'entête (ColiShip lit le FMT pour connaître l'ordre)
         const SEP = ';';
@@ -208,7 +208,11 @@ module.exports = async (req, res) => {
           // Nettoyer les champs (retirer les ; éventuels dans les valeurs)
           const clean = v => String(v || '').replace(/;/g, ',').trim();
 
+          // DOM = Colissimo Domicile sans signature | DOS = avec signature
+          const produitCode = (o.shippingMode||'').toLowerCase()==='express' ? 'DOS' : 'DOM';
+
           return [
+            produitCode,
             clean(nom),
             clean(a.line1),
             clean(a.postal_code),
