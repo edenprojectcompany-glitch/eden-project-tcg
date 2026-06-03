@@ -83,6 +83,26 @@ async function handler(req, res) {
           console.log(`Order ${order.ref} saved for ${email} (+${pts} pts loyalty)`);
         }
 
+        // ── Décrémenter les stocks après paiement ──
+        try {
+          const itemsIds = session.metadata?.items_ids;
+          if (itemsIds) {
+            const ids = JSON.parse(itemsIds);
+            const stocks = await kv.get('admin:stocks') || {};
+            let changed = false;
+            for (const { id, q } of ids) {
+              const key = String(id);
+              if (stocks[key] != null && stocks[key] > 0) {
+                stocks[key] = Math.max(0, stocks[key] - q);
+                changed = true;
+              }
+            }
+            if (changed) await kv.set('admin:stocks', stocks);
+          }
+        } catch (e) {
+          console.error('Stock decrement failed (non-critical):', e.message);
+        }
+
         // ── Push dans la liste globale des commandes (dashboard admin) ──
         try {
           let mrPoint = null;

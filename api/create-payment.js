@@ -215,6 +215,7 @@ module.exports = async (req, res) => {
         discountPct: String(discountPct),
         source: 'eden-project-tcg',
         items_json: JSON.stringify(itemsSummary.slice(0, 8).map(i => ({ n: i.n.slice(0, 20), q: i.q, p: i.p }))).slice(0, 490),
+        items_ids: JSON.stringify(rawItems.slice(0, 12).map(i => ({ id: i.item.id, q: i.qty }))).slice(0, 490),
         userEmail: verifiedUserEmail || '',
         shippingMode: String(shippingMode || '').slice(0, 10),
         mrPoint: mondialRelayPoint ? JSON.stringify(mondialRelayPoint).slice(0, 490) : '',
