@@ -213,7 +213,7 @@ module.exports = async (req, res) => {
           const clean = v => String(v || '').replace(/;/g, ',').trim();
 
           // Format ModeleImport.FMT officiel ColiShip — 15 colonnes, poids en KG
-          // EXP = identifiant interne ColiShip (pas dans le CSV, géré par EntetLigneColis)
+          // EXP = identifiant INTERNE ColiShip, ne pas mettre dans le CSV
           return [
             '',                                      // col1  RaisonSociale
             clean(nom),                              // col2  NomDestinataire
