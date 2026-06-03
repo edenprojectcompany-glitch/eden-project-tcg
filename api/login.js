@@ -51,6 +51,7 @@ module.exports = async (req, res) => {
         id: user.id, name: user.name, email: user.email,
         lastSpin: user.lastSpin, loyalty: user.loyalty || 0,
         orders: user.orders || [],
+        deliveryAddress: user.deliveryAddress || null,
       },
     });
   } catch (err) {

@@ -1849,6 +1849,32 @@ loadAndRenderReviews();
             <label for="i-name" data-i18n="auth.name">Nom complet</label>
             <div class="err">Merci d'indiquer votre nom</div>
           </div>
+          <!-- Champs livraison — visibles uniquement à l'inscription -->
+          <div id="f-delivery" style="display:none">
+            <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin:14px 0 10px;font-weight:600">📦 Informations de livraison <span style="font-weight:400;text-transform:none;letter-spacing:0">(optionnel — pré-remplit le checkout)</span></div>
+            <div class="field">
+              <input type="text" id="i-addr1" placeholder=" " autocomplete="street-address" maxlength="100">
+              <label for="i-addr1">Adresse (numéro et rue)</label>
+            </div>
+            <div class="field">
+              <input type="text" id="i-addr2" placeholder=" " autocomplete="address-line2" maxlength="100">
+              <label for="i-addr2">Complément d'adresse</label>
+            </div>
+            <div style="display:grid;grid-template-columns:130px 1fr;gap:10px;margin-bottom:10px">
+              <div class="field" style="margin:0">
+                <input type="text" id="i-cp" placeholder=" " autocomplete="postal-code" maxlength="10" inputmode="numeric">
+                <label for="i-cp">Code postal</label>
+              </div>
+              <div class="field" style="margin:0">
+                <input type="text" id="i-city" placeholder=" " autocomplete="address-level2" maxlength="60">
+                <label for="i-city">Ville</label>
+              </div>
+            </div>
+            <div class="field">
+              <input type="tel" id="i-tel" placeholder=" " autocomplete="tel" maxlength="15" inputmode="tel">
+              <label for="i-tel">Téléphone</label>
+            </div>
+          </div>
           <div class="field" id="f-email">
             <input type="email" id="i-email" placeholder=" " autocomplete="email">
             <label for="i-email" data-i18n="auth.email">Adresse e-mail</label>
@@ -4267,6 +4293,7 @@ window.addEventListener('load', () => {
     tab.classList.add('active');
     const isReg=tab.dataset.tab==='register';
     document.getElementById('f-name').style.display=isReg?'block':'none';
+    document.getElementById('f-delivery').style.display=isReg?'block':'none';
     document.getElementById('authSubmitBtn').textContent=isReg?t('auth.register_btn'):t('auth.login_btn');
   }));
   document.getElementById('authForm').addEventListener('submit',async e=>{
@@ -4288,7 +4315,14 @@ window.addEventListener('load', () => {
     msg.className='auth-msg'; msg.style.display='none';
     try{
       const endpoint=isReg?'/api/register':'/api/login';
-      const body=isReg?{name,email,password:pwd}:{email,password:pwd};
+      const deliveryAddr=isReg?{
+        line1: document.getElementById('i-addr1')?.value.trim()||'',
+        line2: document.getElementById('i-addr2')?.value.trim()||'',
+        postal_code: document.getElementById('i-cp')?.value.trim()||'',
+        city: document.getElementById('i-city')?.value.trim()||'',
+        tel: document.getElementById('i-tel')?.value.trim()||'',
+      }:null;
+      const body=isReg?{name,email,password:pwd,deliveryAddress:deliveryAddr}:{email,password:pwd};
       const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       const data=await res.json();
       if(!res.ok) throw new Error(data.error||'Erreur serveur');
@@ -4843,10 +4877,17 @@ window.addEventListener('load', () => {
     if(mrSection) mrSection.style.display = isMR ? 'block' : 'none';
     if(coSection) {
       coSection.style.display = isColissimoOrExpress ? 'block' : 'none';
-      // Pré-remplir l'email avec celui du compte si vide
-      if(isColissimoOrExpress && authUser?.email) {
-        const emailField = document.getElementById('coAddr_email');
-        if(emailField && !emailField.value) emailField.value = authUser.email;
+      // Pré-remplir depuis le profil si les champs sont vides
+      if(isColissimoOrExpress && authUser) {
+        const da = authUser.deliveryAddress || {};
+        const fill = (id, val) => { const el=document.getElementById(id); if(el&&!el.value&&val) el.value=val; };
+        fill('coAddr_name',  authUser.name || '');
+        fill('coAddr_line1', da.line1 || '');
+        fill('coAddr_line2', da.line2 || '');
+        fill('coAddr_cp',    da.postal_code || '');
+        fill('coAddr_city',  da.city || '');
+        fill('coAddr_tel',   da.tel || '');
+        fill('coAddr_email', authUser.email || '');
       }
     }
     if(!isMR){ selectedMRPoint=null; const sp=document.getElementById('mr-selected-point'); if(sp) sp.style.display='none'; }

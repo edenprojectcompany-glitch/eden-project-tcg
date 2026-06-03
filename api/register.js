@@ -43,7 +43,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { name, email, password } = req.body || {};
+  const { name, email, password, deliveryAddress } = req.body || {};
 
   if (!name?.trim() || name.trim().length < 2)
     return res.status(400).json({ error: 'Nom invalide (minimum 2 caractères)' });
@@ -83,6 +83,15 @@ module.exports = async (req, res) => {
     const hash = await bcrypt.hash(password, 12);
     const verifyToken = randomUUID();
 
+    // Nettoyer l'adresse de livraison si fournie
+    const cleanAddr = deliveryAddress ? {
+      line1:       String(deliveryAddress.line1       || '').slice(0, 100).trim(),
+      line2:       String(deliveryAddress.line2       || '').slice(0, 100).trim(),
+      postal_code: String(deliveryAddress.postal_code || '').slice(0, 10).trim(),
+      city:        String(deliveryAddress.city        || '').slice(0, 60).trim(),
+      tel:         String(deliveryAddress.tel         || '').slice(0, 20).trim(),
+    } : null;
+
     const user = {
       id: `usr_${randomUUID()}`,
       name: name.trim(),
@@ -94,6 +103,7 @@ module.exports = async (req, res) => {
       loyalty: 0,
       tokenVersion: 0,
       emailVerified: false,
+      deliveryAddress: cleanAddr,
     };
     await kv.set(key, user);
 
@@ -116,7 +126,7 @@ module.exports = async (req, res) => {
 
     return res.status(201).json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, lastSpin: null, loyalty: 0, orders: [], emailVerified: false },
+      user: { id: user.id, name: user.name, email: user.email, lastSpin: null, loyalty: 0, orders: [], emailVerified: false, deliveryAddress: cleanAddr },
       emailSent: true,
     });
   } catch (err) {
