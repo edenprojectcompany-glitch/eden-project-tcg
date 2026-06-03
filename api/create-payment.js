@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { items, shippingCost, promoCode, customerEmail, successUrl, cancelUrl, mondialRelayPoint, shippingMode } = req.body || {};
+    const { items, shippingCost, promoCode, customerEmail, successUrl, cancelUrl, mondialRelayPoint, shippingMode, colissimoAddress } = req.body || {};
     if (!items?.length) return res.status(400).json({ error: 'Panier vide' });
     if (items.length > 50) return res.status(400).json({ error: 'Trop d\'articles' });
 
@@ -204,6 +204,7 @@ module.exports = async (req, res) => {
         userEmail: verifiedUserEmail || '',
         shippingMode: String(shippingMode || '').slice(0, 10),
         mrPoint: mondialRelayPoint ? JSON.stringify(mondialRelayPoint).slice(0, 490) : '',
+        coAddr: colissimoAddress ? JSON.stringify(colissimoAddress).slice(0, 490) : '',
       },
       shipping_address_collection: { allowed_countries: ['FR', 'BE', 'CH', 'LU', 'MC'] },
       locale: 'fr',

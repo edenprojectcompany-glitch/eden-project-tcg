@@ -2033,6 +2033,28 @@ loadAndRenderReviews();
           </div>
           <input type="hidden" id="Retour_Widget">
         </div>
+
+        <!-- ══ ADRESSE COLISSIMO / EXPRESS ══ -->
+        <div id="colissimo-address-section" style="display:none;margin-top:16px;">
+          <div style="padding:18px 20px;border-radius:14px;background:var(--glass);border:1px solid rgba(127,217,255,.2)">
+            <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-1);margin-bottom:14px;font-weight:600">📦 Adresse de livraison</div>
+            <div style="display:grid;gap:10px">
+              <input id="coAddr_name" type="text" placeholder="Nom complet *" maxlength="80" autocomplete="name"
+                style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
+              <input id="coAddr_line1" type="text" placeholder="Adresse (numéro et rue) *" maxlength="100" autocomplete="street-address"
+                style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
+              <input id="coAddr_line2" type="text" placeholder="Complément d'adresse (optionnel)" maxlength="100" autocomplete="address-line2"
+                style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
+              <div style="display:grid;grid-template-columns:130px 1fr;gap:10px">
+                <input id="coAddr_cp" type="text" placeholder="Code postal *" maxlength="10" inputmode="numeric" autocomplete="postal-code"
+                  style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
+                <input id="coAddr_city" type="text" placeholder="Ville *" maxlength="60" autocomplete="address-level2"
+                  style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
+              </div>
+            </div>
+            <div id="coAddr_err" style="display:none;margin-top:8px;font-size:12px;color:var(--danger)"></div>
+          </div>
+        </div>
       </div>
       <div class="co-summary">
         <h3>Récapitulatif</h3>
@@ -4778,10 +4800,36 @@ window.addEventListener('load', () => {
   let selectedMRPoint = null;
 
   function updateMRWidget(){
-    const isMR = document.querySelector('.ship-opt.selected')?.dataset.ship==='mr';
-    const section = document.getElementById('mr-widget-section');
-    if(section) section.style.display = isMR ? 'block' : 'none';
+    const selectedMode = document.querySelector('.ship-opt.selected')?.dataset.ship;
+    const isMR = selectedMode === 'mr';
+    const isColissimoOrExpress = ['colissimo','express'].includes(selectedMode);
+    const mrSection = document.getElementById('mr-widget-section');
+    const coSection = document.getElementById('colissimo-address-section');
+    if(mrSection) mrSection.style.display = isMR ? 'block' : 'none';
+    if(coSection) coSection.style.display = isColissimoOrExpress ? 'block' : 'none';
     if(!isMR){ selectedMRPoint=null; const sp=document.getElementById('mr-selected-point'); if(sp) sp.style.display='none'; }
+  }
+
+  function getColissimoAddress(){
+    return {
+      name:  document.getElementById('coAddr_name')?.value.trim()  || '',
+      line1: document.getElementById('coAddr_line1')?.value.trim() || '',
+      line2: document.getElementById('coAddr_line2')?.value.trim() || '',
+      postal_code: document.getElementById('coAddr_cp')?.value.trim()   || '',
+      city:  document.getElementById('coAddr_city')?.value.trim()  || '',
+      country: 'FR',
+    };
+  }
+
+  function validateColissimoAddress(){
+    const a = getColissimoAddress();
+    const errEl = document.getElementById('coAddr_err');
+    if(!a.name || !a.line1 || !a.postal_code || !a.city){
+      if(errEl){ errEl.textContent='Veuillez remplir tous les champs obligatoires (*)'; errEl.style.display='block'; }
+      return false;
+    }
+    if(errEl) errEl.style.display='none';
+    return true;
   }
 
   function initMRWidget(){
@@ -4879,12 +4927,17 @@ window.addEventListener('load', () => {
       showPayError('📍 Veuillez sélectionner un point Mondial Relay avant de payer.');
       return;
     }
+    if(['colissimo','express'].includes(currentShipMode) && !validateColissimoAddress()){
+      document.getElementById('colissimo-address-section')?.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
     const btn=document.getElementById('payBtn'); btn.textContent='Chargement…'; btn.disabled=true;
     try{
       const headers={'Content-Type':'application/json'};
       if(authToken) headers['Authorization']='Bearer '+authToken;
       const mrPoint=selectedMRPoint?{id:selectedMRPoint.ID,nom:selectedMRPoint.Nom,adresse:selectedMRPoint.Adresse1,cp:selectedMRPoint.CP,ville:selectedMRPoint.Ville}:null;
       const shipMode=document.querySelector('.ship-opt.selected')?.dataset.ship||'';
+      const colissimoAddress=['colissimo','express'].includes(shipMode)?getColissimoAddress():null;
       const res=await fetch('/api/create-payment',{method:'POST',headers,
         body:JSON.stringify({
           items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',sub:i.sub,img:i.img,qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,sub:i.sub,img:i.img,unitPrice:i.unitPrice,qty:i.qty})),
@@ -4893,6 +4946,7 @@ window.addEventListener('load', () => {
           customerEmail:authUser?.email,
           mondialRelayPoint:mrPoint,
           shippingMode:shipMode,
+          colissimoAddress,
           successUrl:location.origin+'?payment=success',cancelUrl:location.origin+'?payment=cancel',
         })});
       const data=await res.json();

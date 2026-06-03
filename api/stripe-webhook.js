@@ -88,16 +88,34 @@ async function handler(req, res) {
           let mrPoint = null;
           try { if (session.metadata?.mrPoint) mrPoint = JSON.parse(session.metadata.mrPoint); } catch {}
           const globalOrders = await kv.get('orders:global') || [];
-          // Adresse de livraison collectée par Stripe Checkout
-          const shipDet = session.shipping_details;
-          const shippingAddress = shipDet ? {
-            name:        shipDet.name || customerName,
-            line1:       shipDet.address?.line1 || '',
-            line2:       shipDet.address?.line2 || '',
-            city:        shipDet.address?.city || '',
-            postal_code: shipDet.address?.postal_code || '',
-            country:     shipDet.address?.country || 'FR',
-          } : null;
+          // Adresse de livraison : d'abord notre formulaire (coAddr), sinon Stripe shipping_details
+          let shippingAddress = null;
+          try {
+            const coAddr = session.metadata?.coAddr;
+            if (coAddr) {
+              const a = JSON.parse(coAddr);
+              shippingAddress = {
+                name:        a.name        || customerName,
+                line1:       a.line1       || '',
+                line2:       a.line2       || '',
+                city:        a.city        || '',
+                postal_code: a.postal_code || '',
+                country:     a.country     || 'FR',
+              };
+            }
+          } catch {}
+          // Fallback : Stripe shipping_details (si disponible)
+          if (!shippingAddress && session.shipping_details?.address) {
+            const sd = session.shipping_details;
+            shippingAddress = {
+              name:        sd.name || customerName,
+              line1:       sd.address.line1 || '',
+              line2:       sd.address.line2 || '',
+              city:        sd.address.city || '',
+              postal_code: sd.address.postal_code || '',
+              country:     sd.address.country || 'FR',
+            };
+          }
           globalOrders.unshift({
             ref: order.ref,
             customerEmail: email || '',
