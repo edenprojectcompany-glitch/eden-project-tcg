@@ -4142,7 +4142,8 @@ window.addEventListener('load', () => {
     }
     const effectivePct=promoDiscount||(auto&&!promoDiscount?auto.pct:0);
     const discounted=sub*(1-effectivePct/100);
-    const ship=shipPromo?0:currentShip;
+    const _selShipMode=document.querySelector('.ship-opt.selected')?.dataset.ship;
+    const ship=(shipPromo&&_selShipMode==='mr')?0:currentShip;
     document.getElementById('cartSub').textContent=sub.toFixed(2).replace('.',',')+' €';
     document.getElementById('cartTotal').textContent=(discounted+ship).toFixed(2).replace('.',',')+' €';
     saveCart();
@@ -4761,14 +4762,17 @@ window.addEventListener('load', () => {
       `<div class="co-line"><span>${i.name} × ${i.qty}</span><span>${(i.unitPrice*i.qty).toFixed(2).replace('.',',')} €</span></div>`
     ).join('');
     document.getElementById('coSub').textContent=sub.toFixed(2).replace('.',',')+' €';
-    document.getElementById('coShip').textContent=(shipPromo?0:currentShip).toFixed(2).replace('.',',')+' €';
+    // SHIP0 = livraison offerte uniquement Mondial Relay
+    const selectedShipMode = document.querySelector('.ship-opt.selected')?.dataset.ship;
+    const shipFreeApplied = shipPromo && selectedShipMode === 'mr';
+    document.getElementById('coShip').textContent=(shipFreeApplied?0:currentShip).toFixed(2).replace('.',',')+' €';
     const discRow=document.getElementById('coDiscountRow');
     if(effectivePct>0){
       discRow.style.display='flex';
       document.getElementById('coDiscountLabel').textContent=(promoDiscount?'Code promo':'Remise auto')+' -'+effectivePct+'%';
       document.getElementById('coDiscount').textContent='-'+(discAmount).toFixed(2).replace('.',',')+' €';
     } else discRow.style.display='none';
-    document.getElementById('coTotal').textContent=(discounted+(shipPromo?0:currentShip)).toFixed(2).replace('.',',')+' €';
+    document.getElementById('coTotal').textContent=(discounted+(shipFreeApplied?0:currentShip)).toFixed(2).replace('.',',')+' €';
   }
   // ══ MONDIAL RELAY ══
   let selectedMRPoint = null;
@@ -4809,7 +4813,14 @@ window.addEventListener('load', () => {
 
   document.querySelectorAll('.ship-opt').forEach(o=>o.addEventListener('click',()=>{
     document.querySelectorAll('.ship-opt').forEach(x=>x.classList.remove('selected'));
-    o.classList.add('selected'); currentShip=parseFloat(o.dataset.price); renderCheckout(); updateMRWidget();
+    o.classList.add('selected'); currentShip=parseFloat(o.dataset.price);
+    // SHIP0 : livraison offerte UNIQUEMENT sur Mondial Relay
+    const isMRSelected = o.dataset.ship === 'mr';
+    if(shipPromo && !isMRSelected){
+      const shipEl=o.querySelector('.p');
+      if(shipEl) shipEl.style.color='';
+    }
+    renderCheckout(); updateMRWidget();
   }));
   updateMRWidget();
   document.getElementById('promoBtn').addEventListener('click',()=>{
@@ -4877,7 +4888,7 @@ window.addEventListener('load', () => {
       const res=await fetch('/api/create-payment',{method:'POST',headers,
         body:JSON.stringify({
           items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',sub:i.sub,img:i.img,qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,sub:i.sub,img:i.img,unitPrice:i.unitPrice,qty:i.qty})),
-          shippingCost:shipPromo?0:currentShip,
+          shippingCost:(shipPromo&&currentShipMode==='mr')?0:currentShip,
           promoCode:document.getElementById('promoInput')?.value||'',
           customerEmail:authUser?.email,
           mondialRelayPoint:mrPoint,
@@ -4889,7 +4900,7 @@ window.addEventListener('load', () => {
         const _sub=cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
         const _auto=getAutoPromo(_sub);
         const _pct=promoDiscount||(_auto&&!promoDiscount?_auto.pct:0);
-        const _tot=((_sub*(1-_pct/100))+(shipPromo?0:currentShip)).toFixed(2).replace('.',',')+' €';
+        const _tot=((_sub*(1-_pct/100))+((shipPromo&&currentShipMode==='mr')?0:currentShip)).toFixed(2).replace('.',',')+' €';
         sessionStorage.setItem('eden_pending_total',_tot);
         if(data.sessionId) sessionStorage.setItem('eden_pending_ref','EDN-'+data.sessionId.slice(-6).toUpperCase());
         // Redirection dans le même onglet — le panier est sauvé en localStorage
@@ -4920,7 +4931,7 @@ window.addEventListener('load', () => {
       const res=await fetch('/api/create-paypal-order',{method:'POST',headers,
         body:JSON.stringify({
           items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,unitPrice:i.unitPrice,qty:i.qty})),
-          shippingCost:shipPromo?0:currentShip,
+          shippingCost:(shipPromo&&currentShipModeP==='mr')?0:currentShip,
           promoCode:document.getElementById('promoInput')?.value||'',
           customerEmail:authUser?.email||'',
           mondialRelayPoint:mrPointP,
