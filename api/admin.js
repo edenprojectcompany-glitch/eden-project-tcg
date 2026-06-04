@@ -208,8 +208,10 @@ module.exports = async (req, res) => {
           const nom    = spIdx > 0 ? fullName.slice(spIdx + 1) : fullName;
           const prenom = spIdx > 0 ? fullName.slice(0, spIdx) : '';
           const nbDisplays = (o.items || []).reduce((s, i) => s + (parseInt(i.q) || 1), 0) || 1;
-          const poidsKg = (nbDisplays * POIDS_PAR_DISPLAY_KG).toFixed(2).replace('.', ',');
-          const contreSignature = (o.shippingMode||'').toLowerCase() === 'express' ? 'O' : 'N';
+          // Poids avec point (pas virgule) — virgule peut être lue comme 50 par ColiShip
+          const poidsKg = (nbDisplays * POIDS_PAR_DISPLAY_KG).toFixed(3);
+          // Signature O = DOS (avec signature) — les contrats FACILITÉ n'ont souvent que DOS actif
+          const contreSignature = 'O';
           const clean = v => String(v || '').replace(/;/g, ',').trim();
 
           // Format ModeleImport.FMT officiel ColiShip — 15 colonnes, poids en KG
