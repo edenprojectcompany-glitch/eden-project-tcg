@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const https  = require('https');
 
 const CORS_ORIGIN   = process.env.SITE_URL    || 'https://edenprojecttcg.com';
-const MR_ENSEIGNE   = 'CC23K5TI';
+const MR_ENSEIGNE   = process.env.MR_ENSEIGNE || 'CC23K5TI';
 const MR_SENDER     = {
   name : 'Eden Project TCG',
   ad2  : '',
