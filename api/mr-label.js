@@ -198,7 +198,10 @@ module.exports = async (req, res) => {
     const stat = xmlVal(soapResp, 'STAT');
     if (stat !== '0') {
       console.error('[mr-label] MR error STAT=' + stat, soapResp);
-      return res.status(400).json({ error: `Erreur Mondial Relay (code ${stat}) — vérifiez les paramètres de votre compte` });
+      // Extraire le message d'erreur SOAP si présent
+      const faultString = xmlVal(soapResp, 'faultstring') || xmlVal(soapResp, 'Message') || '';
+      const detail = stat ? `code ${stat}` : (faultString || 'réponse inattendue');
+      return res.status(400).json({ error: `Erreur Mondial Relay (${detail}) — vérifiez les paramètres de votre compte`, debug: soapResp.slice(0, 300) });
     }
 
     const expedition = xmlVal(soapResp, 'ExpeditionNum');

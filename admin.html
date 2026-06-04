@@ -566,7 +566,7 @@ async function genLabel(ref){
   try{
     const r=await fetch('/api/mr-label',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({ref})});
     const d=await r.json();
-    if(!r.ok) throw new Error(d.error||'Erreur');
+    if(!r.ok) throw new Error((d.error||'Erreur') + (d.debug ? ' | '+d.debug : ''));
     window.open(d.labelUrl,'_blank');
     const i=_orders.findIndex(o=>o.ref===ref);
     if(i!==-1){_orders[i].status='label_printed';_orders[i].mrLabelUrl=d.labelUrl;_orders[i].mrExpedition=d.expedition;renderOrders();}
