@@ -29,7 +29,7 @@ const EDEN = {
 };
 
 // ── Paramètres colis par défaut (displays Pokémon scellées) ──────────────────
-const CODE_CONTENU         = '40110'; // Cartes Pokémon / jeux de cartes
+const CODE_CONTENU         = '80100'; // Produits culturels : jeux, cartes Pokémon (Boxtal code vérifié)
 const POIDS_PAR_DISPLAY_KG = 0.45;   // kg par display
 const LONGUEUR_CM          = 20;
 const LARGEUR_CM           = 15;
