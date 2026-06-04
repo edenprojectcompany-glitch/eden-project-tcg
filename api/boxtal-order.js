@@ -247,8 +247,12 @@ async function createOrder(order, offer, siteUrl) {
     'reference_externe': order.ref,
   });
 
-  // Point relais de retrait si commande Mondial Relay (code mrPoint.id)
-  if (order.shippingMode === 'mr' && order.mrPoint?.id) {
+  // Point relais Chronopost choisi par le client pendant le checkout
+  if (order.chronoPoint?.code) {
+    params.set('retrait.pointrelais', order.chronoPoint.code);
+  }
+  // Rétrocompatibilité : ancien mode MR (commandes historiques)
+  else if (order.shippingMode === 'mr' && order.mrPoint?.id) {
     params.set('retrait.pointrelais', order.mrPoint.id);
   }
 

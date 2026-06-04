@@ -2061,6 +2061,24 @@ loadAndRenderReviews();
             <div id="coAddr_err" style="display:none;margin-top:8px;font-size:12px;color:var(--danger)"></div>
           </div>
         </div>
+
+        <!-- ══ SÉLECTEUR RELAIS CHRONOPOST ══ -->
+        <div id="relay-picker-section" style="margin-top:14px;">
+          <div style="padding:16px 18px;border-radius:14px;background:var(--glass);border:1px solid rgba(127,217,255,.2)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-1);font-weight:600">📍 Relais Chronopost près de chez vous</div>
+              <div id="relay-search-status" style="font-size:11px;color:var(--text-dim)"></div>
+            </div>
+            <div id="relay-list" style="display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:12.5px;color:var(--text-dim)">Remplissez votre code postal et ville pour voir les relais disponibles.</div>
+            </div>
+            <div id="relay-selected-banner" style="display:none;margin-top:10px;padding:10px 13px;border-radius:10px;background:rgba(127,217,255,.1);border:1px solid rgba(127,217,255,.35);font-size:12.5px;">
+              <span style="color:var(--foil-1);font-weight:600" id="relay-selected-name"></span>
+              <span style="color:var(--text-dim);margin-left:8px" id="relay-selected-addr"></span>
+            </div>
+            <div id="relay-err" style="display:none;margin-top:8px;font-size:12px;color:var(--danger)">⚠️ Veuillez sélectionner un point relais Chronopost.</div>
+          </div>
+        </div>
       </div>
       <div class="co-summary">
         <h3>Récapitulatif</h3>
@@ -4851,7 +4869,80 @@ window.addEventListener('load', () => {
     fill('coAddr_city',  da.city || '');
     fill('coAddr_tel',   da.tel || '');
     fill('coAddr_email', authUser.email || '');
+    // Déclencher la recherche de relais si CP + ville déjà remplis
+    if(da.postal_code && da.city) searchRelais(da.postal_code, da.city);
   }
+
+  // ══ SÉLECTEUR RELAIS CHRONOPOST ══
+  let selectedRelaisPoint = null; // { code, name, address, zipcode, city }
+  let _relaisSearchTimer  = null;
+
+  function searchRelais(cp, ville){
+    if(!cp || cp.length < 4 || !ville || ville.length < 2) return;
+    const status = document.getElementById('relay-search-status');
+    const list   = document.getElementById('relay-list');
+    if(status) status.textContent = 'Recherche…';
+    if(list)   list.innerHTML     = '<div style="font-size:12px;color:var(--text-dim)">Chargement des relais…</div>';
+
+    fetch(`/api/relay-points?cp=${encodeURIComponent(cp)}&ville=${encodeURIComponent(ville)}`)
+      .then(r => r.json())
+      .then(data => {
+        if(status) status.textContent = '';
+        const points = data.points || [];
+        if(!points.length){
+          if(list) list.innerHTML = '<div style="font-size:12px;color:var(--text-dim)">Aucun relais Chronopost trouvé dans cette zone.</div>';
+          return;
+        }
+        if(list) list.innerHTML = points.map(p => `
+          <div class="relay-item" data-code="${p.code}" data-name="${p.name.replace(/"/g,'&quot;')}"
+            data-addr="${(p.address+', '+p.zipcode+' '+p.city).replace(/"/g,'&quot;')}"
+            style="padding:10px 13px;border-radius:10px;border:1px solid var(--glass-border);cursor:pointer;transition:all .2s;background:var(--glass)">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${p.name}</div>
+            <div style="font-size:11.5px;color:var(--text-dim);margin-top:2px">${p.address}, ${p.zipcode} ${p.city}</div>
+            ${p.schedule.length ? `<div style="font-size:10.5px;color:var(--text-dim);margin-top:3px;opacity:.7">${p.schedule.join(' · ')}</div>` : ''}
+          </div>`).join('');
+
+        // Clic sur un relais
+        list.querySelectorAll('.relay-item').forEach(el => {
+          el.addEventListener('click', () => {
+            list.querySelectorAll('.relay-item').forEach(x => {
+              x.style.borderColor = 'var(--glass-border)';
+              x.style.background  = 'var(--glass)';
+            });
+            el.style.borderColor = 'var(--foil-1)';
+            el.style.background  = 'rgba(127,217,255,.08)';
+            selectedRelaisPoint = { code: el.dataset.code, name: el.dataset.name, address: el.dataset.addr };
+            // Afficher le banner de confirmation
+            document.getElementById('relay-selected-name').textContent = el.dataset.name;
+            document.getElementById('relay-selected-addr').textContent = el.dataset.addr;
+            document.getElementById('relay-selected-banner').style.display = 'block';
+            document.getElementById('relay-err').style.display = 'none';
+          });
+        });
+
+        // Restaurer la sélection précédente si elle est dans les résultats
+        if(selectedRelaisPoint){
+          const prev = list.querySelector(`[data-code="${selectedRelaisPoint.code}"]`);
+          if(prev) prev.click();
+        }
+      })
+      .catch(() => {
+        if(status) status.textContent = '';
+        if(list)   list.innerHTML = '<div style="font-size:12px;color:var(--text-dim)">Impossible de charger les relais.</div>';
+      });
+  }
+
+  // Auto-recherche quand CP + ville changent (debounce 700ms)
+  ['coAddr_cp','coAddr_city'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      clearTimeout(_relaisSearchTimer);
+      _relaisSearchTimer = setTimeout(() => {
+        const cp   = document.getElementById('coAddr_cp')?.value.trim();
+        const ville= document.getElementById('coAddr_city')?.value.trim();
+        searchRelais(cp, ville);
+      }, 700);
+    });
+  });
 
   function getColissimoAddress(){
     return {
@@ -4938,10 +5029,15 @@ window.addEventListener('load', () => {
   async function initiateStripePayment(){
     if(!cart.length) return;
     if(!authUser){go('auth');showNotif('Créez un compte pour finaliser votre commande 🔐','info');return;}
-    // Validation adresse de livraison (obligatoire pour tous les modes Chronopost)
+    // Validation adresse + relais Chronopost
     const currentShipMode=document.querySelector('.ship-opt.selected')?.dataset.ship;
     if(!validateColissimoAddress()){
       document.getElementById('colissimo-address-section')?.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+    if(!selectedRelaisPoint){
+      document.getElementById('relay-err').style.display='block';
+      document.getElementById('relay-picker-section')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
     const btn=document.getElementById('payBtn'); btn.textContent='Chargement…'; btn.disabled=true;
@@ -4950,14 +5046,16 @@ window.addEventListener('load', () => {
       if(authToken) headers['Authorization']='Bearer '+authToken;
       const shipMode=document.querySelector('.ship-opt.selected')?.dataset.ship||'shop2shop';
       const colissimoAddress=getColissimoAddress();
-      const mrPoint=null; // Plus de sélection manuelle de relais — Boxtal détermine le relais le plus proche
+      const mrPoint=null;
+      const chronoPoint=selectedRelaisPoint||null; // relais Chronopost choisi par le client
       const res=await fetch('/api/create-payment',{method:'POST',headers,
         body:JSON.stringify({
           items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',sub:i.sub,img:i.img,qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,sub:i.sub,img:i.img,unitPrice:i.unitPrice,qty:i.qty})),
-          shippingCost:(shipPromo&&currentShipMode==='mr')?0:currentShip,
+          shippingCost:(shipPromo&&currentShipMode==='shop2shop')?0:currentShip,
           promoCode:document.getElementById('promoInput')?.value||'',
           customerEmail:authUser?.email,
           mondialRelayPoint:mrPoint,
+          chronoPoint,
           shippingMode:shipMode,
           colissimoAddress,
           successUrl:location.origin+'?payment=success',cancelUrl:location.origin+'?payment=cancel',
@@ -4983,9 +5081,14 @@ window.addEventListener('load', () => {
   async function initiatePayPalPayment(){
     if(!cart.length) return;
     if(!authUser){go('auth');showNotif('Créez un compte pour finaliser votre commande 🔐','info');return;}
-    // Validation adresse de livraison
+    // Validation adresse + relais Chronopost
     if(!validateColissimoAddress()){
       document.getElementById('colissimo-address-section')?.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+    if(!selectedRelaisPoint){
+      document.getElementById('relay-err').style.display='block';
+      document.getElementById('relay-picker-section')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
     const currentShipModeP=document.querySelector('.ship-opt.selected')?.dataset.ship;
@@ -5001,6 +5104,7 @@ window.addEventListener('load', () => {
           promoCode:document.getElementById('promoInput')?.value||'',
           customerEmail:authUser?.email||'',
           mondialRelayPoint:null,
+          chronoPoint:selectedRelaisPoint||null,
           shippingMode:shipModeP,
           colissimoAddress:getColissimoAddress(),
         })});

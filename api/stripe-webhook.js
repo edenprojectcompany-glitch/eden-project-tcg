@@ -105,8 +105,10 @@ async function handler(req, res) {
 
         // ── Push dans la liste globale des commandes (dashboard admin) ──
         try {
-          let mrPoint = null;
-          try { if (session.metadata?.mrPoint) mrPoint = JSON.parse(session.metadata.mrPoint); } catch {}
+          let mrPoint     = null;
+          let chronoPoint = null;
+          try { if (session.metadata?.mrPoint)     mrPoint     = JSON.parse(session.metadata.mrPoint);     } catch {}
+          try { if (session.metadata?.chronoPoint) chronoPoint = JSON.parse(session.metadata.chronoPoint); } catch {}
           const globalOrders = await kv.get('orders:global') || [];
           // Adresse de livraison : d'abord notre formulaire (coAddr), sinon Stripe shipping_details
           let shippingAddress = null;
@@ -146,6 +148,7 @@ async function handler(req, res) {
             shippingMode: session.metadata?.shippingMode || '',
             shippingAddress,
             mrPoint,
+            chronoPoint,
             status: 'pending',
             createdAt: order.createdAt,
           });
