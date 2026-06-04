@@ -5881,27 +5881,27 @@ window.addEventListener('load', () => {
 
   /* ══ PRIX EBAY LIVE (après le rendu initial) ══ */
   const EBAY_TERMS={
-    1:'Pokemon 151 CN Gengar Edition booster box sealed',
-    2:'Pokemon 151 CN Pikachu Jungle booster box sealed',
-    3:'Pokemon 151 CN Journey Edition booster box sealed',
-    4:'Pokemon 151 CN Hope Edition booster box sealed',
-    5:'Pokemon Gempack Vol.3 Gengar Orange booster box CN',
-    6:'Pokemon Gempack Vol.2 Sylveon booster box Chinese',
-    8:'Pokemon Gempack Vol.4 Ponyta booster box Chinese',
-    9:'Pokemon Gempack Vol.5 Sprigatito booster box Chinese',
-    10:'Pokemon Mega Dream EX booster box Japanese sealed',
-    11:'Pokemon Mega Inferno X booster box Japanese sealed',
-    12:'Pokemon Mega Brave booster box Japanese sealed',
-    13:'Pokemon Mega Symphonia booster box Japanese sealed',
-    14:'Pokemon Munikis Zero booster box Japanese sealed',
-    15:'Pokemon Terastal Festival ex SV8a booster box sealed',
-    16:'Pokemon Battle Partners SV9 booster box Japanese sealed',
-    17:'Pokemon Heat Wave Arena SV9a booster box Japanese sealed',
-    18:'Pokemon Glory Team Rocket SV10 booster box Japanese sealed',
-    19:'Pokemon Black Bolt SV11b booster box Japanese sealed',
-    20:'Pokemon White Flare SV11w booster box Japanese sealed',
-    21:'Pokemon 151 SV2a booster box Japanese sealed',
-    22:'Pokemon Mega Abyss Eye booster box Japanese sealed',
+    1:'CN 151 gengar edition display',
+    2:'CN 151 pikachu jungle display',
+    3:'CN 151 journey edition display',
+    4:'CN 151 hope edition display',
+    5:'gempack vol 3 display',
+    6:'gempack vol 2 display',
+    8:'gempack vol 4 display',
+    9:'gempack vol 5 display',
+    10:'m2a mega dream ex display',
+    11:'m2 mega inferno x display',
+    12:'m1l mega brave display',
+    13:'m1s mega symphonia display',
+    14:'m3 munikis zero display',
+    15:'sv8a terastal festival display',
+    16:'sv9 battle partners display',
+    17:'sv9a heat wave arena display',
+    18:'sv10 glory rocket display',
+    19:'sv11b black bolt display',
+    20:'sv11w white flare display',
+    21:'sv2a 151 display',
+    22:'m5 abyss eye display',
   };
   (async function loadEbayPrices(){
     try{
@@ -5913,7 +5913,14 @@ window.addEventListener('load', () => {
       if(!res.ok) return;
       const {prices}=await res.json();
       let updated=false;
-      products.forEach(p=>{if(prices[p.id]!=null){p.ebay=prices[p.id];updated=true;}});
+      products.forEach(p=>{
+        if(prices[p.id]==null) return;
+        const edenBase = p.tiers?.[0]?.p ?? p.price;
+        // Filtre anti-aberration : ignore si le prix eBay est > 4× ou < 0.3× le prix Eden
+        if(edenBase && (prices[p.id] > edenBase * 4 || prices[p.id] < edenBase * 0.3)) return;
+        p.ebay = prices[p.id];
+        updated = true;
+      });
       if(updated) renderGrid(currentFilter);
     }catch{}
   })();
