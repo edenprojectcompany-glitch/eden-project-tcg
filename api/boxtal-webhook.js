@@ -3,14 +3,17 @@
 //
 // Type "status" : bordereau prêt → label_url disponible
 //   GET /api/boxtal-webhook?ref=EDN-XXX&type=status&emc_reference=...&carrier_reference=...&label_url=...
+//   → met à jour la commande en KV + envoie l'email de suivi au client
 //
 // Type "tracking" : mise à jour du suivi
 //   GET /api/boxtal-webhook?ref=EDN-XXX&type=tracking&etat=ENV&text=...&date=...
+//   → met à jour le statut (LIV = livré → passe en "shipped")
 //
 // Réponse HTTP 200 = Boxtal considère le callback reçu.
 // Réponse HTTP 422 = Boxtal considère la commande introuvable (il ne retentera pas).
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
+const { sendEmail, shippingTrackingHtml } = require('../lib/email');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -39,12 +42,34 @@ module.exports = async (req, res) => {
     if (type === 'status') {
       // ── Bordereau prêt : on stocke l'URL du PDF et la référence transporteur ──
       if (label_url) {
-        order.labelUrl         = label_url;          // URL signée Boxtal pour télécharger le PDF
-        order.carrierRef       = carrier_reference   || order.carrierRef;
-        order.boxtalRef        = emc_reference       || order.boxtalRef;
-        order.status           = 'label_printed';
-        order.labelPrintedAt   = new Date().toISOString();
+        order.labelUrl       = label_url;
+        order.carrierRef     = carrier_reference || order.carrierRef;
+        order.boxtalRef      = emc_reference     || order.boxtalRef;
+        order.status         = 'label_printed';
+        order.labelPrintedAt = new Date().toISOString();
         console.log(`boxtal-webhook [status] ${ref} — bordereau reçu : ${label_url}`);
+
+        // ── Email de suivi automatique au client ──────────────────────────────
+        const clientEmail = order.customerEmail;
+        const trackingNum = carrier_reference || order.carrierRef;
+        if (clientEmail && trackingNum) {
+          const trackingUrl = `https://www.chronopost.fr/tracking-colis/rechercheAvancee/${trackingNum}`;
+          try {
+            await sendEmail({
+              to:      clientEmail,
+              subject: `📦 Votre commande ${ref} est en route — n° ${trackingNum}`,
+              html:    shippingTrackingHtml({
+                ref,
+                name:       order.customerName || '',
+                carrierRef: trackingNum,
+                trackingUrl,
+              }),
+            });
+            console.log(`boxtal-webhook [email] tracking envoyé à ${clientEmail} pour ${ref}`);
+          } catch (emailErr) {
+            console.error(`boxtal-webhook [email] échec envoi tracking ${ref}:`, emailErr.message);
+          }
+        }
       }
 
     } else if (type === 'tracking') {
