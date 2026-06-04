@@ -3731,21 +3731,80 @@ window.addEventListener('load', () => {
   }
   window.openCaseModal = function(id, caseQty, caseTotal, tierPrice, saving){
     const p=products.find(x=>x.id===id); if(!p) return;
-    // Override temporairement la desc et le tag pour afficher les infos case
-    const origDesc=p.desc, origTag=p.tag;
-    const caseDesc=`📦 <strong>${t('case.modal.qty_label')} ${caseQty} ${t('case.modal.displays_sealed')}</strong> — ${t('case.modal.group_order')}<br><br>`
-      +`<strong>💰 ${t('case.modal.case_price')}</strong> ${caseTotal.toFixed(2).replace('.',',')} € TTC`
-      +(saving>0?` <span style="color:var(--foil-4);font-size:11px">(${t('case.modal.saving')} ${saving.toFixed(0)}€ ${t('case.modal.saving_vs')})</span>`:'')+`<br>`
-      +`<strong>📊 ${t('case.modal.price_per_display')}</strong> ${tierPrice.toFixed(0)}${t('modal.per_box')}<br>`
-      +`<strong>🚢 ${t('case.modal.shipping')}</strong> ${t('case.modal.shipping_detail')}<br>`
-      +`<strong>📅 ${t('case.modal.delay')}</strong> ${t('case.modal.delay_detail')}<br><br>`
-      +p.desc;
-    p.desc=caseDesc; p.tag='CASE '+p.tag;
-    openModal(id);
-    p.desc=origDesc; p.tag=origTag;
-    // Masquer le bouton "Ajouter au panier" individuel du modal
-    const btn=document.getElementById('mAddBtn');
-    if(btn) btn.style.display='none';
+    const caseKey = id+'_case';
+
+    // Image
+    let imgEl=modalImg.querySelector('img');
+    if(!imgEl){imgEl=document.createElement('img');modalImg.insertBefore(imgEl,modalImg.querySelector('.foil-modal'));}
+    imgEl.src=IMG_BASE+p.img; imgEl.alt=p.name; imgEl.loading='lazy';
+    imgEl.onerror=()=>{imgEl.style.display='none';}; imgEl.style.display='';
+
+    // Quantité de cases déjà au panier
+    const caseItem=cart.find(c=>c._caseKey===caseKey);
+    let mCaseQty=caseItem?caseItem.qty:0;
+
+    function refreshCaseModal(){
+      const inp=document.getElementById('mQtyInput');
+      const minus=document.getElementById('mQtyMinus');
+      const lbl=document.getElementById('mQtyLabel');
+      const btn=document.getElementById('mAddBtn');
+      if(inp&&document.activeElement!==inp) inp.value=mCaseQty;
+      if(minus) minus.classList.toggle('visible',mCaseQty>0);
+      if(inp)   inp.classList.toggle('visible',mCaseQty>0);
+      if(lbl)   lbl.textContent=mCaseQty>0?mCaseQty+' case'+(mCaseQty>1?'s':'')+' au panier':t('modal.qty_label');
+      if(btn)   btn.textContent=mCaseQty>0?t('modal.update'):t('modal.add_cart');
+    }
+
+    modalBody.innerHTML=`
+      <div class="modal-tag"><span class="lang-badge ${p.lang==='cn'?'b-cn':'b-jp'}">${p.lang==='cn'?'CN':'JPN'}</span> CASE DISPLAY ${p.lang.toUpperCase()} · SCELLÉ</div>
+      <div class="modal-name">${p.name}</div>
+      <div class="modal-sub">${p.sub}</div>
+      <div class="modal-desc">
+        📦 <strong>${t('case.modal.qty_label')} ${caseQty} ${t('case.modal.displays_sealed')}</strong> — ${t('case.modal.group_order')}<br><br>
+        <strong>💰 ${t('case.modal.case_price')}</strong> <span style="color:var(--foil-4);font-size:16px;font-weight:700">${caseTotal.toFixed(2).replace('.',',')} € TTC</span>${saving>0?` <span style="color:var(--foil-4);font-size:11px">(${t('case.modal.saving')} ${saving.toFixed(0)}€ ${t('case.modal.saving_vs')})</span>`:''}<br>
+        <strong>📊 ${t('case.modal.price_per_display')}</strong> ${tierPrice.toFixed(0)}${t('modal.per_box')}<br>
+        <strong>🚢 ${t('case.modal.shipping')}</strong> ${t('case.modal.shipping_detail')}<br>
+        <strong>📅 ${t('case.modal.delay')}</strong> ${t('case.modal.delay_detail')}<br><br>
+        ${p.desc}
+      </div>
+      <div class="modal-price-row">
+        <div class="modal-price"><span>${caseTotal.toFixed(2).replace('.',',')} €</span><span> / case</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin:10px 0 4px;justify-content:center">
+        <button class="cq-btn cq-minus ${mCaseQty>0?'visible':''}" id="mQtyMinus">−</button>
+        <input class="cq-input ${mCaseQty>0?'visible':''}" id="mQtyInput" type="number" min="0" max="50" value="${mCaseQty}" style="width:52px;font-size:15px;padding:5px 4px">
+        <button class="cq-btn cq-plus" id="mQtyPlus">+</button>
+        <span id="mQtyLabel" style="font-size:12px;color:var(--text-dim)">${mCaseQty>0?mCaseQty+' case'+(mCaseQty>1?'s':'')+' au panier':t('modal.qty_label')}</span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" id="mAddBtn">${mCaseQty>0?t('modal.update'):t('modal.add_cart')}</button>
+        <button class="btn-ghost" id="mCloseBtn">${t('modal.close')}</button>
+      </div>`;
+
+    modalOverlay.classList.add('open'); document.body.style.overflow='hidden';
+
+    // Contrôles quantité — en cases, pas en boîtes
+    document.getElementById('mQtyPlus')?.addEventListener('click',()=>{
+      mCaseQty++; refreshCaseModal();
+    });
+    document.getElementById('mQtyMinus')?.addEventListener('click',()=>{
+      if(mCaseQty>0){mCaseQty--;refreshCaseModal();}
+    });
+    document.getElementById('mQtyInput')?.addEventListener('change',e=>{
+      mCaseQty=Math.max(0,parseInt(e.target.value)||0); refreshCaseModal();
+    });
+    document.getElementById('mAddBtn')?.addEventListener('click',()=>{
+      if(mCaseQty===0){
+        cart=cart.filter(c=>c._caseKey!==caseKey); renderCart();
+      } else {
+        // Ajouter ou mettre à jour la case dans le panier
+        const ex=cart.find(c=>c._caseKey===caseKey);
+        if(ex){ ex.qty=mCaseQty; renderCart(); }
+        else  { addCaseToCart(id,caseQty,caseTotal); if(mCaseQty>1) setCaseQty(caseKey,mCaseQty); }
+      }
+      closeModal();
+    });
+    document.getElementById('mCloseBtn')?.addEventListener('click',closeModal);
   };
   window.debugCases = function() {
     const cc = CASE_CATALOG.map(c=>({...products.find(p=>p.id===c.id),_caseQty:c.qty}));
