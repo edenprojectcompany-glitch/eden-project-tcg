@@ -32,7 +32,7 @@ function soapCall(xmlBody) {
       method  : 'POST',
       headers : {
         'Content-Type'  : 'text/xml; charset=utf-8',
-        'SOAPAction'    : 'http://www.mondialrelay.com/webservice/WSI2_CreationExpedition',
+        'SOAPAction'    : '"http://www.mondialrelay.com/webservice/WSI2_CreationExpedition"',
         'Content-Length': buf.length,
       },
     };
@@ -201,7 +201,7 @@ module.exports = async (req, res) => {
       // Extraire le message d'erreur SOAP si présent
       const faultString = xmlVal(soapResp, 'faultstring') || xmlVal(soapResp, 'Message') || '';
       const detail = stat ? `code ${stat}` : (faultString || 'réponse inattendue');
-      return res.status(400).json({ error: `Erreur Mondial Relay (${detail}) — vérifiez les paramètres de votre compte`, debug: soapResp.slice(0, 300) });
+      return res.status(400).json({ error: `Erreur Mondial Relay (${detail}) — vérifiez les paramètres de votre compte`, debug: soapResp.slice(0, 800) });
     }
 
     const expedition = xmlVal(soapResp, 'ExpeditionNum');
