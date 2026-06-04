@@ -17,9 +17,13 @@ const MR_SENDER     = {
 };
 
 /* ── Calcul clé de sécurité MD5 Mondial Relay ── */
+// Règles confirmées par Claude Opus via WSDL officiel :
+// - PAS de suppression d'espaces (valeurs telles qu'envoyées dans le XML)
+// - PAS de toUpperCase sur l'input (seulement sur le hex en sortie)
+// - Les valeurs des champs doivent être en MAJUSCULES à la source
 function mrSecurity(values, privateKey) {
-  const raw = values.map(v => String(v ?? '').replace(/ /g, '')).join('') + privateKey;
-  return crypto.createHash('md5').update(raw.toUpperCase()).digest('hex').toUpperCase();
+  const raw = values.map(v => String(v ?? '')).join('') + privateKey;
+  return crypto.createHash('md5').update(raw).digest('hex').toUpperCase();
 }
 
 /* ── Appel SOAP ── */
@@ -85,8 +89,9 @@ module.exports = async (req, res) => {
     if (order.shippingMode !== 'mr') return res.status(400).json({ error: 'Pas une commande Mondial Relay' });
     if (!order.mrPoint?.id) return res.status(400).json({ error: 'Point relais manquant sur cette commande' });
 
+    // Valeurs en MAJUSCULES à la source (requis par l'API MR)
     const dest = {
-      ad1  : esc((order.customerName || order.customerEmail || 'Client').slice(0, 50)),
+      ad1  : esc((order.customerName || order.customerEmail || 'CLIENT').toUpperCase().slice(0, 32)),
       ville: esc((order.mrPoint.ville || '').toUpperCase()),
       cp   : esc(order.mrPoint.cp || ''),
       pays : 'FR',
@@ -95,7 +100,9 @@ module.exports = async (req, res) => {
     };
     const livRel = esc(order.mrPoint.id);
 
-    // Paramètres dans l'ordre exact pour le calcul MD5
+    // Ordre EXACT du WSDL WSI2_CreationExpedition (confirmé par Claude Opus)
+    // Champs inexistants supprimés : Montant, PUDHT, PUTTC
+    // Champs ajoutés : Dest_Tel2, Longueur, Taille, Exp_Valeur, Exp_Devise, TReprise, Montage, Instructions
     const p = {
       Enseigne    : MR_ENSEIGNE,
       ModeCol     : 'CCC',
@@ -103,11 +110,11 @@ module.exports = async (req, res) => {
       NDossier    : '',
       NClient     : '',
       Expe_Langage: 'FR',
-      Expe_Ad1    : MR_SENDER.name,
+      Expe_Ad1    : MR_SENDER.name.toUpperCase(),
       Expe_Ad2    : MR_SENDER.ad2,
       Expe_Ad3    : '',
       Expe_Ad4    : '',
-      Expe_Ville  : MR_SENDER.ville,
+      Expe_Ville  : MR_SENDER.ville.toUpperCase(),
       Expe_CP     : MR_SENDER.cp,
       Expe_Pays   : MR_SENDER.pays,
       Expe_Tel1   : MR_SENDER.tel,
@@ -122,21 +129,26 @@ module.exports = async (req, res) => {
       Dest_CP     : dest.cp,
       Dest_Pays   : dest.pays,
       Dest_Tel1   : dest.tel,
+      Dest_Tel2   : '',
       Dest_Mail   : dest.mail,
       Poids       : '400',
+      Longueur    : '',
+      Taille      : '',
       NbColis     : '1',
       CRT_Valeur  : '0',
       CRT_Devise  : 'EUR',
+      Exp_Valeur  : '0',
+      Exp_Devise  : 'EUR',
       COL_Rel_Pays: '',
       COL_Rel     : '',
       LIV_Rel_Pays: 'FR',
       LIV_Rel     : livRel,
       TAvisage    : '',
+      TReprise    : '',
+      Montage     : '',
       TRDV        : '',
-      Montant     : '0',
-      PUDHT       : '0',
-      PUTTC       : '0',
       Assurance   : '0',
+      Instructions: '',
     };
 
     const security = mrSecurity(Object.values(p), MR_KEY);
@@ -172,21 +184,26 @@ module.exports = async (req, res) => {
       <Dest_CP>${p.Dest_CP}</Dest_CP>
       <Dest_Pays>${p.Dest_Pays}</Dest_Pays>
       <Dest_Tel1>${p.Dest_Tel1}</Dest_Tel1>
+      <Dest_Tel2>${p.Dest_Tel2}</Dest_Tel2>
       <Dest_Mail>${p.Dest_Mail}</Dest_Mail>
       <Poids>${p.Poids}</Poids>
+      <Longueur>${p.Longueur}</Longueur>
+      <Taille>${p.Taille}</Taille>
       <NbColis>${p.NbColis}</NbColis>
       <CRT_Valeur>${p.CRT_Valeur}</CRT_Valeur>
       <CRT_Devise>${p.CRT_Devise}</CRT_Devise>
+      <Exp_Valeur>${p.Exp_Valeur}</Exp_Valeur>
+      <Exp_Devise>${p.Exp_Devise}</Exp_Devise>
       <COL_Rel_Pays>${p.COL_Rel_Pays}</COL_Rel_Pays>
       <COL_Rel>${p.COL_Rel}</COL_Rel>
       <LIV_Rel_Pays>${p.LIV_Rel_Pays}</LIV_Rel_Pays>
       <LIV_Rel>${p.LIV_Rel}</LIV_Rel>
       <TAvisage>${p.TAvisage}</TAvisage>
+      <TReprise>${p.TReprise}</TReprise>
+      <Montage>${p.Montage}</Montage>
       <TRDV>${p.TRDV}</TRDV>
-      <Montant>${p.Montant}</Montant>
-      <PUDHT>${p.PUDHT}</PUDHT>
-      <PUTTC>${p.PUTTC}</PUTTC>
       <Assurance>${p.Assurance}</Assurance>
+      <Instructions>${p.Instructions}</Instructions>
       <Security>${security}</Security>
     </WSI2_CreationExpedition>
   </soap:Body>
