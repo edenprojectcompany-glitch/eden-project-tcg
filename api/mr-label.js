@@ -89,20 +89,17 @@ module.exports = async (req, res) => {
     if (order.shippingMode !== 'mr') return res.status(400).json({ error: 'Pas une commande Mondial Relay' });
     if (!order.mrPoint?.id) return res.status(400).json({ error: 'Point relais manquant sur cette commande' });
 
-    // Valeurs en MAJUSCULES à la source (requis par l'API MR)
-    const dest = {
-      ad1  : esc((order.customerName || order.customerEmail || 'CLIENT').toUpperCase().slice(0, 32)),
-      ville: esc((order.mrPoint.ville || '').toUpperCase()),
-      cp   : esc(order.mrPoint.cp || ''),
-      pays : 'FR',
-      tel  : '',
-      mail : esc(order.customerEmail || ''),
-    };
-    const livRel = esc(order.mrPoint.id);
+    // Valeurs RAW (pour MD5) — en majuscules à la source
+    const destAd1  = (order.customerName || order.customerEmail || 'CLIENT').toUpperCase().slice(0, 32);
+    const destVille = (order.mrPoint.ville || '').toUpperCase();
+    const destCp    = order.mrPoint.cp || '';
+    const destMail  = order.customerEmail || '';
+    // LIV_Rel : code relais seul (6 chiffres), sans préfixe pays "FR-"
+    const livRel = (order.mrPoint.id || '').replace(/^[A-Z]{2}-/i, '');
 
-    // Ordre EXACT du WSDL WSI2_CreationExpedition (confirmé par Claude Opus)
-    // Champs inexistants supprimés : Montant, PUDHT, PUTTC
-    // Champs ajoutés : Dest_Tel2, Longueur, Taille, Exp_Valeur, Exp_Devise, TReprise, Montage, Instructions
+    // p = valeurs RAW — utilisées pour le calcul MD5 ET le XML (on échappe séparément dans le XML)
+    // Ordre EXACT WSDL (45 champs) confirmé par Claude Opus
+    // CRT_Valeur/Devise, Exp_Valeur/Devise, Assurance : vides (pas '0'/'EUR')
     const p = {
       Enseigne    : MR_ENSEIGNE,
       ModeCol     : 'CCC',
@@ -121,24 +118,24 @@ module.exports = async (req, res) => {
       Expe_Tel2   : '',
       Expe_Mail   : MR_SENDER.mail,
       Dest_Langage: 'FR',
-      Dest_Ad1    : dest.ad1,
+      Dest_Ad1    : destAd1,
       Dest_Ad2    : '',
       Dest_Ad3    : '',
       Dest_Ad4    : '',
-      Dest_Ville  : dest.ville,
-      Dest_CP     : dest.cp,
-      Dest_Pays   : dest.pays,
-      Dest_Tel1   : dest.tel,
+      Dest_Ville  : destVille,
+      Dest_CP     : destCp,
+      Dest_Pays   : 'FR',
+      Dest_Tel1   : '',
       Dest_Tel2   : '',
-      Dest_Mail   : dest.mail,
+      Dest_Mail   : destMail,
       Poids       : '400',
       Longueur    : '',
       Taille      : '',
       NbColis     : '1',
-      CRT_Valeur  : '0',
-      CRT_Devise  : 'EUR',
-      Exp_Valeur  : '0',
-      Exp_Devise  : 'EUR',
+      CRT_Valeur  : '',
+      CRT_Devise  : '',
+      Exp_Valeur  : '',
+      Exp_Devise  : '',
       COL_Rel_Pays: '',
       COL_Rel     : '',
       LIV_Rel_Pays: 'FR',
@@ -147,7 +144,7 @@ module.exports = async (req, res) => {
       TReprise    : '',
       Montage     : '',
       TRDV        : '',
-      Assurance   : '0',
+      Assurance   : '',
       Instructions: '',
     };
 
@@ -176,16 +173,16 @@ module.exports = async (req, res) => {
       <Expe_Tel2>${p.Expe_Tel2}</Expe_Tel2>
       <Expe_Mail>${p.Expe_Mail}</Expe_Mail>
       <Dest_Langage>${p.Dest_Langage}</Dest_Langage>
-      <Dest_Ad1>${p.Dest_Ad1}</Dest_Ad1>
-      <Dest_Ad2>${p.Dest_Ad2}</Dest_Ad2>
-      <Dest_Ad3>${p.Dest_Ad3}</Dest_Ad3>
-      <Dest_Ad4>${p.Dest_Ad4}</Dest_Ad4>
-      <Dest_Ville>${p.Dest_Ville}</Dest_Ville>
-      <Dest_CP>${p.Dest_CP}</Dest_CP>
-      <Dest_Pays>${p.Dest_Pays}</Dest_Pays>
-      <Dest_Tel1>${p.Dest_Tel1}</Dest_Tel1>
-      <Dest_Tel2>${p.Dest_Tel2}</Dest_Tel2>
-      <Dest_Mail>${p.Dest_Mail}</Dest_Mail>
+      <Dest_Ad1>${esc(p.Dest_Ad1)}</Dest_Ad1>
+      <Dest_Ad2>${esc(p.Dest_Ad2)}</Dest_Ad2>
+      <Dest_Ad3>${esc(p.Dest_Ad3)}</Dest_Ad3>
+      <Dest_Ad4>${esc(p.Dest_Ad4)}</Dest_Ad4>
+      <Dest_Ville>${esc(p.Dest_Ville)}</Dest_Ville>
+      <Dest_CP>${esc(p.Dest_CP)}</Dest_CP>
+      <Dest_Pays>${esc(p.Dest_Pays)}</Dest_Pays>
+      <Dest_Tel1>${esc(p.Dest_Tel1)}</Dest_Tel1>
+      <Dest_Tel2>${esc(p.Dest_Tel2)}</Dest_Tel2>
+      <Dest_Mail>${esc(p.Dest_Mail)}</Dest_Mail>
       <Poids>${p.Poids}</Poids>
       <Longueur>${p.Longueur}</Longueur>
       <Taille>${p.Taille}</Taille>
