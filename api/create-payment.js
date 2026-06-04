@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { items, shippingCost, promoCode, customerEmail, successUrl, cancelUrl, mondialRelayPoint, shippingMode, colissimoAddress, chronoPoint } = req.body || {};
+    const { items, shippingCost, promoCode, customerEmail, successUrl, cancelUrl, mondialRelayPoint, shippingMode, colissimoAddress, chronoPoint, domtomCountry } = req.body || {};
     if (!items?.length) return res.status(400).json({ error: 'Panier vide' });
     if (items.length > 50) return res.status(400).json({ error: 'Trop d\'articles' });
 
@@ -217,10 +217,11 @@ module.exports = async (req, res) => {
         items_json: JSON.stringify(itemsSummary.slice(0, 8).map(i => ({ n: i.n.slice(0, 20), q: i.q, p: i.p }))).slice(0, 490),
         items_ids: JSON.stringify(rawItems.slice(0, 12).map(i => ({ id: i.item.id, q: i.qty }))).slice(0, 490),
         userEmail: verifiedUserEmail || '',
-        shippingMode: String(shippingMode || '').slice(0, 10),
-        mrPoint:      mondialRelayPoint ? JSON.stringify(mondialRelayPoint).slice(0, 490) : '',
-        coAddr:       colissimoAddress  ? JSON.stringify(colissimoAddress).slice(0, 490)  : '',
-        chronoPoint:  chronoPoint       ? JSON.stringify(chronoPoint).slice(0, 490)       : '',
+        shippingMode:   String(shippingMode || '').slice(0, 10),
+        mrPoint:        mondialRelayPoint ? JSON.stringify(mondialRelayPoint).slice(0, 490) : '',
+        coAddr:         colissimoAddress  ? JSON.stringify(colissimoAddress).slice(0, 490)  : '',
+        chronoPoint:    chronoPoint       ? JSON.stringify(chronoPoint).slice(0, 490)       : '',
+        domtomCountry:  String(domtomCountry || '').slice(0, 5),
       },
       // Adresse collectée directement sur le site (formulaire Colissimo) — pas besoin de Stripe
       // shipping_address_collection supprimé pour éviter la double saisie

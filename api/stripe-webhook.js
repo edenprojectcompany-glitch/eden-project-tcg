@@ -105,8 +105,9 @@ async function handler(req, res) {
 
         // ── Push dans la liste globale des commandes (dashboard admin) ──
         try {
-          let mrPoint     = null;
-          let chronoPoint = null;
+          let mrPoint      = null;
+          let chronoPoint  = null;
+          const domtomCountry = session.metadata?.domtomCountry || '';
           try { if (session.metadata?.mrPoint)     mrPoint     = JSON.parse(session.metadata.mrPoint);     } catch {}
           try { if (session.metadata?.chronoPoint) chronoPoint = JSON.parse(session.metadata.chronoPoint); } catch {}
           const globalOrders = await kv.get('orders:global') || [];
@@ -145,10 +146,11 @@ async function handler(req, res) {
             amount: order.amount,
             provider: 'stripe',
             items: orderItems,
-            shippingMode: session.metadata?.shippingMode || '',
+            shippingMode:   session.metadata?.shippingMode || '',
             shippingAddress,
             mrPoint,
             chronoPoint,
+            domtomCountry,
             status: 'pending',
             createdAt: order.createdAt,
           });

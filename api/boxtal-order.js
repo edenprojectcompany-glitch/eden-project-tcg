@@ -38,9 +38,13 @@ const HAUTEUR_CM           = 5;
 // ── Mapping mode d'envoi Eden → service Boxtal (codes exacts vérifiés via API) ─
 // operator CHRP = Chronopost. Les deux services déposent à La Poste bureau Rue Siam Brest.
 const SERVICE_MAP = {
-  'shop2shop': { operator: 'CHRP', service: 'Chrono2ShopDirect' }, // Éco relais — dépôt bureaude poste, retrait relais Chronopost, ~J+2
-  'relais13':  { operator: 'CHRP', service: 'ChronoRelais'       }, // J+1 garanti — dépôt bureau de poste, retrait relais Chronopost
+  'shop2shop': { operator: 'CHRP', service: 'Chrono2ShopDirect'       }, // Éco relais — dépôt bureau de poste, retrait relais Chronopost
+  'relais13':  { operator: 'CHRP', service: 'ChronoRelais'            }, // J+1 garanti — dépôt bureau de poste, retrait relais Chronopost
+  'outremer':  { operator: 'POFR', service: 'ColissimoAccessOutreMer' }, // DOM-TOM domicile — pays = order.domtomCountry
 };
+
+// Pays DOM-TOM valides (codes ISO attendus par l'API Boxtal)
+const DOMTOM_COUNTRIES = new Set(['GP','MQ','GF','RE','YT','PM','MF','BL','NC','PF','WF']);
 
 // ── Helpers CORS ─────────────────────────────────────────────────────────────
 function cors(res) {
@@ -208,6 +212,11 @@ async function createOrder(order, offer, siteUrl) {
   // URL de callback unique par commande : Boxtal l'appelle quand le bordereau est prêt
   const urlPush = `${siteUrl}/api/boxtal-webhook?ref=${encodeURIComponent(order.ref)}`;
 
+  // Pour les DOM-TOM : utiliser le code pays du territoire (RE, GP, GF…) pas 'FR'
+  const destPays = (order.shippingMode === 'outremer' && DOMTOM_COUNTRIES.has(order.domtomCountry))
+    ? order.domtomCountry
+    : (a.country || 'FR');
+
   const params = new URLSearchParams({
     // ── Colis
     'colis_0.poids':     poids,
@@ -234,9 +243,9 @@ async function createOrder(order, offer, siteUrl) {
     'destinataire.prenom':      prenomDest,
     'destinataire.nom':         nomDest,
     'destinataire.email':       order.customerEmail || '',
-    'destinataire.tel':         a.tel || '33600000000', // fallback si non collecté
+    'destinataire.tel':         a.tel || '33600000000',
     'destinataire.adresse':     a.line1 || '',
-    'destinataire.pays':        a.country      || 'FR',
+    'destinataire.pays':        destPays,
     'destinataire.code_postal': a.postal_code  || '',
     'destinataire.ville':       a.city         || '',
     // ── Transporteur sélectionné par la cotation

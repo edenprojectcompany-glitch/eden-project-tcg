@@ -2033,8 +2033,34 @@ loadAndRenderReviews();
               <div class="l"><div class="n">🚀 Relais Chronopost — J+1</div><div class="s">Livraison garantie le lendemain · Retrait en point relais</div></div>
               <div class="p">9,50 €</div>
             </div>
+            <div class="ship-opt" data-ship="outremer" data-price="20.00">
+              <div class="l"><div class="n">🌴 DOM-TOM</div><div class="s">Guadeloupe, Réunion, Martinique, Guyane… · Colissimo domicile · 8–15 jours</div></div>
+              <div class="p">20,00 €</div>
+            </div>
           </div>
         </div>
+        <!-- ══ SÉLECTEUR TERRITOIRE DOM-TOM ══ -->
+        <div id="domtom-section" style="display:none;margin-top:14px;">
+          <div style="padding:14px 18px;border-radius:14px;background:var(--glass);border:1px solid rgba(168,255,212,.2)">
+            <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-4);font-weight:600;margin-bottom:10px">🌴 Votre territoire</div>
+            <select id="domtomSelect" style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;appearance:auto">
+              <option value="">— Choisissez votre territoire —</option>
+              <option value="GP">🏝 Guadeloupe</option>
+              <option value="MQ">🌺 Martinique</option>
+              <option value="GF">🌊 Guyane</option>
+              <option value="RE">🏔 La Réunion</option>
+              <option value="YT">🌴 Mayotte</option>
+              <option value="PM">⛵ Saint-Pierre-et-Miquelon</option>
+              <option value="MF">🌸 Saint-Martin</option>
+              <option value="BL">🌅 Saint-Barthélemy</option>
+              <option value="NC">🐠 Nouvelle-Calédonie</option>
+              <option value="PF">🌺 Polynésie française</option>
+              <option value="WF">🏄 Wallis-et-Futuna</option>
+            </select>
+            <div id="domtom-err" style="display:none;margin-top:6px;font-size:12px;color:var(--danger)">⚠️ Veuillez sélectionner votre territoire.</div>
+          </div>
+        </div>
+
         <!-- ══ ADRESSE DE LIVRAISON (Chronopost relais — tous modes) ══ -->
         <!-- Boxtal détermine automatiquement le relais Chronopost le plus proche de cette adresse -->
         <div id="colissimo-address-section" style="margin-top:16px;">
@@ -5027,6 +5053,21 @@ window.addEventListener('load', () => {
     return true;
   }
 
+  // Affichage/masquage des sections selon le mode sélectionné
+  function updateShippingSections(){
+    const mode = document.querySelector('.ship-opt.selected')?.dataset.ship || 'shop2shop';
+    const isOutremer  = mode === 'outremer';
+    const domtomSec   = document.getElementById('domtom-section');
+    const relayPicker = document.getElementById('relay-picker-section');
+    if(domtomSec)   domtomSec.style.display   = isOutremer ? 'block' : 'none';
+    if(relayPicker) relayPicker.style.display  = isOutremer ? 'none'  : 'block';
+    // Changer le label du formulaire adresse selon le mode
+    const addrLabel = document.querySelector('#colissimo-address-section [style*="letter-spacing"]');
+    if(addrLabel) addrLabel.textContent = isOutremer
+      ? '📦 Adresse de livraison domicile'
+      : '📍 Adresse pour localiser le relais Chronopost';
+  }
+
   document.querySelectorAll('.ship-opt').forEach(o=>o.addEventListener('click',()=>{
     document.querySelectorAll('.ship-opt').forEach(x=>x.classList.remove('selected'));
     o.classList.add('selected'); currentShip=parseFloat(o.dataset.price);
@@ -5036,8 +5077,10 @@ window.addEventListener('load', () => {
       if(shipEl) shipEl.style.color='';
     }
     renderCheckout();
+    updateShippingSections();
   }));
   prefillShippingAddress();
+  updateShippingSections();
   document.getElementById('promoBtn').addEventListener('click',()=>{
     const code=document.getElementById('promoInput').value.trim().toUpperCase();
     const msg=document.getElementById('promoMsg');
@@ -5094,7 +5137,10 @@ window.addEventListener('load', () => {
       document.getElementById('colissimo-address-section')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
-    if(!selectedRelaisPoint){
+    if(currentShipMode==='outremer'){
+      const terr=document.getElementById('domtomSelect')?.value;
+      if(!terr){ document.getElementById('domtom-err').style.display='block'; document.getElementById('domtom-section')?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    } else if(!selectedRelaisPoint){
       document.getElementById('relay-err').style.display='block';
       document.getElementById('relay-picker-section')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
@@ -5106,7 +5152,8 @@ window.addEventListener('load', () => {
       const shipMode=document.querySelector('.ship-opt.selected')?.dataset.ship||'shop2shop';
       const colissimoAddress=getColissimoAddress();
       const mrPoint=null;
-      const chronoPoint=selectedRelaisPoint||null; // relais Chronopost choisi par le client
+      const chronoPoint=selectedRelaisPoint||null;
+      const domtomCountry=shipMode==='outremer'?(document.getElementById('domtomSelect')?.value||''):'';
       const res=await fetch('/api/create-payment',{method:'POST',headers,
         body:JSON.stringify({
           items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',sub:i.sub,img:i.img,qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,sub:i.sub,img:i.img,unitPrice:i.unitPrice,qty:i.qty})),
@@ -5115,6 +5162,7 @@ window.addEventListener('load', () => {
           customerEmail:authUser?.email,
           mondialRelayPoint:mrPoint,
           chronoPoint,
+          domtomCountry,
           shippingMode:shipMode,
           colissimoAddress,
           successUrl:location.origin+'?payment=success',cancelUrl:location.origin+'?payment=cancel',
@@ -5145,12 +5193,15 @@ window.addEventListener('load', () => {
       document.getElementById('colissimo-address-section')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
-    if(!selectedRelaisPoint){
+    const currentShipModeP=document.querySelector('.ship-opt.selected')?.dataset.ship;
+    if(currentShipModeP==='outremer'){
+      const terr=document.getElementById('domtomSelect')?.value;
+      if(!terr){ document.getElementById('domtom-err').style.display='block'; document.getElementById('domtom-section')?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    } else if(!selectedRelaisPoint){
       document.getElementById('relay-err').style.display='block';
       document.getElementById('relay-picker-section')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
-    const currentShipModeP=document.querySelector('.ship-opt.selected')?.dataset.ship;
     const btn=document.getElementById('paypalBtn'); btn.textContent='Chargement…'; btn.disabled=true;
     try{
       const headers={'Content-Type':'application/json'};
@@ -5164,6 +5215,7 @@ window.addEventListener('load', () => {
           customerEmail:authUser?.email||'',
           mondialRelayPoint:null,
           chronoPoint:selectedRelaisPoint||null,
+          domtomCountry:currentShipModeP==='outremer'?(document.getElementById('domtomSelect')?.value||''):'',
           shippingMode:shipModeP,
           colissimoAddress:getColissimoAddress(),
         })});
@@ -5536,7 +5588,8 @@ window.addEventListener('load', () => {
     const priceMap={
       'shop2shop': cfg.shop2shop ?? 5.90,
       'relais13':  cfg.relais13  ?? 9.50,
-      // rétrocompatibilité si anciennes clés dans le KV
+      'outremer':  cfg.outremer  ?? 20.00,
+      // rétrocompatibilité
       'mr':        cfg.relay     ?? 5.90,
       'colissimo': cfg.colissimo ?? 9.50,
       'express':   cfg.express   ?? 14.90,
