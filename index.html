@@ -2025,49 +2025,21 @@ loadAndRenderReviews();
         <div class="co-section">
           <h3><span class="num">1</span>Livraison</h3>
           <div class="ship-opts">
-            <div class="ship-opt selected" data-ship="mr" data-price="4.90">
-              <div class="l"><div class="n">Mondial Relay · Point relais</div><div class="s">3–4 jours ouvrés</div></div>
-              <div class="p">4,90 €</div>
+            <div class="ship-opt selected" data-ship="shop2shop" data-price="5.90">
+              <div class="l"><div class="n">📦 Relais Chronopost — Éco</div><div class="s">2–3 jours · Retrait en point relais Chronopost</div></div>
+              <div class="p">5,90 €</div>
             </div>
-            <div class="ship-opt" data-ship="colissimo" data-price="7.90">
-              <div class="l"><div class="n">Colissimo domicile</div><div class="s">2–3 jours ouvrés · Livraison à domicile</div></div>
-              <div class="p">7,90 €</div>
-            </div>
-            <div class="ship-opt" data-ship="express" data-price="14.90">
-              <div class="l"><div class="n">Express sécurisé</div><div class="s">24h · Signature obligatoire</div></div>
-              <div class="p">14,90 €</div>
-            </div>
-            <div class="ship-opt" data-ship="outremer" data-price="20.00">
-              <div class="l"><div class="n">🌴 Colissimo Outre-mer</div><div class="s">Guadeloupe, Martinique, Réunion, Guyane… · 5–8 jours</div></div>
-              <div class="p">20,00 €</div>
+            <div class="ship-opt" data-ship="relais13" data-price="9.50">
+              <div class="l"><div class="n">🚀 Relais Chronopost — J+1</div><div class="s">Livraison garantie le lendemain · Retrait en point relais</div></div>
+              <div class="p">9,50 €</div>
             </div>
           </div>
         </div>
-        <!-- ══ WIDGET MONDIAL RELAY ══ -->
-        <div id="mr-widget-section" style="display:none;margin-top:16px;">
-          <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;">
-            <input type="text" id="mrCodePostal" placeholder="Votre code postal (ex: 75001)" maxlength="5" inputmode="numeric"
-              style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s;">
-            <button id="mrSearchBtn"
-              style="padding:10px 18px;border-radius:10px;border:none;background:var(--foil-1);color:#0a0a0c;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;">📍 Chercher</button>
-          </div>
-          <div id="mr-selected-point" style="display:none;margin-bottom:14px;padding:12px 14px;border-radius:10px;background:rgba(127,217,255,.08);border:1px solid rgba(127,217,255,.3);font-size:12.5px;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--foil-1)" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <strong id="mr-point-name" style="color:var(--foil-1);font-size:13px;"></strong>
-            </div>
-            <span id="mr-point-addr" style="color:var(--text-dim);padding-left:21px;display:block;"></span>
-          </div>
-          <div id="mr-widget-glow-wrap">
-            <div id="Zone_Widget" style="border-radius:11px;overflow:hidden;position:relative;z-index:1;background:#0f0f12;"></div>
-          </div>
-          <input type="hidden" id="Retour_Widget">
-        </div>
-
-        <!-- ══ ADRESSE COLISSIMO / EXPRESS ══ -->
-        <div id="colissimo-address-section" style="display:none;margin-top:16px;">
+        <!-- ══ ADRESSE DE LIVRAISON (Chronopost relais — tous modes) ══ -->
+        <!-- Boxtal détermine automatiquement le relais Chronopost le plus proche de cette adresse -->
+        <div id="colissimo-address-section" style="margin-top:16px;">
           <div style="padding:18px 20px;border-radius:14px;background:var(--glass);border:1px solid rgba(127,217,255,.2)">
-            <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-1);margin-bottom:14px;font-weight:600">📦 Adresse de livraison</div>
+            <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-1);margin-bottom:14px;font-weight:600">📍 Adresse pour localiser le relais Chronopost</div>
             <div style="display:grid;gap:10px">
               <input id="coAddr_name" type="text" placeholder="Nom complet *" maxlength="80" autocomplete="name"
                 style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
@@ -4842,8 +4814,8 @@ window.addEventListener('load', () => {
     if(_pb){_pb.textContent='💳 Payer par carte bancaire';_pb.disabled=false;}
     const _pp=document.getElementById('paypalBtn');
     if(_pp){_pp.textContent='🅿 Payer avec PayPal';_pp.disabled=false;}
-    // Sync visibilité widget MR
-    if(typeof updateMRWidget==='function') updateMRWidget();
+    // Pré-remplir adresse si connecté
+    if(typeof prefillShippingAddress==='function') prefillShippingAddress();
     const sub=cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
     const auto=getAutoPromo(sub);
     const effectivePct=promoDiscount||(auto&&!promoDiscount?auto.pct:0);
@@ -4853,9 +4825,9 @@ window.addEventListener('load', () => {
       `<div class="co-line"><span>${i.name} × ${i.qty}</span><span>${(i.unitPrice*i.qty).toFixed(2).replace('.',',')} €</span></div>`
     ).join('');
     document.getElementById('coSub').textContent=sub.toFixed(2).replace('.',',')+' €';
-    // SHIP0 = livraison offerte uniquement Mondial Relay
+    // SHIP0 = livraison offerte sur le mode le moins cher (shop2shop)
     const selectedShipMode = document.querySelector('.ship-opt.selected')?.dataset.ship;
-    const shipFreeApplied = shipPromo && selectedShipMode === 'mr';
+    const shipFreeApplied = shipPromo && selectedShipMode === 'shop2shop';
     document.getElementById('coShip').textContent=(shipFreeApplied?0:currentShip).toFixed(2).replace('.',',')+' €';
     const discRow=document.getElementById('coDiscountRow');
     if(effectivePct>0){
@@ -4865,32 +4837,20 @@ window.addEventListener('load', () => {
     } else discRow.style.display='none';
     document.getElementById('coTotal').textContent=(discounted+(shipFreeApplied?0:currentShip)).toFixed(2).replace('.',',')+' €';
   }
-  // ══ MONDIAL RELAY ══
-  let selectedMRPoint = null;
+  // ══ LIVRAISON CHRONOPOST (shop2shop + relais13) ══
+  // Pas de widget relais : Boxtal détermine le relais le plus proche de l'adresse client automatiquement
 
-  function updateMRWidget(){
-    const selectedMode = document.querySelector('.ship-opt.selected')?.dataset.ship;
-    const isMR = selectedMode === 'mr';
-    const isColissimoOrExpress = ['colissimo','express','outremer'].includes(selectedMode);
-    const mrSection = document.getElementById('mr-widget-section');
-    const coSection = document.getElementById('colissimo-address-section');
-    if(mrSection) mrSection.style.display = isMR ? 'block' : 'none';
-    if(coSection) {
-      coSection.style.display = isColissimoOrExpress ? 'block' : 'none';
-      // Pré-remplir depuis le profil si les champs sont vides
-      if(isColissimoOrExpress && authUser) {
-        const da = authUser.deliveryAddress || {};
-        const fill = (id, val) => { const el=document.getElementById(id); if(el&&!el.value&&val) el.value=val; };
-        fill('coAddr_name',  authUser.name || '');
-        fill('coAddr_line1', da.line1 || '');
-        fill('coAddr_line2', da.line2 || '');
-        fill('coAddr_cp',    da.postal_code || '');
-        fill('coAddr_city',  da.city || '');
-        fill('coAddr_tel',   da.tel || '');
-        fill('coAddr_email', authUser.email || '');
-      }
-    }
-    if(!isMR){ selectedMRPoint=null; const sp=document.getElementById('mr-selected-point'); if(sp) sp.style.display='none'; }
+  function prefillShippingAddress(){
+    if(!authUser) return;
+    const da = authUser.deliveryAddress || {};
+    const fill = (id, val) => { const el=document.getElementById(id); if(el&&!el.value&&val) el.value=val; };
+    fill('coAddr_name',  authUser.name || '');
+    fill('coAddr_line1', da.line1 || '');
+    fill('coAddr_line2', da.line2 || '');
+    fill('coAddr_cp',    da.postal_code || '');
+    fill('coAddr_city',  da.city || '');
+    fill('coAddr_tel',   da.tel || '');
+    fill('coAddr_email', authUser.email || '');
   }
 
   function getColissimoAddress(){
@@ -4917,45 +4877,17 @@ window.addEventListener('load', () => {
     return true;
   }
 
-  function initMRWidget(){
-    const cp = document.getElementById('mrCodePostal').value.trim();
-    if(!cp || cp.length<4){ showNotif('Entrez un code postal valide','info'); return; }
-    if(typeof $==='undefined'){ showNotif('Widget en cours de chargement, réessayez dans un instant','info'); return; }
-    document.getElementById('Zone_Widget').innerHTML='';
-    document.getElementById('mr-selected-point').style.display='none';
-    selectedMRPoint=null;
-    $('#Zone_Widget').MR_ParcelShopPicker({
-      Target:'#Retour_Widget',
-      Brand:'CC23K5TI',
-      Country:'FR',
-      PostCode:cp,
-      NbResults:'7',
-      Theme:'mondialrelay',
-      OnParcelShopSelected:function(data){
-        selectedMRPoint=data;
-        document.getElementById('mr-point-name').textContent=data.Nom;
-        document.getElementById('mr-point-addr').textContent=data.Adresse1+', '+data.CP+' '+data.Ville;
-        document.getElementById('mr-selected-point').style.display='block';
-        showNotif('✅ Point relais sélectionné : '+data.Nom,'success');
-      }
-    });
-  }
-
-  document.getElementById('mrSearchBtn').addEventListener('click', initMRWidget);
-  document.getElementById('mrCodePostal').addEventListener('keydown', e=>{ if(e.key==='Enter') initMRWidget(); });
-
   document.querySelectorAll('.ship-opt').forEach(o=>o.addEventListener('click',()=>{
     document.querySelectorAll('.ship-opt').forEach(x=>x.classList.remove('selected'));
     o.classList.add('selected'); currentShip=parseFloat(o.dataset.price);
-    // SHIP0 : livraison offerte UNIQUEMENT sur Mondial Relay
-    const isMRSelected = o.dataset.ship === 'mr';
-    if(shipPromo && !isMRSelected){
+    // SHIP0 : livraison offerte uniquement sur shop2shop (le moins cher)
+    if(shipPromo && o.dataset.ship !== 'shop2shop'){
       const shipEl=o.querySelector('.p');
       if(shipEl) shipEl.style.color='';
     }
-    renderCheckout(); updateMRWidget();
+    renderCheckout();
   }));
-  updateMRWidget();
+  prefillShippingAddress();
   document.getElementById('promoBtn').addEventListener('click',()=>{
     const code=document.getElementById('promoInput').value.trim().toUpperCase();
     const msg=document.getElementById('promoMsg');
@@ -5006,13 +4938,9 @@ window.addEventListener('load', () => {
   async function initiateStripePayment(){
     if(!cart.length) return;
     if(!authUser){go('auth');showNotif('Créez un compte pour finaliser votre commande 🔐','info');return;}
-    // Validation point Mondial Relay
+    // Validation adresse de livraison (obligatoire pour tous les modes Chronopost)
     const currentShipMode=document.querySelector('.ship-opt.selected')?.dataset.ship;
-    if(currentShipMode==='mr'&&!selectedMRPoint){
-      showPayError('📍 Veuillez sélectionner un point Mondial Relay avant de payer.');
-      return;
-    }
-    if(['colissimo','express','outremer'].includes(currentShipMode) && !validateColissimoAddress()){
+    if(!validateColissimoAddress()){
       document.getElementById('colissimo-address-section')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
@@ -5020,9 +4948,9 @@ window.addEventListener('load', () => {
     try{
       const headers={'Content-Type':'application/json'};
       if(authToken) headers['Authorization']='Bearer '+authToken;
-      const mrPoint=selectedMRPoint?{id:selectedMRPoint.ID,nom:selectedMRPoint.Nom,adresse:selectedMRPoint.Adresse1,cp:selectedMRPoint.CP,ville:selectedMRPoint.Ville}:null;
-      const shipMode=document.querySelector('.ship-opt.selected')?.dataset.ship||'';
-      const colissimoAddress=['colissimo','express','outremer'].includes(shipMode)?getColissimoAddress():null;
+      const shipMode=document.querySelector('.ship-opt.selected')?.dataset.ship||'shop2shop';
+      const colissimoAddress=getColissimoAddress();
+      const mrPoint=null; // Plus de sélection manuelle de relais — Boxtal détermine le relais le plus proche
       const res=await fetch('/api/create-payment',{method:'POST',headers,
         body:JSON.stringify({
           items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',sub:i.sub,img:i.img,qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,sub:i.sub,img:i.img,unitPrice:i.unitPrice,qty:i.qty})),
@@ -5055,26 +4983,26 @@ window.addEventListener('load', () => {
   async function initiatePayPalPayment(){
     if(!cart.length) return;
     if(!authUser){go('auth');showNotif('Créez un compte pour finaliser votre commande 🔐','info');return;}
-    // Validation point Mondial Relay
-    const currentShipModeP=document.querySelector('.ship-opt.selected')?.dataset.ship;
-    if(currentShipModeP==='mr'&&!selectedMRPoint){
-      showPayError('📍 Veuillez sélectionner un point Mondial Relay avant de payer.');
+    // Validation adresse de livraison
+    if(!validateColissimoAddress()){
+      document.getElementById('colissimo-address-section')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
+    const currentShipModeP=document.querySelector('.ship-opt.selected')?.dataset.ship;
     const btn=document.getElementById('paypalBtn'); btn.textContent='Chargement…'; btn.disabled=true;
     try{
       const headers={'Content-Type':'application/json'};
       if(authToken) headers['Authorization']='Bearer '+authToken;
-      const mrPointP=selectedMRPoint?{id:selectedMRPoint.ID,nom:selectedMRPoint.Nom,adresse:selectedMRPoint.Adresse1,cp:selectedMRPoint.CP,ville:selectedMRPoint.Ville}:null;
-      const shipModeP=document.querySelector('.ship-opt.selected')?.dataset.ship||'';
+      const shipModeP=document.querySelector('.ship-opt.selected')?.dataset.ship||'shop2shop';
       const res=await fetch('/api/create-paypal-order',{method:'POST',headers,
         body:JSON.stringify({
           items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,unitPrice:i.unitPrice,qty:i.qty})),
-          shippingCost:(shipPromo&&currentShipModeP==='mr')?0:currentShip,
+          shippingCost:(shipPromo&&currentShipModeP==='shop2shop')?0:currentShip,
           promoCode:document.getElementById('promoInput')?.value||'',
           customerEmail:authUser?.email||'',
-          mondialRelayPoint:mrPointP,
+          mondialRelayPoint:null,
           shippingMode:shipModeP,
+          colissimoAddress:getColissimoAddress(),
         })});
       const data=await res.json();
       if(data.approveUrl) location.href=data.approveUrl;
@@ -5441,14 +5369,21 @@ window.addEventListener('load', () => {
 
   function applyShippingConfig(cfg){
     const opts=document.querySelectorAll('.ship-opt');
-    const keys=['mr','colissimo','express','outremer'];
-    const vals=cfg.freeForAll?[0,0,0,0]:[cfg.relay,cfg.colissimo,cfg.express,cfg.outremer??20];
+    // Mapping mode → valeur de prix depuis la config KV admin
+    const priceMap={
+      'shop2shop': cfg.shop2shop ?? 5.90,
+      'relais13':  cfg.relais13  ?? 9.50,
+      // rétrocompatibilité si anciennes clés dans le KV
+      'mr':        cfg.relay     ?? 5.90,
+      'colissimo': cfg.colissimo ?? 9.50,
+      'express':   cfg.express   ?? 14.90,
+    };
     opts.forEach(o=>{
-      const idx=keys.indexOf(o.dataset.ship);
-      if(idx===-1) return;
-      const v=vals[idx];
-      o.dataset.price=v;
-      o.querySelector('.p').innerHTML=cfg.freeForAll?'<span style="color:var(--foil-4)">Offerte 🎁</span>':v.toFixed(2).replace('.',',')+' €';
+      const v = cfg.freeForAll ? 0 : (priceMap[o.dataset.ship] ?? parseFloat(o.dataset.price));
+      o.dataset.price = v;
+      o.querySelector('.p').innerHTML = cfg.freeForAll
+        ? '<span style="color:var(--foil-4)">Offerte 🎁</span>'
+        : v.toFixed(2).replace('.',',')+' €';
     });
     if(cfg.freeForAll){ shipPromo=true; currentShip=0; }
     else {

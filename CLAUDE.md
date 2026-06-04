@@ -35,6 +35,8 @@ Site SPA (Single Page Application) hébergé sur Vercel avec APIs serverless Nod
 | `JWT_SECRET` | Clé secrète JWT (chaîne aléatoire ≥ 32 chars) | login.js, register.js, spin.js |
 | `ADMIN_CODE` | Code d'accès au panneau admin | admin.js |
 | `SITE_URL` | URL du site sans slash final (`https://edenprojecttcg.com`) | CORS sur tous les endpoints |
+| `BOXTAL_ACCESS_KEY` | Clé d'accès Boxtal API v1 | boxtal-order.js |
+| `BOXTAL_SECRET_KEY` | Clé secrète Boxtal API v1 | boxtal-order.js |
 
 > **Vercel KV** : créer une base dans le dashboard Vercel → Storage → KV, puis la connecter au projet. Les variables `KV_REST_API_URL` et `KV_REST_API_TOKEN` sont injectées automatiquement.
 

@@ -146,22 +146,19 @@ module.exports = async (req, res) => {
       }
 
       if (action === 'set_shipping') {
-        const relay = parseFloat(data?.relay);
-        const colissimo = parseFloat(data?.colissimo);
-        const express = parseFloat(data?.express);
-        const outremer = parseFloat(data?.outremer ?? 20);
-        if ([relay, colissimo, express].some(v => isNaN(v) || v < 0 || v > 100)) {
+        // Nouveaux champs Chronopost
+        const shop2shop = parseFloat(data?.shop2shop ?? data?.relay ?? 5.90);
+        const relais13  = parseFloat(data?.relais13  ?? data?.colissimo ?? 9.50);
+        if ([shop2shop, relais13].some(v => isNaN(v) || v < 0 || v > 100)) {
           return res.status(400).json({ error: 'Tarifs invalides (0–100€)' });
         }
-        if (isNaN(outremer) || outremer < 0 || outremer > 200) {
-          return res.status(400).json({ error: 'Tarif outre-mer invalide (0–200€)' });
-        }
         await kv.set('admin:shipping', {
-          relay: +relay.toFixed(2),
-          colissimo: +colissimo.toFixed(2),
-          express: +express.toFixed(2),
-          outremer: +outremer.toFixed(2),
+          shop2shop:  +shop2shop.toFixed(2),
+          relais13:   +relais13.toFixed(2),
           freeForAll: data?.freeForAll === true,
+          // Clés legacy conservées pour rétrocompatibilité
+          relay:      +shop2shop.toFixed(2),
+          colissimo:  +relais13.toFixed(2),
         });
         return res.status(200).json({ ok: true });
       }
