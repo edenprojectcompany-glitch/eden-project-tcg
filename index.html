@@ -5881,14 +5881,10 @@ window.addEventListener('load', () => {
 
   /* ══ PRIX EBAY LIVE (après le rendu initial) ══ */
   const EBAY_TERMS={
-    1:'CN 151 gengar edition display',
-    2:'CN 151 pikachu jungle display',
-    3:'CN 151 journey edition display',
-    4:'CN 151 hope edition display',
-    5:'gempack vol 3 display',
-    6:'gempack vol 2 display',
-    8:'gempack vol 4 display',
-    9:'gempack vol 5 display',
+    // CN — seuls vol3 et gempack2 ont des prix fiables sur eBay FR
+    // les autres utilisent la valeur hardcodée (marché CN peu listé sur eBay FR)
+    1:'151 vol 3 display',
+    6:'gempack 2 display',
     10:'m2a mega dream ex display',
     11:'m2 mega inferno x display',
     12:'m1l mega brave display',
@@ -5916,8 +5912,8 @@ window.addEventListener('load', () => {
       products.forEach(p=>{
         if(prices[p.id]==null) return;
         const edenBase = p.tiers?.[0]?.p ?? p.price;
-        // Filtre anti-aberration : ignore si le prix eBay est > 4× ou < 0.3× le prix Eden
-        if(edenBase && (prices[p.id] > edenBase * 4 || prices[p.id] < edenBase * 0.3)) return;
+        // Filtre anti-aberration : ignore si le prix eBay est > 2× ou < 0.4× le prix Eden
+        if(edenBase && (prices[p.id] > edenBase * 2 || prices[p.id] < edenBase * 0.4)) return;
         p.ebay = prices[p.id];
         updated = true;
       });
