@@ -312,8 +312,18 @@ module.exports = async (req, res) => {
         const orderResp = await createOrder(order, offer, siteUrl);
 
         if (orderResp.status !== 200) {
-          // Extraire le message d'erreur Boxtal (XML <error><message>…</message></error>)
-          const errMsg = xmlVal(orderResp.body, 'message') || orderResp.body.slice(0, 300);
+          // Boxtal retourne XML ou JSON selon le type d'erreur
+          let errMsg = '';
+          try {
+            const parsed = JSON.parse(orderResp.body);
+            errMsg = parsed.message || JSON.stringify(parsed);
+          } catch {
+            errMsg = xmlVal(orderResp.body, 'message') || orderResp.body.slice(0, 300);
+          }
+          // Message actionnable si 403
+          if (orderResp.status === 403) {
+            errMsg = 'Paiement différé non activé sur ce compte Boxtal → appeler le 3631 pour activation';
+          }
           result.status = 'error';
           result.error  = `Boxtal HTTP ${orderResp.status} : ${errMsg}`;
           results.push(result);

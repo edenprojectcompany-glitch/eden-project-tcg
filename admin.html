@@ -621,7 +621,8 @@ async function createBoxtalOrders(){
     // Construire le résumé
     const lines = (d.results || []).map(res => {
       if (res.status === 'created') {
-        return `✅ ${res.ref} → ${res.offer?.operator} ${res.offer?.service} — ${res.offer?.prixTTC?.toFixed(2).replace('.',',')} €`;
+        const prix = (res.offer?.prixTTC != null) ? res.offer.prixTTC.toFixed(2).replace('.',',') + ' €' : 'prix Boxtal';
+        return `✅ ${res.ref} → ${res.offer?.operator} ${res.offer?.service} — ${prix}`;
       } else {
         return `❌ ${res.ref} — ${res.error || 'Erreur inconnue'}`;
       }
