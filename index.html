@@ -5983,10 +5983,13 @@ document.getElementById('submitReviewBtn')?.addEventListener('click',async()=>{
   const msg=document.getElementById('reviewFormMsg');
   const text=document.getElementById('reviewText').value.trim();
   if(text.length<5){msg.style.display='block';msg.style.color='var(--danger)';msg.textContent='Votre commentaire est trop court.';return;}
+  // Lire le token depuis le stockage (authToken est déclaré dans window.load, inaccessible ici)
+  const token=localStorage.getItem('edn_token')||sessionStorage.getItem('edn_token_ss')||'';
+  if(!token){msg.style.display='block';msg.style.color='var(--danger)';msg.textContent='Vous devez être connecté pour laisser un avis.';return;}
   btn.textContent='Envoi…'; btn.disabled=true;
   try{
     const res=await fetch('/api/review',{method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({rating:_reviewRating,text})});
     const data=await res.json();
     if(!res.ok) throw new Error(data.error||'Erreur');
