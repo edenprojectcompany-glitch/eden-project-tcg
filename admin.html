@@ -509,6 +509,28 @@ async function loadOrders(){
     renderOrders();
   }catch{toast('Erreur chargement commandes','err');}
 }
+// Infère la remise appliquée en comparant les prix stockés aux prix catalogue
+function inferDiscount(items){
+  if(!items||!items.length) return 0;
+  const pcts=items.map(i=>{
+    const stored=parseFloat(i.p||0);
+    if(!stored) return null;
+    const name=(i.n||i.name||'').toLowerCase().trim();
+    const prod=PRODUCTS.find(pr=>{
+      if(!pr.price) return false;
+      const pn=pr.name.toLowerCase();
+      return pn===name || pn.startsWith(name) || name.startsWith(pn.slice(0,14));
+    });
+    if(!prod||!prod.price) return null;
+    const pct=Math.round((1-stored/prod.price)*100);
+    return pct>0&&pct<=50?pct:null;
+  }).filter(d=>d!==null);
+  if(!pcts.length) return 0;
+  // Retourne le pourcentage le plus fréquent parmi les lignes
+  const freq={};
+  pcts.forEach(d=>freq[d]=(freq[d]||0)+1);
+  return parseInt(Object.entries(freq).sort((a,b)=>b[1]-a[1])[0][0]);
+}
 function renderOrders(){
   const body=document.getElementById('ordersBody');
   if(!_orders.length){body.innerHTML='<tr class="empty-row"><td colspan="7">Aucune commande pour l\'instant</td></tr>';return;}
@@ -546,10 +568,10 @@ function renderOrders(){
 
     const addr=o.shippingAddress;
     const addrHtml=addr?`${addr.name||''} · ${addr.line1||''} ${addr.line2||''} ${addr.postal_code||''} ${addr.city||''} ${addr.country||''}`.replace(/\s+/g,' ').trim():'—';
-    const discPct=parseFloat(o.discountPct||0);
+    const discPct=parseFloat(o.discountPct||0)||inferDiscount(o.items);
     const promoHtml=o.promoCode
       ? `<span>🏷 Code <strong>${o.promoCode}</strong>${discPct>0?` — −${discPct}%`:''}</span>`
-      : (discPct>0?`<span>🏷 Remise auto <strong>−${discPct}%</strong></span>`:'');
+      : (discPct>0?`<span>🏷 Remise <strong>−${discPct}%</strong> appliquée</span>`:'');
     const footerHtml=`
       <span>📍 <strong>${addrHtml}</strong></span>
       ${promoHtml}
