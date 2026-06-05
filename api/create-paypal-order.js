@@ -199,6 +199,7 @@ module.exports = async (req, res) => {
       const pending = {
         items: validatedItems.map(i => ({ n: i.name, q: i.qty, p: i.unitPrice })),
         promoCode: code,
+        discountPct: String(discountPct),
         userEmail: verifiedUserEmail || '',
         wonCodeIndex,
         mrPoint: mondialRelayPoint || null,

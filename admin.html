@@ -546,9 +546,13 @@ function renderOrders(){
 
     const addr=o.shippingAddress;
     const addrHtml=addr?`${addr.name||''} · ${addr.line1||''} ${addr.line2||''} ${addr.postal_code||''} ${addr.city||''} ${addr.country||''}`.replace(/\s+/g,' ').trim():'—';
+    const discPct=parseFloat(o.discountPct||0);
+    const promoHtml=o.promoCode
+      ? `<span>🏷 Code <strong>${o.promoCode}</strong>${discPct>0?` — −${discPct}%`:''}</span>`
+      : (discPct>0?`<span>🏷 Remise auto <strong>−${discPct}%</strong></span>`:'');
     const footerHtml=`
       <span>📍 <strong>${addrHtml}</strong></span>
-      ${o.promoCode?`<span>🏷 Promo <strong>${o.promoCode}</strong>${o.discountPct&&o.discountPct!=='0'?` (−${o.discountPct}%)`:''}</span>`:''}
+      ${promoHtml}
       ${o.shippingCost!=null?`<span>🚚 Livraison <strong>${parseFloat(o.shippingCost).toFixed(2)} €</strong></span>`:''}
       ${addr?.tel?`<span>📞 <strong>${addr.tel}</strong></span>`:''}
     `;

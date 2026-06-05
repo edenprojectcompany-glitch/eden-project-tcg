@@ -148,6 +148,8 @@ module.exports = async (req, res) => {
             amount: order.amount,
             provider: 'paypal',
             items: orderItems,
+            promoCode:   pendingPromoCode,
+            discountPct: pendingData?.discountPct || '0',
             shippingMode: pendingShippingMode,
             mrPoint: pendingMrPoint,
             status: 'pending',

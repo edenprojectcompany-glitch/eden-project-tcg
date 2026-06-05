@@ -146,6 +146,8 @@ async function handler(req, res) {
             amount: order.amount,
             provider: 'stripe',
             items: orderItems,
+            promoCode:   session.metadata?.promoCode   || '',
+            discountPct: session.metadata?.discountPct || '0',
             shippingMode:   session.metadata?.shippingMode || '',
             shippingAddress,
             mrPoint,
