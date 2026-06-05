@@ -29,11 +29,33 @@ const EDEN = {
 };
 
 // ── Paramètres colis par défaut (displays Pokémon scellées) ──────────────────
-const CODE_CONTENU         = '80100'; // Produits culturels : jeux, cartes Pokémon (Boxtal code vérifié)
-const POIDS_PAR_DISPLAY_KG = 0.45;   // kg par display
-const LONGUEUR_CM          = 20;
-const LARGEUR_CM           = 15;
-const HAUTEUR_CM           = 5;
+const CODE_CONTENU  = '80100'; // Produits culturels : jeux, cartes Pokémon (Boxtal code vérifié)
+const LONGUEUR_CM   = 20;
+const LARGEUR_CM    = 15;
+const HAUTEUR_CM    = 5;
+
+// Poids réels par produit (kg)
+// CN (IDs 1–9) : 200 g · JP 10 boosters (10, 15) : 200 g · JP 20–30 boosters : 300 g
+const POIDS_PAR_PRODUIT_KG = {
+  1:0.200, 2:0.200, 3:0.200, 4:0.200, 5:0.200,
+  6:0.200, 7:0.200, 8:0.200, 9:0.200,
+  10:0.200,
+  11:0.300, 12:0.300, 13:0.300, 14:0.300,
+  15:0.200,
+  16:0.300, 17:0.300, 18:0.300, 19:0.300,
+  20:0.300, 21:0.300, 22:0.300,
+};
+const POIDS_DEFAUT_KG = 0.300; // fallback si ID inconnu
+
+// Calcule le poids total d'une commande en kg
+function calcPoids(items) {
+  const total = (items || []).reduce((s, i) => {
+    const qty = parseInt(i.q || i.qty) || 1;
+    const w   = POIDS_PAR_PRODUIT_KG[parseInt(i.id)] ?? POIDS_DEFAUT_KG;
+    return s + qty * w;
+  }, 0);
+  return (total > 0 ? total : POIDS_DEFAUT_KG).toFixed(3);
+}
 
 // ── Mapping mode d'envoi Eden → service Boxtal (codes exacts vérifiés via API) ─
 // operator CHRP = Chronopost. Les deux services déposent à La Poste bureau Rue Siam Brest.
@@ -168,9 +190,8 @@ function selectOffer(offers, shippingMode) {
 
 // ── Cotation pour une commande ─────────────────────────────────────────────────
 async function getCotation(order) {
-  const a       = order.shippingAddress || {};
-  const nbItems = (order.items || []).reduce((s, i) => s + (parseInt(i.q || i.qty) || 1), 0) || 1;
-  const poids   = (nbItems * POIDS_PAR_DISPLAY_KG).toFixed(3);
+  const a     = order.shippingAddress || {};
+  const poids = calcPoids(order.items);
 
   const params = new URLSearchParams({
     'colis_0.poids':    poids,
@@ -195,9 +216,8 @@ async function getCotation(order) {
 
 // ── Création commande Boxtal ───────────────────────────────────────────────────
 async function createOrder(order, offer, siteUrl) {
-  const a       = order.shippingAddress || {};
-  const nbItems = (order.items || []).reduce((s, i) => s + (parseInt(i.q || i.qty) || 1), 0) || 1;
-  const poids   = (nbItems * POIDS_PAR_DISPLAY_KG).toFixed(3);
+  const a     = order.shippingAddress || {};
+  const poids = calcPoids(order.items);
 
   // Découpage prénom / nom depuis le nom complet du destinataire
   const fullName  = (a.name || order.customerName || '').trim();
@@ -248,6 +268,10 @@ async function createOrder(order, offer, siteUrl) {
     'destinataire.pays':        destPays,
     'destinataire.code_postal': a.postal_code  || '',
     'destinataire.ville':       a.city         || '',
+    // ── Valeur déclarée du contenu (sans assurance)
+    ...(order.amount && !isNaN(parseFloat(order.amount))
+      ? { 'colis_0.valeur_declaree': parseFloat(order.amount).toFixed(2) }
+      : {}),
     // ── Transporteur sélectionné par la cotation
     'operator': offer.operatorCode,
     'service':  offer.serviceCode,

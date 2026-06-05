@@ -19,9 +19,13 @@ module.exports = async (req, res) => {
   try {
     const { kv } = require('@vercel/kv');
 
-    // ── GET : avis approuvés (public) ──
+    // ── GET : avis approuvés (public) ou tous les avis (admin) ──
     if (req.method === 'GET') {
       const reviews = await kv.get('reviews:list') || [];
+      const adminCode = req.headers['x-admin-code'];
+      if (adminCode && adminCode === process.env.ADMIN_CODE) {
+        return res.status(200).json({ reviews });
+      }
       const approved = reviews.filter(r => r.status === 'approved');
       return res.status(200).json({ reviews: approved });
     }

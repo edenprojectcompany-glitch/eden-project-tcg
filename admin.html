@@ -102,6 +102,25 @@ tr:hover td{background:rgba(255,255,255,.015)}
 .live-btns{display:flex;gap:10px;justify-content:center;margin-top:22px}
 .live-last{text-align:center;font-size:11.5px;color:var(--dim);margin-top:10px}
 
+/* ── DÉTAIL COMMANDE (dépliable) ── */
+.detail-row{display:none}
+.detail-row.open{display:table-row}
+.detail-row td{padding:0;border-bottom:1px solid var(--gb)}
+.detail-inner{padding:14px 18px 16px;background:rgba(127,217,255,.03);border-top:1px solid rgba(127,217,255,.1)}
+.detail-items{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.detail-item{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:8px 12px;border-radius:10px;background:var(--bg3);border:1px solid var(--gb)}
+.detail-item-name{font-size:13px;font-weight:500;flex:1}
+.detail-item-qty{font-size:12px;color:var(--c1);font-weight:700;white-space:nowrap}
+.detail-item-price{font-size:12px;color:var(--dim);white-space:nowrap}
+.detail-item-sub{font-size:11.5px;font-weight:700;color:var(--c4);white-space:nowrap}
+.detail-footer{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--dim);padding-top:8px;border-top:1px solid var(--gb)}
+.detail-footer strong{color:var(--text)}
+.order-row{cursor:pointer;user-select:none}
+.order-row:hover td{background:rgba(127,217,255,.04)!important}
+.detail-arrow{display:inline-block;transition:transform .2s;font-size:10px;margin-left:5px;color:var(--dim)}
+.order-row.expanded .detail-arrow{transform:rotate(180deg)}
+
 /* Toast */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg2);border:1px solid var(--gb);border-radius:12px;padding:12px 20px;font-size:13px;z-index:9999;transition:all .3s;opacity:0;pointer-events:none;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -495,7 +514,7 @@ function renderOrders(){
   if(!_orders.length){body.innerHTML='<tr class="empty-row"><td colspan="7">Aucune commande pour l\'instant</td></tr>';return;}
   body.innerHTML=_orders.map(o=>{
     const date=new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-    const items=(o.items||[]).map(i=>`${i.n||i.name||'?'} ×${i.q||i.qty||1}`).join(', ').slice(0,55)||'—';
+    const itemsSummary=(o.items||[]).map(i=>`${i.n||i.name||'?'} ×${i.q||i.qty||1}`).join(', ').slice(0,55)||'—';
     const isMR=o.shippingMode==='mr'; // rétrocompatibilité anciennes commandes
     const shipLabel={'shop2shop':'📦 Relais Éco','relais13':'🚀 Relais J+1','mr':'📦 MR','colissimo':'🏠 Colissimo','exp':'⚡ Express','express':'⚡ Express'};
     const ship=(shipLabel[o.shippingMode]||o.shippingMode||'—')
@@ -503,7 +522,6 @@ function renderOrders(){
       +(o.boxtalRef?` <span style="font-size:10px;color:var(--c2)">✓${o.boxtalRef}</span>`:'');
     const badge=o.status==='shipped'?'<span class="badge b-shipped">📦 Expédié</span>':o.status==='label_printed'?'<span class="badge b-label">🖨️ Étiquette imprimée</span>':'<span class="badge b-pending">⏳ En attente</span>';
     const prov=o.provider==='paypal'?'🅿 PayPal':'💳 CB';
-    // Bouton bordereau : Boxtal (label_url via webhook) ou MR natif
     const labelBtn = o.labelUrl
       ? `<a href="${o.labelUrl}" target="_blank" class="abtn act-pdf">📄 Bordereau</a>`
       : (isMR&&o.mrPoint?.id
@@ -511,16 +529,55 @@ function renderOrders(){
               ? `<a href="${o.mrLabelUrl}" target="_blank" class="abtn act-pdf">📄 PDF</a>`
               : `<button class="abtn act-label" onclick="genLabel('${o.ref}')">🖨️ Étiquette</button>`)
           : '');
-    return `<tr>
-      <td><span class="ref">${o.ref||'—'}</span></td>
+    const safeRef=o.ref.replace(/[^A-Z0-9-]/g,'');
+
+    // ── Panneau détail (items) ──
+    const itemsHtml=(o.items||[]).map(i=>{
+      const qty=parseInt(i.q||i.qty)||1;
+      const prix=parseFloat(i.p||0);
+      const sub=(prix>0?(qty*prix).toFixed(2)+' €':'—');
+      return `<div class="detail-item">
+        <span class="detail-item-name">${i.n||i.name||'Produit inconnu'}</span>
+        <span class="detail-item-qty">× ${qty}</span>
+        ${prix>0?`<span class="detail-item-price">${prix.toFixed(2)} € / unité</span>`:''}
+        <span class="detail-item-sub">${sub}</span>
+      </div>`;
+    }).join('')||'<div style="color:var(--dim);font-size:12px">Détail non disponible (ancienne commande)</div>';
+
+    const addr=o.shippingAddress;
+    const addrHtml=addr?`${addr.name||''} · ${addr.line1||''} ${addr.line2||''} ${addr.postal_code||''} ${addr.city||''} ${addr.country||''}`.replace(/\s+/g,' ').trim():'—';
+    const footerHtml=`
+      <span>📍 <strong>${addrHtml}</strong></span>
+      ${o.promoCode?`<span>🏷 Promo <strong>${o.promoCode}</strong>${o.discountPct&&o.discountPct!=='0'?` (−${o.discountPct}%)`:''}</span>`:''}
+      ${o.shippingCost!=null?`<span>🚚 Livraison <strong>${parseFloat(o.shippingCost).toFixed(2)} €</strong></span>`:''}
+      ${addr?.tel?`<span>📞 <strong>${addr.tel}</strong></span>`:''}
+    `;
+
+    return `<tr class="order-row" id="row-${safeRef}" onclick="toggleDetail('${safeRef}')">
+      <td><span class="ref">${o.ref||'—'}</span><span class="detail-arrow">▼</span></td>
       <td style="color:var(--dim);font-size:12px">${date}</td>
       <td style="font-size:12.5px">${o.customerName||''}<br><span style="color:var(--dim);font-size:11px">${o.customerEmail||'—'}</span></td>
       <td style="font-weight:700;color:var(--c4)">${parseFloat(o.amount||0).toFixed(2)} €<br><span style="font-size:10.5px;font-weight:400;color:var(--dim)">${prov}</span></td>
-      <td style="color:var(--dim);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis">${items}</td>
+      <td style="color:var(--dim);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis">${itemsSummary}</td>
       <td style="font-size:12px">${ship}</td>
-      <td>${badge}<div class="action-row">${labelBtn}<button class="abtn" onclick="setStatus('${o.ref}','pending')" title="En attente">⏳</button><button class="abtn" onclick="setStatus('${o.ref}','label_printed')" title="Étiquette">🖨️</button><button class="abtn" onclick="setStatus('${o.ref}','shipped')" title="Expédié">📦</button>${o.status==='shipped'?`<button class="abtn" onclick="deleteOrder('${o.ref}')" title="Supprimer" style="color:var(--danger);border-color:var(--danger);margin-left:4px">🗑</button>`:''}</div></td>
+      <td onclick="event.stopPropagation()">${badge}<div class="action-row">${labelBtn}<button class="abtn" onclick="setStatus('${o.ref}','pending')" title="En attente">⏳</button><button class="abtn" onclick="setStatus('${o.ref}','label_printed')" title="Étiquette">🖨️</button><button class="abtn" onclick="setStatus('${o.ref}','shipped')" title="Expédié">📦</button>${o.status==='shipped'?`<button class="abtn" onclick="deleteOrder('${o.ref}')" title="Supprimer" style="color:var(--danger);border-color:var(--danger);margin-left:4px">🗑</button>`:''}</div></td>
+    </tr>
+    <tr class="detail-row" id="detail-${safeRef}">
+      <td colspan="7">
+        <div class="detail-inner">
+          <div class="detail-items">${itemsHtml}</div>
+          <div class="detail-footer">${footerHtml}</div>
+        </div>
+      </td>
     </tr>`;
   }).join('');
+}
+function toggleDetail(ref){
+  const row=document.getElementById('row-'+ref);
+  const detail=document.getElementById('detail-'+ref);
+  if(!detail) return;
+  const open=detail.classList.toggle('open');
+  row.classList.toggle('expanded',open);
 }
 async function setStatus(ref,status){
   try{
