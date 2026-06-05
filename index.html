@@ -1786,13 +1786,13 @@ loadAndRenderReviews();
         <div style="font-size:36px">🎁</div>
         <div style="flex:1">
           <div style="font-family:'Fraunces',serif;font-size:17px;color:var(--foil-2);margin-bottom:3px">Eden Mystery Box</div>
-          <div style="font-size:12.5px;color:var(--text-dim)">4 displays sélectionnées par nos experts · Valeur estimée supérieure au prix · Stock ultra-limité</div>
+          <div style="font-size:12.5px;color:var(--text-dim)">Une sélection de display · Valeur estimée supérieure au prix</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:22px;font-weight:700;color:var(--foil-2)">249 €</div>
           <div style="font-size:11px;color:var(--text-dim);text-decoration:line-through">≈310 €</div>
         </div>
-        <button class="btn-primary btn-sm" style="flex-shrink:0" onclick="event.stopPropagation();addToCart(0)">Ajouter</button>
+        <span class="badge-soon" style="flex-shrink:0">Bientôt de retour</span>
       </div>
       <div class="filters">
         <button class="chip active" data-filter="all">Tous (22)</button>
@@ -2798,7 +2798,7 @@ loadAndRenderReviews();
       'catalog.filter.all':'Tous','catalog.filter.jp':'🇯🇵 Japonais','catalog.filter.cn':'🇨🇳 Chinois',
       'catalog.no_results':'Aucun produit trouvé.',
       'mystery.title':'Eden Mystery Box',
-      'mystery.sub':'4 displays sélectionnées par nos experts · Valeur estimée supérieure au prix · Stock ultra-limité',
+      'mystery.sub':'Une sélection de display · Valeur estimée supérieure au prix',
       'mystery.add':'Ajouter',
       'case.h2':'Acheter en<br><em>— Case.</em>',
       'case.sub':'Prix grossiste réservés aux revendeurs et collectionneurs professionnels. Livraison entrepôt Asie disponible.',
@@ -2881,7 +2881,7 @@ loadAndRenderReviews();
       'catalog.filter.all':'All','catalog.filter.jp':'🇯🇵 Japanese','catalog.filter.cn':'🇨🇳 Chinese',
       'catalog.no_results':'No products found.',
       'mystery.title':'Eden Mystery Box',
-      'mystery.sub':'4 displays selected by our experts · Estimated value above retail · Ultra-limited stock',
+      'mystery.sub':'A selection of displays · Estimated value above retail price',
       'mystery.add':'Add',
       'case.h2':'Buy a<br><em>— Case.</em>',
       'case.sub':'Wholesale pricing for professional resellers and collectors. Direct Asia warehouse delivery available.',
@@ -3036,7 +3036,7 @@ window.addEventListener('load', () => {
 
   /* ══ PRODUITS ══ */
   // Mystery Box — product id:0 (special)
-  const MYSTERY_BOX = {id:0,name:'Eden Mystery Box',sub:'4 displays sélectionnées par nos experts',price:249,tag:'Mystery Box',cat:'mystery',lang:'all',rare:'ÉDITION LIMITÉE',urgent:true,img:'mega-dream-ex-m2a.png',tiers:[{q:1,p:249}],desc:'Chaque Eden Mystery Box contient 4 displays Pokémon sélectionnées avec soin : valeur marchande garantie supérieure au prix d\'achat. JP/CN mixte selon arrivages. Scellé, authentifié, expédié avec soin depuis Brest.',mystery:true};
+  const MYSTERY_BOX = {id:0,name:'Eden Mystery Box',sub:'Une sélection de display',price:249,tag:'Mystery Box',cat:'mystery',lang:'all',rare:'ÉDITION LIMITÉE',urgent:true,img:'mega-dream-ex-m2a.png',tiers:[{q:1,p:249}],desc:'Chaque Eden Mystery Box contient 4 displays Pokémon sélectionnées avec soin : valeur marchande garantie supérieure au prix d\'achat. JP/CN mixte selon arrivages. Scellé, authentifié, expédié avec soin depuis Brest.',mystery:true};
 
   // Bundles — paires suggérées
   const BUNDLES = [
@@ -3969,7 +3969,7 @@ window.addEventListener('load', () => {
       <div style="margin:14px 0;padding:14px;border-radius:12px;background:rgba(201,168,255,.08);border:1px solid rgba(201,168,255,.2)">
         <div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px">Ce que vous recevez</div>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text)">
-          <div>🎴 4 displays Pokémon scellées (JP ou CN)</div>
+          <div>🎴 Une sélection de display Pokémon scellées (JP ou CN)</div>
           <div>✅ Valeur marchande estimée ≥ 310€</div>
           <div>📦 Emballage premium anti-casse</div>
           <div>🏷️ Authenticité certifiée Eden Project</div>
