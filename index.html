@@ -1796,6 +1796,7 @@ loadAndRenderReviews();
       </div>
       <div class="filters">
         <button class="chip active" data-filter="all">Tous (22)</button>
+        <button class="chip" data-filter="stock" style="background:rgba(127,255,170,.12);border-color:rgba(127,255,170,.3);color:var(--success)">✅ En stock</button>
         <button class="chip" data-filter="jp">🇯🇵 Japonais (13)</button>
         <button class="chip" data-filter="cn">🇨🇳 Chinois (9)</button>
       </div>
@@ -2972,6 +2973,7 @@ loadAndRenderReviews();
     if(window._filterCounts){
       var fc = window._filterCounts;
       document.querySelectorAll('.chip[data-filter="all"]').forEach(function(c){ c.textContent = window.t('catalog.filter.all')+' ('+fc.total+')'; });
+      document.querySelectorAll('.chip[data-filter="stock"]').forEach(function(c){ c.innerHTML = '✅ En stock ('+(fc.inStock||0)+')'; });
       document.querySelectorAll('.chip[data-filter="jp"]').forEach(function(c){ c.innerHTML = window.t('catalog.filter.jp')+' ('+fc.jp+')'; });
       document.querySelectorAll('.chip[data-filter="cn"]').forEach(function(c){ c.innerHTML = window.t('catalog.filter.cn')+' ('+fc.cn+')'; });
     }
@@ -3076,8 +3078,10 @@ window.addEventListener('load', () => {
     const total = products.filter(p=>p.price!==null).length;
     const jp = products.filter(p=>p.lang==='jp'&&p.price!==null).length;
     const cn = products.filter(p=>p.lang==='cn'&&p.price!==null).length;
-    window._filterCounts = {total, jp, cn};
+    const inStock = products.filter(p=>p.price!==null&&!(p.stock!=null&&p.stock===0)).length;
+    window._filterCounts = {total, jp, cn, inStock};
     document.querySelectorAll('.chip[data-filter="all"]').forEach(c=>c.textContent=`${t('catalog.filter.all')} (${total})`);
+    document.querySelectorAll('.chip[data-filter="stock"]').forEach(c=>c.innerHTML=`✅ En stock (${inStock})`);
     document.querySelectorAll('.chip[data-filter="jp"]').forEach(c=>c.innerHTML=`${t('catalog.filter.jp')} (${jp})`);
     document.querySelectorAll('.chip[data-filter="cn"]').forEach(c=>c.innerHTML=`${t('catalog.filter.cn')} (${cn})`);
   })();
@@ -3531,7 +3535,10 @@ window.addEventListener('load', () => {
     const grid=document.getElementById('grid'); if(!grid) return;
     const q=query.toLowerCase().trim();
     const list=products.filter(p=>{
-      const mf=filter==='all'||p.lang===filter;
+      const inStock = p.price!==null && !(p.stock!=null && p.stock===0);
+      const mf = filter==='all' ? true
+               : filter==='stock' ? inStock
+               : p.lang===filter;
       const ms=!q||p.name.toLowerCase().includes(q)||p.sub.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q);
       return mf&&ms;
     });
