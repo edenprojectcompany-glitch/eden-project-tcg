@@ -268,10 +268,6 @@ async function createOrder(order, offer, siteUrl) {
     'destinataire.pays':        destPays,
     'destinataire.code_postal': a.postal_code  || '',
     'destinataire.ville':       a.city         || '',
-    // ── Valeur déclarée du contenu (sans assurance)
-    ...(order.amount && !isNaN(parseFloat(order.amount))
-      ? { 'colis_0.valeur_declaree': parseFloat(order.amount).toFixed(2) }
-      : {}),
     // ── Transporteur sélectionné par la cotation
     'operator': offer.operatorCode,
     'service':  offer.serviceCode,
@@ -279,6 +275,12 @@ async function createOrder(order, offer, siteUrl) {
     'url_push':          urlPush,
     'reference_externe': order.ref,
   });
+
+  // Valeur déclarée du contenu (sans assurance) — paramètre top-level Boxtal v1
+  const declaredValue = parseFloat(order.amount || 0);
+  if (declaredValue > 0) {
+    params.set('valeur_declaree', declaredValue.toFixed(2));
+  }
 
   // Point relais Chronopost choisi par le client pendant le checkout
   if (order.chronoPoint?.code) {
