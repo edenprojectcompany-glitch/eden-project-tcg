@@ -5595,18 +5595,18 @@ window.addEventListener('load', () => {
       'express':   cfg.express   ?? 14.90,
     };
     opts.forEach(o=>{
-      const v = cfg.freeForAll ? 0 : (priceMap[o.dataset.ship] ?? parseFloat(o.dataset.price));
+      // "Livraison offerte" s'applique UNIQUEMENT au Relais Éco (shop2shop) — pas au J+1 ni DOM-TOM
+      const isEco = o.dataset.ship === 'shop2shop';
+      const v = (cfg.freeForAll && isEco) ? 0 : (priceMap[o.dataset.ship] ?? parseFloat(o.dataset.price));
       o.dataset.price = v;
-      o.querySelector('.p').innerHTML = cfg.freeForAll
+      o.querySelector('.p').innerHTML = (cfg.freeForAll && isEco)
         ? '<span style="color:var(--foil-4)">Offerte 🎁</span>'
         : v.toFixed(2).replace('.',',')+' €';
     });
-    if(cfg.freeForAll){ shipPromo=true; currentShip=0; }
-    else {
-      shipPromo=false;
-      const sel=document.querySelector('.ship-opt.selected');
-      if(sel){ currentShip=parseFloat(sel.dataset.price); }
-    }
+    shipPromo = !!cfg.freeForAll;
+    // Recalcule currentShip selon le mode actuellement sélectionné
+    const sel=document.querySelector('.ship-opt.selected');
+    if(sel){ currentShip=parseFloat(sel.dataset.price); }
     renderCheckout(); renderCart();
   }
 
