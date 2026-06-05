@@ -544,11 +544,12 @@ function renderOrders(){
       +(o.boxtalRef?` <span style="font-size:10px;color:var(--c2)">✓${o.boxtalRef}</span>`:'');
     const badge=o.status==='shipped'?'<span class="badge b-shipped">📦 Expédié</span>':o.status==='label_printed'?'<span class="badge b-label">🖨️ Étiquette imprimée</span>':'<span class="badge b-pending">⏳ En attente</span>';
     const prov=o.provider==='paypal'?'🅿 PayPal':'💳 CB';
+    // Bordereau : proxy serveur (fetch + blob) pour contourner l'auth Boxtal
     const labelBtn = o.labelUrl
-      ? `<a href="${o.labelUrl}" target="_blank" class="abtn act-pdf">📄 Bordereau</a>`
+      ? `<button class="abtn act-pdf" onclick="event.stopPropagation();openBordereau('${o.ref}')">📄 Bordereau</button>`
       : (isMR&&o.mrPoint?.id
           ? (o.mrLabelUrl
-              ? `<a href="${o.mrLabelUrl}" target="_blank" class="abtn act-pdf">📄 PDF</a>`
+              ? `<a href="${o.mrLabelUrl}" target="_blank" class="abtn act-pdf" onclick="event.stopPropagation()">📄 PDF</a>`
               : `<button class="abtn act-label" onclick="genLabel('${o.ref}')">🖨️ Étiquette</button>`)
           : '');
     const safeRef=o.ref.replace(/[^A-Z0-9-]/g,'');
@@ -597,6 +598,17 @@ function renderOrders(){
       </td>
     </tr>`;
   }).join('');
+}
+async function openBordereau(ref){
+  try{
+    toast('⏳ Chargement du bordereau…');
+    const r=await fetch(`/api/boxtal-label?ref=${encodeURIComponent(ref)}`,{headers:{'X-Admin-Code':_code}});
+    if(!r.ok){const d=await r.json().catch(()=>({}));toast('Erreur bordereau : '+(d.error||r.status),'err');return;}
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    window.open(url,'_blank');
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }catch(e){toast('Erreur bordereau : '+e.message,'err');}
 }
 function toggleDetail(ref){
   const row=document.getElementById('row-'+ref);
