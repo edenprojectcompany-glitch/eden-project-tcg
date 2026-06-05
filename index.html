@@ -3526,9 +3526,14 @@ window.addEventListener('load', () => {
   }
   function buildEbayHtml(p){
     if(!p.ebay||!p.price) return '';
-    const diff=p.ebay-p.price; if(diff<=0) return '';
-    const pct=Math.round(diff/p.ebay*100);
-    return `<div class="ebay-cmp"><span class="ebay-lbl">${t('ebay.label')}</span><span class="ebay-val">${p.ebay}€</span><span class="ebay-save">-${pct}${t('ebay.save')}</span></div>`;
+    const diff=p.ebay-p.price;
+    // Toujours afficher le prix eBay comme référence marché
+    // Si Eden est moins cher → affiche le % d'économie
+    // Si Eden est plus cher ou identique → affiche juste la réf eBay (sans badge économie)
+    const saveBadge = diff>0
+      ? `<span class="ebay-save">-${Math.round(diff/p.ebay*100)}${t('ebay.save')}</span>`
+      : '';
+    return `<div class="ebay-cmp"><span class="ebay-lbl">${t('ebay.label')}</span><span class="ebay-val">${p.ebay}€</span>${saveBadge}</div>`;
   }
   function renderGrid(filter='all',query=''){
     currentFilter=filter;
