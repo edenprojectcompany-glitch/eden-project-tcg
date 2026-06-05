@@ -33,6 +33,22 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       const { action, ref, status } = req.body || {};
 
+      // Suppression d'une commande — uniquement si statut 'shipped' (expédiée)
+      if (action === 'delete_order') {
+        if (!ref || typeof ref !== 'string' || ref.length > 20) {
+          return res.status(400).json({ error: 'Référence invalide' });
+        }
+        const orders = await kv.get('orders:global') || [];
+        const idx = orders.findIndex(o => o.ref === ref);
+        if (idx === -1) return res.status(404).json({ error: 'Commande introuvable' });
+        if (orders[idx].status !== 'shipped') {
+          return res.status(400).json({ error: 'Seules les commandes expédiées peuvent être supprimées' });
+        }
+        orders.splice(idx, 1);
+        await kv.set('orders:global', orders);
+        return res.status(200).json({ ok: true });
+      }
+
       if (action === 'update_status') {
         if (!ref || typeof ref !== 'string' || ref.length > 20) {
           return res.status(400).json({ error: 'Référence invalide' });
