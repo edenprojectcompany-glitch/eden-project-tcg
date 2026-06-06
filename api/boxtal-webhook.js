@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
         const clientEmail = order.customerEmail;
         const trackingNum = carrier_reference || order.carrierRef;
         if (clientEmail && trackingNum) {
-          const trackingUrl = `https://www.chronopost.fr/tracking-colis/rechercheAvancee/${trackingNum}`;
+          const trackingUrl = `https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=${trackingNum}`;
           try {
             await sendEmail({
               to:      clientEmail,
