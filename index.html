@@ -3640,9 +3640,10 @@ window.addEventListener('load', () => {
     grid.innerHTML=caseProducts.map(p=>{
       const caseQty=p._caseQty;
       const caseCatalogItem=CASE_CATALOG.find(c2=>c2.id===p.id);
+      // Prix de la case indépendant du prix marketplace — toujours basé sur le catalogue de case
       let tierPrice=caseCatalogItem?.basePrice||(p.tiers?p.tiers[0].p:p.price);
-      if(p.adminPrice!=null) tierPrice=p.adminPrice;
-      const caseTotal=+(tierPrice*caseQty+CASE_SURCHARGE).toFixed(2);
+      const caseOverride=casePricesOverride['case_'+p.id];
+      const caseTotal=caseOverride!=null?+caseOverride:+(tierPrice*caseQty+CASE_SURCHARGE).toFixed(2);
       const baseTotal=+((p.tiers?p.tiers[0].p:p.price)*caseQty+CASE_SURCHARGE).toFixed(2);
       const saving=+(baseTotal-caseTotal).toFixed(2);
       // Badge "Bientôt de retour" si stock case = 0 (défini dans admin Cases)
@@ -5168,7 +5169,7 @@ window.addEventListener('load', () => {
       const domtomCountry=shipMode==='outremer'?(document.getElementById('domtomSelect')?.value||''):'';
       const res=await fetch('/api/create-payment',{method:'POST',headers,
         body:JSON.stringify({
-          items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',sub:i.sub,img:i.img,qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,sub:i.sub,img:i.img,unitPrice:i.unitPrice,qty:i.qty})),
+          items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',sub:i.sub,img:i.img,qty:i.qty*i.caseQty,isCaseItem:true}]:[i]).map(i=>({id:i.id,name:i.name,sub:i.sub,img:i.img,unitPrice:i.unitPrice,qty:i.qty,isCaseItem:i.isCaseItem||false})),
           shippingCost:(shipPromo&&currentShipMode==='shop2shop')?0:currentShip,
           promoCode:document.getElementById('promoInput')?.value||'',
           customerEmail:authUser?.email,
@@ -5221,7 +5222,7 @@ window.addEventListener('load', () => {
       const shipModeP=document.querySelector('.ship-opt.selected')?.dataset.ship||'shop2shop';
       const res=await fetch('/api/create-paypal-order',{method:'POST',headers,
         body:JSON.stringify({
-          items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',qty:i.qty*i.caseQty}]:[i]).map(i=>({id:i.id,name:i.name,unitPrice:i.unitPrice,qty:i.qty})),
+          items:cart.flatMap(i=>i.isCaseItem?[{id:i.id,name:i.name+' (Case ×'+i.caseQty+')',qty:i.qty*i.caseQty,isCaseItem:true}]:[i]).map(i=>({id:i.id,name:i.name,unitPrice:i.unitPrice,qty:i.qty,isCaseItem:i.isCaseItem||false})),
           shippingCost:(shipPromo&&currentShipModeP==='shop2shop')?0:currentShip,
           promoCode:document.getElementById('promoInput')?.value||'',
           customerEmail:authUser?.email||'',

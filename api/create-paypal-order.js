@@ -3,7 +3,7 @@
 
 const { PAYPAL_BASE, getPayPalToken } = require('../lib/paypal');
 const jwt = require('jsonwebtoken');
-const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, PRODUCT_LANG, getServerPrice, getAutoPromoPct, computeLangPools } = require('../lib/prices');
+const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, PRODUCT_LANG, getServerPrice, getAutoPromoPct, computeLangPools, CASE_CATALOG, getCasePrice } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 
@@ -38,17 +38,20 @@ module.exports = async (req, res) => {
 
     // 1 seul appel KV — inclut flash sale prices + user + shipping config
     let adminPrices = {};
+    let adminStocks = {};
     let verifiedUser = null;
     let shippingCfg = { relay: 4.90, colissimo: 7.90, express: 14.90, freeForAll: false };
     let kvFailed = false;
     try {
       const { kv } = require('@vercel/kv');
-      const [prices, flashsale, userFromKv, shippingFromKv] = await Promise.all([
+      const [prices, stocks, flashsale, userFromKv, shippingFromKv] = await Promise.all([
         kv.get('admin:prices'),
+        kv.get('admin:stocks'),
         kv.get('admin:flashsale'),
         kv.get(`user:${verifiedUserEmail}`),
         kv.get('admin:shipping'),
       ]);
+      adminStocks = stocks || {};
       if (shippingFromKv) shippingCfg = shippingFromKv;
       verifiedUser = userFromKv || null;
       // Vérification tokenVersion : rejeter les sessions révoquées (ex: après reset mot de passe)
@@ -103,6 +106,28 @@ module.exports = async (req, res) => {
     for (const item of items) {
       const qty = parseInt(item.qty);
       if (item.id == null || !qty || qty < 1 || qty > 1000) continue;
+
+      // Cases : prix forfaitaire (prix/unité × qty + surcharge logistique), override admin possible
+      if (item.isCaseItem) {
+        const caseInfo = CASE_CATALOG.find(c => c.id === item.id);
+        if (!caseInfo || qty % caseInfo.qty !== 0) continue;
+        const nbCases = qty / caseInfo.qty;
+        if (nbCases < 1 || nbCases > 50) continue;
+        const casePrice = getCasePrice(item.id, adminPrices);
+        if (casePrice === null) continue;
+        // Vérification stock côté serveur (stock exprimé en nombre de cases)
+        const availableCaseStock = adminStocks['case_' + item.id];
+        if (availableCaseStock != null && availableCaseStock > 0 && nbCases > availableCaseStock) {
+          return res.status(400).json({ error: `Stock insuffisant pour ${item.name || 'article'} — ${availableCaseStock} case${availableCaseStock > 1 ? 's' : ''} disponible${availableCaseStock > 1 ? 's' : ''}` });
+        }
+        if (availableCaseStock != null && availableCaseStock === 0) {
+          return res.status(400).json({ error: `${item.name || 'Article'} n'est plus en stock` });
+        }
+        rawSubtotal += casePrice * nbCases;
+        rawItems.push({ item, qty: nbCases, serverPrice: casePrice });
+        continue;
+      }
+
       const lang = PRODUCT_LANG[item.id];
       const pooledQty = lang && langPools[lang] ? langPools[lang] : qty;
       const serverPrice = getServerPrice(item.id, qty, adminPrices, pooledQty);

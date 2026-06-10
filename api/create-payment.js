@@ -3,7 +3,7 @@
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const jwt = require('jsonwebtoken');
-const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, getServerPrice, getAutoPromoPct, computeLangPools } = require('../lib/prices');
+const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, getServerPrice, getAutoPromoPct, computeLangPools, CASE_CATALOG, getCasePrice } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -115,6 +115,28 @@ module.exports = async (req, res) => {
     for (const item of items) {
       const qty = parseInt(item.qty);
       if (item.id == null || !qty || qty < 1 || qty > 1000) continue;
+
+      // Cases : prix forfaitaire (prix/unité × qty + surcharge logistique), override admin possible
+      if (item.isCaseItem) {
+        const caseInfo = CASE_CATALOG.find(c => c.id === item.id);
+        if (!caseInfo || qty % caseInfo.qty !== 0) continue;
+        const nbCases = qty / caseInfo.qty;
+        if (nbCases < 1 || nbCases > 50) continue;
+        const casePrice = getCasePrice(item.id, adminPrices);
+        if (casePrice === null) continue;
+        // Vérification stock côté serveur (stock exprimé en nombre de cases)
+        const availableCaseStock = adminStocks['case_' + item.id];
+        if (availableCaseStock != null && availableCaseStock > 0 && nbCases > availableCaseStock) {
+          return res.status(400).json({ error: `Stock insuffisant pour ${item.name || 'article'} — ${availableCaseStock} case${availableCaseStock > 1 ? 's' : ''} disponible${availableCaseStock > 1 ? 's' : ''}` });
+        }
+        if (availableCaseStock != null && availableCaseStock === 0) {
+          return res.status(400).json({ error: `${item.name || 'Article'} n'est plus en stock` });
+        }
+        rawSubtotal += casePrice * nbCases;
+        rawItems.push({ item, qty: nbCases, serverPrice: casePrice, stockQty: qty });
+        continue;
+      }
+
       const { PRODUCT_LANG } = require('../lib/prices');
       const lang = PRODUCT_LANG[item.id];
       const pooledQty = lang && langPools[lang] ? langPools[lang] : qty;
@@ -215,7 +237,7 @@ module.exports = async (req, res) => {
         discountPct: String(discountPct),
         source: 'eden-project-tcg',
         items_json: JSON.stringify(itemsSummary.slice(0, 8).map(i => ({ n: i.n.slice(0, 20), q: i.q, p: i.p }))).slice(0, 490),
-        items_ids: JSON.stringify(rawItems.slice(0, 12).map(i => ({ id: i.item.id, q: i.qty }))).slice(0, 490),
+        items_ids: JSON.stringify(rawItems.slice(0, 12).map(i => ({ id: i.item.id, q: i.stockQty ?? i.qty }))).slice(0, 490),
         userEmail: verifiedUserEmail || '',
         shippingMode:   String(shippingMode || '').slice(0, 10),
         mrPoint:        mondialRelayPoint ? JSON.stringify(mondialRelayPoint).slice(0, 490) : '',
