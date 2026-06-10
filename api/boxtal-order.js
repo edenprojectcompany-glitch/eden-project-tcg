@@ -276,10 +276,12 @@ async function createOrder(order, offer, siteUrl) {
     'reference_externe': order.ref,
   });
 
-  // Valeur déclarée du contenu (sans assurance) — paramètre top-level Boxtal v1
+  // Valeur déclarée du contenu (sans assurance) — paramètre Boxtal v1 "colis.valeur"
+  // (même préfixe que colis.description ; "valeur_declaree" top-level n'est pas reconnu par l'API
+  // et était systématiquement ignoré, d'où le 0,00 € affiché sur les bordereaux)
   const declaredValue = parseFloat(order.amount || 0);
   if (declaredValue > 0) {
-    params.set('valeur_declaree', declaredValue.toFixed(2));
+    params.set('colis.valeur', declaredValue.toFixed(2));
   }
 
   // Point relais Chronopost choisi par le client pendant le checkout

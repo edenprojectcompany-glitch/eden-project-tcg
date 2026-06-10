@@ -124,6 +124,7 @@ async function handler(req, res) {
                 city:        a.city        || '',
                 postal_code: a.postal_code || '',
                 country:     a.country     || 'FR',
+                tel:         a.tel         || '',
               };
             }
           } catch {}
@@ -137,6 +138,7 @@ async function handler(req, res) {
               city:        sd.address.city || '',
               postal_code: sd.address.postal_code || '',
               country:     sd.address.country || 'FR',
+              tel:         session.customer_details?.phone || '',
             };
           }
           globalOrders.unshift({
