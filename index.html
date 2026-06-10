@@ -3038,7 +3038,7 @@ window.addEventListener('load', () => {
 
   /* ══ PRODUITS ══ */
   // Mystery Box — product id:0 (special)
-  const MYSTERY_BOX = {id:0,name:'Eden Mystery Box',sub:'Une sélection de display',price:249,tag:'Mystery Box',cat:'mystery',lang:'all',rare:'ÉDITION LIMITÉE',urgent:true,img:'mega-dream-ex-m2a.png',tiers:[{q:1,p:249}],desc:'Chaque Eden Mystery Box contient 4 displays Pokémon sélectionnées avec soin : valeur marchande garantie supérieure au prix d\'achat. JP/CN mixte selon arrivages. Scellé, authentifié, expédié avec soin depuis Brest.',mystery:true};
+  const MYSTERY_BOX = {id:0,name:'Eden Mystery Box',sub:'Une sélection de display',price:249,tag:'Mystery Box',cat:'mystery',lang:'all',rare:'ÉDITION LIMITÉE',urgent:true,img:'mega-dream-ex-m2a.png',tiers:[{q:1,p:249}],desc:'Chaque Eden Mystery Box contient 4 displays Pokémon sélectionnées avec soin. JP/CN mixte selon arrivages. Scellé, authentifié, expédié avec soin depuis Brest.',mystery:true};
 
   // Bundles — paires suggérées
   const BUNDLES = [
@@ -3959,7 +3959,7 @@ window.addEventListener('load', () => {
   function closeModal(){modalOverlay.classList.remove('open');document.body.style.overflow='';}
   modalClose.addEventListener('click',closeModal);
   modalOverlay.addEventListener('click',e=>{if(e.target===modalOverlay)closeModal();});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeAdmin();}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();}});
 
   /* ══ CART ══ */
   function getAutoPromo(sub){for(const p of AUTO_PROMOS)if(sub>=p.min)return p;return null;}
@@ -3983,7 +3983,6 @@ window.addEventListener('load', () => {
         <div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px">Ce que vous recevez</div>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text)">
           <div>🎴 Une sélection de display Pokémon scellées (JP ou CN)</div>
-          <div>✅ Valeur marchande estimée ≥ 310€</div>
           <div>📦 Emballage premium anti-casse</div>
           <div>🏷️ Authenticité certifiée Eden Project</div>
           <div>⭐ Bonus surprise dans chaque box</div>
@@ -5252,11 +5251,7 @@ window.addEventListener('load', () => {
   }));
 
   /* ══ ADMIN PANEL ══ */
-  let adminUnlocked=false;
   function openAdmin(){window.open('/admin','_blank');}
-  function closeAdmin(){}
-  if(document.getElementById('adminClose')) document.getElementById('adminClose').onclick=closeAdmin;
-  document.getElementById('adminOverlay')?.addEventListener('click',e=>{if(e.target===document.getElementById('adminOverlay'))closeAdmin();});
   document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openAdmin();}});
   let adminClicks=0,adminTimer;
   document.getElementById('adminHint')?.addEventListener('click',()=>{
@@ -5264,336 +5259,10 @@ window.addEventListener('load', () => {
     adminTimer=setTimeout(()=>adminClicks=0,700);
     if(adminClicks>=3){adminClicks=0;openAdmin();}
   });
-  document.getElementById('adminUnlockBtn')?.addEventListener('click',async()=>{
-    const code=document.getElementById('adminCodeInput').value;
-    const msgEl=document.getElementById('adminLockMsg');
-    try{
-      const res=await fetch('/api/admin',{headers:{'X-Admin-Code':code}});
-      if(!res.ok) throw new Error('Code incorrect');
-      const data=await res.json();
-      adminUnlocked=true;
-      document.getElementById('adminLock').style.display='none';
-      const ac=document.getElementById('adminContent');
-      ac.style.display='flex'; ac.style.flexDirection='column';
-      buildAdminProducts(data.prices||{},data.stocks||{});
-      buildAdminFlash(data.flashsale||{});
-      buildAdminWheel(data.wheel||DEFAULT_WHEEL);
-      buildAdminShipping(data.shipping||{relay:4.90,colissimo:7.90,express:14.90});
-      buildAdminGraded(data.graded||null);
-      // Charger les commandes au déverrouillage (onglet actif par défaut)
-      setTimeout(loadAdminOrders, 200);
-    }catch(err){
-      msgEl.className='admin-msg err'; msgEl.textContent='Code incorrect ou serveur indisponible';
-    }
-  });
-  document.querySelectorAll('.admin-tab').forEach(atab=>atab.addEventListener('click',()=>{
-    document.querySelectorAll('.admin-tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.admin-section').forEach(x=>x.classList.remove('active'));
-    atab.classList.add('active');
-    document.getElementById('atab-'+atab.dataset.atab)?.classList.add('active');
-    const tab=atab.dataset.atab;
-    if(tab==='commandes') loadAdminOrders();
-    if(tab==='stats') loadAdminStats();
-    if(tab==='live') loadLiveVisitors();
-  }));
 
-  /* ══ COMMANDES ══ */
-  let _adminOrders=[];
-  async function loadAdminOrders(){
-    const code=document.getElementById('adminCodeInput').value;
-    const tbody=document.getElementById('adminOrdersBody');
-    if(tbody) tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:20px">Chargement…</td></tr>';
-    try{
-      const res=await fetch('/api/orders',{headers:{'X-Admin-Code':code}});
-      const data=await res.json();
-      _adminOrders=data.orders||[];
-      document.getElementById('adminOrderCount').textContent=_adminOrders.length+' commande(s)';
-      renderAdminOrders();
-    }catch(e){
-      if(tbody) tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--danger);padding:20px">Erreur de chargement</td></tr>';
-    }
-  }
-  function renderAdminOrders(){
-    const tbody=document.getElementById('adminOrdersBody'); if(!tbody) return;
-    if(!_adminOrders.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:20px">Aucune commande</td></tr>';return;}
-    tbody.innerHTML=_adminOrders.map(o=>{
-      const date=new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-      const items=(o.items||[]).map(i=>`${i.n||i.name||'?'} ×${i.q||i.qty||1}`).join(', ').slice(0,60)||'—';
-      const isMR=o.shippingMode==='mr';
-      const ship=isMR?'📦 MR'+(o.mrPoint?` <span style="font-size:10px;color:var(--foil-1)">${o.mrPoint.ville||''}</span>`:''):o.shippingMode==='colissimo'?'🏠 Colissimo':o.shippingMode==='exp'?'⚡ Express':'—';
-      const badge=o.status==='shipped'?'<span class="order-status-badge osb-shipped">📦 Expédié</span>':o.status==='label_printed'?'<span class="order-status-badge osb-label">🖨️ Étiquette imprimée</span>':'<span class="order-status-badge osb-pending">⏳ En attente</span>';
-      const prov=o.provider==='paypal'?'🅿 PayPal':'💳 CB';
-      const labelBtn=isMR&&o.mrPoint?.id
-        ? (o.mrLabelUrl
-            ? `<a href="${o.mrLabelUrl}" target="_blank" class="order-action-btn" style="text-decoration:none;color:var(--foil-4);border-color:var(--foil-4)">📄 PDF</a>`
-            : `<button class="order-action-btn" onclick="generateMRLabel('${o.ref}')" style="color:var(--foil-1);border-color:var(--foil-1)">🖨️ Étiquette</button>`)
-        : '';
-      return `<tr>
-        <td><span style="font-family:monospace;font-size:12px;color:var(--foil-1)">${o.ref||'—'}</span></td>
-        <td style="font-size:11.5px;color:var(--text-dim)">${date}</td>
-        <td style="font-size:12px">${o.customerName||''}<br><span style="color:var(--text-dim);font-size:11px">${o.customerEmail||'—'}</span></td>
-        <td style="font-weight:700;color:var(--foil-4)">${parseFloat(o.amount||0).toFixed(2)} €<br><span style="font-size:10.5px;font-weight:400;color:var(--text-dim)">${prov}</span></td>
-        <td style="font-size:11.5px;color:var(--text-dim);max-width:180px;overflow:hidden;text-overflow:ellipsis">${items}</td>
-        <td style="font-size:11.5px">${ship}</td>
-        <td>
-          ${badge}
-          <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
-            ${labelBtn}
-            <button class="order-action-btn${o.status==='pending'?' active':''}" onclick="setOrderStatus('${o.ref}','pending')" title="En attente">⏳</button>
-            <button class="order-action-btn${o.status==='label_printed'?' active':''}" onclick="setOrderStatus('${o.ref}','label_printed')" title="Étiquette imprimée">🖨️</button>
-            <button class="order-action-btn${o.status==='shipped'?' active':''}" onclick="setOrderStatus('${o.ref}','shipped')" title="Expédié">📦</button>
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
-  }
-  async function setOrderStatus(ref,status){
-    const code=document.getElementById('adminCodeInput').value;
-    try{
-      await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':code},
-        body:JSON.stringify({action:'update_status',ref,status})});
-      const idx=_adminOrders.findIndex(o=>o.ref===ref);
-      if(idx!==-1){_adminOrders[idx].status=status;renderAdminOrders();}
-    }catch(e){showNotif('Erreur mise à jour statut','info');}
-  }
-
-  async function generateMRLabel(ref){
-    const code=document.getElementById('adminCodeInput').value;
-    showNotif('Génération de l\'étiquette en cours…','info');
-    try{
-      const res=await fetch('/api/mr-label',{method:'POST',
-        headers:{'Content-Type':'application/json','X-Admin-Code':code},
-        body:JSON.stringify({ref})});
-      const data=await res.json();
-      if(!res.ok) throw new Error(data.error||'Erreur inconnue');
-      // Ouvrir le PDF dans un nouvel onglet
-      window.open(data.labelUrl,'_blank');
-      // Mettre à jour localement
-      const idx=_adminOrders.findIndex(o=>o.ref===ref);
-      if(idx!==-1){
-        _adminOrders[idx].status='label_printed';
-        _adminOrders[idx].mrLabelUrl=data.labelUrl;
-        _adminOrders[idx].mrExpedition=data.expedition;
-        renderAdminOrders();
-      }
-      showNotif('✅ Étiquette générée — n° '+data.expedition,'success');
-    }catch(err){
-      showNotif('❌ '+err.message,'info');
-    }
-  }
-  document.getElementById('adminOrderRefresh')?.addEventListener('click',loadAdminOrders);
-
-  /* ══ STATS ══ */
-  function loadAdminStats(){
-    if(!_adminOrders.length){loadAdminOrders().then(computeStats);return;}
-    computeStats();
-  }
-  function computeStats(){
-    const orders=_adminOrders;
-    const now=new Date(); const todayStr=now.toISOString().slice(0,10);
-    const monthStr=now.toISOString().slice(0,7);
-    const total=orders.reduce((s,o)=>s+parseFloat(o.amount||0),0);
-    const todayCA=orders.filter(o=>o.createdAt?.slice(0,10)===todayStr).reduce((s,o)=>s+parseFloat(o.amount||0),0);
-    const monthCA=orders.filter(o=>o.createdAt?.slice(0,7)===monthStr).reduce((s,o)=>s+parseFloat(o.amount||0),0);
-    const count=orders.length;
-    const avg=count?total/count:0;
-    const pending=orders.filter(o=>o.status==='pending').length;
-    document.getElementById('statTotal').textContent=total.toFixed(2)+' €';
-    document.getElementById('statToday').textContent=todayCA.toFixed(2)+' €';
-    document.getElementById('statMonth').textContent=monthCA.toFixed(2)+' €';
-    document.getElementById('statCount').textContent=count;
-    document.getElementById('statAvg').textContent=avg.toFixed(2)+' €';
-    document.getElementById('statPending').textContent=pending;
-    // Top produits
-    const productQtys={};
-    orders.forEach(o=>(o.items||[]).forEach(i=>{const n=i.n||i.name||'?';productQtys[n]=(productQtys[n]||0)+(i.q||i.qty||1);}));
-    const sorted=Object.entries(productQtys).sort((a,b)=>b[1]-a[1]).slice(0,6);
-    const maxQ=sorted[0]?.[1]||1;
-    const wrap=document.getElementById('adminTopProducts'); if(!wrap) return;
-    wrap.innerHTML=sorted.map(([n,q])=>`
-      <div class="admin-top-product">
-        <div style="font-size:13px;min-width:130px;color:var(--text)">${n}</div>
-        <div class="atp-bar"><div class="atp-fill" style="width:${Math.round(q/maxQ*100)}%"></div></div>
-        <div style="font-size:13px;font-weight:700;color:var(--foil-1);min-width:30px;text-align:right">${q}</div>
-      </div>`).join('');
-  }
-
-  /* ══ VISITEURS LIVE ══ */
-  let _liveAutoRefresh=null;
-  async function loadLiveVisitors(){
-    const code=document.getElementById('adminCodeInput').value;
-    try{
-      const res=await fetch('/api/ping',{headers:{'X-Admin-Code':code}});
-      const data=await res.json();
-      document.getElementById('liveCount').textContent=data.count||0;
-      const pages=data.pages||{};
-      const wrap=document.getElementById('livePagesWrap');
-      const PAGE_LABELS={home:'🏠 Accueil',catalog:'🛍️ Catalogue',case:'📦 Case',checkout:'🛒 Checkout',dashboard:'👤 Mon compte',graded:'🏅 Gradées',news:'📰 News'};
-      wrap.innerHTML=Object.entries(pages).sort((a,b)=>b[1]-a[1]).map(([p,n])=>`
-        <div class="live-page-row">
-          <span>${PAGE_LABELS[p]||p}</span>
-          <span style="font-weight:700;color:var(--foil-1)">${n} visiteur${n>1?'s':''}</span>
-        </div>`).join('');
-      document.getElementById('liveLastUpdate').textContent='Dernière maj : '+new Date().toLocaleTimeString('fr-FR');
-    }catch(e){}
-  }
-  document.getElementById('liveRefreshBtn')?.addEventListener('click',loadLiveVisitors);
-  document.getElementById('liveAutoRefreshBtn')?.addEventListener('click',function(){
-    if(_liveAutoRefresh){clearInterval(_liveAutoRefresh);_liveAutoRefresh=null;this.textContent='▶ Auto (30s)';}
-    else{_liveAutoRefresh=setInterval(loadLiveVisitors,30000);this.textContent='⏸ Stop auto';loadLiveVisitors();}
-  });
-
-  /* ══ CHARGEMENT AUTO AU DÉVERROUILLAGE ══ */
-  // Charger les commandes dès que l'admin se déverrouille
-  const _origAdminUnlock=document.getElementById('adminUnlockBtn')?.onclick;
-  document.getElementById('adminUnlockBtn')?.addEventListener('click',()=>{
-    setTimeout(()=>{if(document.getElementById('atab-commandes')?.classList.contains('active')) loadAdminOrders();},600);
-  });
-  function buildAdminProducts(prices,stocks){
-    const tbody=document.getElementById('adminProductBody'); if(!tbody) return;
-    tbody.innerHTML=products.map(p=>`
-      <tr>
-        <td><span class="lang-badge ${p.lang==='cn'?'b-cn':'b-jp'}">${p.lang==='cn'?'CN':'JP'}</span> ${p.name}</td>
-        <td style="color:var(--text-dim)">${p.price!=null?p.price+'€':'Dem.'}</td>
-        <td><input class="admin-input" id="ap-${p.id}" type="number" value="${prices[p.id]??p.price??''}" placeholder="${p.price??'—'}"></td>
-        <td><input class="admin-input" id="as-${p.id}" type="number" value="${stocks[p.id]??''}" placeholder="illim."></td>
-      </tr>`).join('');
-  }
-  function buildAdminFlash(flashsale){
-    const wrap=document.getElementById('adminFlashRows'); if(!wrap) return;
-    const eligible=products.filter(p=>p.price!==null&&p.id!==0);
-    wrap.innerHTML=eligible.map(p=>{
-      const fs=flashsale[p.id]||{};
-      const active=fs.active||false;
-      const salePrice=fs.salePrice||p.price||'';
-      const endTs=fs.endTime?new Date(fs.endTime).toISOString().slice(0,16):'';
-      return `<div style="display:grid;grid-template-columns:1fr auto 100px 160px;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;background:var(--glass);border:1px solid ${active?'rgba(255,71,87,.4)':'var(--glass-border)'}">
-        <div style="font-size:12.5px"><span class="lang-badge ${p.lang==='cn'?'b-cn':'b-jp'}" style="font-size:8px">${p.lang==='cn'?'CN':'JP'}</span> ${p.name}</div>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text-dim)">
-          <input type="checkbox" id="afl-on-${p.id}" ${active?'checked':''} style="accent-color:var(--danger)"> ⚡ Actif
-        </label>
-        <div><input class="admin-input" id="afl-price-${p.id}" type="number" value="${salePrice}" placeholder="Prix flash" style="width:90px"></div>
-        <div><input class="admin-input" id="afl-end-${p.id}" type="datetime-local" value="${endTs}" style="width:150px;font-size:11px"></div>
-      </div>`;
-    }).join('');
-  }
-
-  document.getElementById('adminSaveFlash')?.addEventListener('click',async()=>{
-    const code=document.getElementById('adminCodeInput').value;
-    const flashsale={};
-    products.filter(p=>p.price!==null&&p.id!==0).forEach(p=>{
-      const active=document.getElementById('afl-on-'+p.id)?.checked||false;
-      const priceVal=document.getElementById('afl-price-'+p.id)?.value;
-      const endVal=document.getElementById('afl-end-'+p.id)?.value;
-      if(active){
-        flashsale[p.id]={
-          active:true,
-          salePrice:priceVal?parseFloat(priceVal):p.price,
-          endTime:endVal?new Date(endVal).getTime():null,
-        };
-      } else {
-        flashsale[p.id]={active:false};
-      }
-    });
-    const msg=document.getElementById('adminFlashMsg');
-    try{
-      const res=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':code},
-        body:JSON.stringify({action:'set_flashsale',data:flashsale})});
-      if(!res.ok) throw new Error('Erreur');
-      // Appliquer localement
-      products.forEach(p=>{
-        const fs=flashsale[p.id];
-        if(fs&&fs.active&&fs.salePrice){p.flashSale=true;p.adminPrice=fs.salePrice;p.price=fs.salePrice;}
-        else{p.flashSale=false;}
-      });
-      buildAdminFlash(flashsale);
-      renderGrid(currentFilter);
-      msg.className='admin-msg ok';msg.textContent='✓ Flash sales enregistrées';
-    }catch{msg.className='admin-msg err';msg.textContent='Erreur lors de l\'enregistrement';}
-    setTimeout(()=>msg.textContent='',3000);
-  });
-
-  function buildAdminWheel(wheel){
-    const wrap=document.getElementById('adminWheelRows'); if(!wrap) return;
-    wrap.innerHTML=wheel.map((prize,i)=>`
-      <div class="admin-wheel-row">
-        <div class="admin-wheel-color" style="background:${prize.color}"></div>
-        <div class="admin-wheel-label">${prize.label}</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <input class="admin-input admin-prob-input" id="aw-${i}" type="number" step="0.5" min="0" max="100" value="${prize.prob}">
-          <span style="font-size:11px;color:var(--text-dim)">%</span>
-        </div>
-      </div>`).join('');
-  }
-  document.getElementById('adminSavePrices')?.addEventListener('click',async()=>{
-    const code=document.getElementById('adminCodeInput').value;
-    const prices={}, stocks={};
-    products.forEach(p=>{
-      const pv=document.getElementById('ap-'+p.id)?.value;
-      const sv=document.getElementById('as-'+p.id)?.value;
-      if(pv!=='') prices[p.id]=parseFloat(pv);
-      if(sv!=='') stocks[p.id]=parseInt(sv);
-    });
-    const msg=document.getElementById('adminPriceMsg');
-    try{
-      await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':code},
-        body:JSON.stringify({action:'set_prices',data:prices})});
-      await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':code},
-        body:JSON.stringify({action:'set_stocks',data:stocks})});
-      // Apply locally
-      products.forEach(p=>{
-        if(prices[p.id]!=null){p.price=prices[p.id];p.adminPrice=prices[p.id];}
-        else{p.adminPrice=null;}
-        if(stocks[p.id]!=null)p.stock=stocks[p.id];
-      });
-      renderGrid(currentFilter);
-      msg.className='admin-msg ok'; msg.textContent='✓ Prix et stocks mis à jour';
-    }catch(err){msg.className='admin-msg err'; msg.textContent='Erreur: '+err.message;}
-  });
-  document.getElementById('adminSaveWheel')?.addEventListener('click',async()=>{
-    const code=document.getElementById('adminCodeInput').value;
-    const wheel=wheelPrizes.map((prize,i)=>({...prize,prob:parseFloat(document.getElementById('aw-'+i)?.value||prize.prob)}));
-    const total=wheel.reduce((s,p)=>s+p.prob,0);
-    const msg=document.getElementById('adminWheelMsg');
-    if(Math.abs(total-100)>0.5){msg.className='admin-msg err';msg.textContent=`Total ${total.toFixed(1)}% ≠ 100%`;return;}
-    try{
-      await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':code},
-        body:JSON.stringify({action:'set_wheel',data:wheel})});
-      wheelPrizes=wheel; drawWheelAt(wheelAngle);
-      msg.className='admin-msg ok'; msg.textContent='✓ Roue mise à jour';
-    }catch(err){msg.className='admin-msg err'; msg.textContent='Erreur: '+err.message;}
-  });
-
-  /* ══ ADMIN LIVRAISON ══ */
+  /* ══ LIVRAISON — config admin appliquée au site public ══ */
   const DEFAULT_SHIPPING_CFG={relay:4.90,colissimo:7.90,express:14.90};
   let shippingCfg={...DEFAULT_SHIPPING_CFG};
-
-  function buildAdminShipping(cfg){
-    document.getElementById('shipAdminRelay').value=cfg.relay??4.90;
-    document.getElementById('shipAdminColissimo').value=cfg.colissimo??7.90;
-    document.getElementById('shipAdminExpress').value=cfg.express??14.90;
-    document.getElementById('shipFreeAll').checked=!!cfg.freeForAll;
-  }
-  document.getElementById('adminSaveShipping')?.addEventListener('click',async()=>{
-    const code=document.getElementById('adminCodeInput').value;
-    const msg=document.getElementById('adminShippingMsg');
-    const data={
-      relay:parseFloat(document.getElementById('shipAdminRelay').value),
-      colissimo:parseFloat(document.getElementById('shipAdminColissimo').value),
-      express:parseFloat(document.getElementById('shipAdminExpress').value),
-      freeForAll:document.getElementById('shipFreeAll').checked,
-    };
-    try{
-      const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':code},
-        body:JSON.stringify({action:'set_shipping',data})});
-      const d=await r.json();
-      if(!r.ok) throw new Error(d.error||'Erreur');
-      shippingCfg=data;
-      applyShippingConfig(data);
-      msg.className='admin-msg ok'; msg.textContent='✓ Tarifs livraison mis à jour';
-    }catch(err){msg.className='admin-msg err'; msg.textContent='Erreur: '+err.message;}
-    setTimeout(()=>msg.textContent='',3000);
-  });
 
   function applyShippingConfig(cfg){
     const opts=document.querySelectorAll('.ship-opt');
@@ -5623,55 +5292,7 @@ window.addEventListener('load', () => {
     renderCheckout(); renderCart();
   }
 
-  /* ══ ADMIN GRADÉES ══ */
-  const DEFAULT_GRADED_CFG=[
-    {name:'Mew ex',sub:'151 · Pokémon Card 151',tag:'Illustration Rare · Holo',price:189,badge:'Sur commande',available:false},
-    {name:'Charizard ex',sub:'151 · Special Art Rare',tag:'Special Art Rare · Holo',price:259,badge:'Sur commande',available:false},
-    {name:'Pikachu VMAX',sub:'Vivid Voltage · Rainbow',tag:'Rainbow Rare · PSA 10',price:489,badge:'PSA 10',available:false},
-    {name:'Lugia V',sub:'Silver Tempest · Alt Art',tag:'Alt Art · Holo',price:118,badge:'Sur commande',available:false},
-  ];
-
-  function buildAdminGraded(graded){
-    const cfg=graded||DEFAULT_GRADED_CFG;
-    const wrap=document.getElementById('adminGradedRows'); if(!wrap) return;
-    wrap.innerHTML=cfg.map((c,i)=>`
-      <div style="padding:16px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border)">
-        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-2);margin-bottom:12px">Carte ${i+1}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div class="field"><input type="text" id="gc-name-${i}" value="${c.name||''}" placeholder=" "><label>Nom</label></div>
-          <div class="field"><input type="text" id="gc-sub-${i}" value="${c.sub||''}" placeholder=" "><label>Sous-titre (set)</label></div>
-          <div class="field"><input type="text" id="gc-tag-${i}" value="${c.tag||''}" placeholder=" "><label>Tag (rareté)</label></div>
-          <div class="field"><input type="number" id="gc-price-${i}" value="${c.price??''}" placeholder=" " step="0.01"><label>Prix (€)</label></div>
-          <div class="field"><input type="text" id="gc-badge-${i}" value="${c.badge||''}" placeholder=" "><label>Badge</label></div>
-          <div style="display:flex;align-items:center;gap:8px;padding-top:8px">
-            <input type="checkbox" id="gc-avail-${i}" ${c.available?'checked':''} style="width:16px;height:16px">
-            <label for="gc-avail-${i}" style="font-size:12.5px;cursor:pointer">Disponible (retire "Bientôt dispo")</label>
-          </div>
-        </div>
-      </div>`).join('');
-  }
-  document.getElementById('adminSaveGraded')?.addEventListener('click',async()=>{
-    const code=document.getElementById('adminCodeInput').value;
-    const msg=document.getElementById('adminGradedMsg');
-    const data=[0,1,2,3].map(i=>({
-      name:document.getElementById('gc-name-'+i)?.value||'',
-      sub:document.getElementById('gc-sub-'+i)?.value||'',
-      tag:document.getElementById('gc-tag-'+i)?.value||'',
-      price:parseFloat(document.getElementById('gc-price-'+i)?.value)||null,
-      badge:document.getElementById('gc-badge-'+i)?.value||'',
-      available:document.getElementById('gc-avail-'+i)?.checked||false,
-    }));
-    try{
-      const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':code},
-        body:JSON.stringify({action:'set_graded',data})});
-      const d=await r.json();
-      if(!r.ok) throw new Error(d.error||'Erreur');
-      applyGradedConfig(data);
-      msg.className='admin-msg ok'; msg.textContent='✓ Cartes gradées mises à jour';
-    }catch(err){msg.className='admin-msg err'; msg.textContent='Erreur: '+err.message;}
-    setTimeout(()=>msg.textContent='',3000);
-  });
-
+  /* ══ GRADÉES — config admin appliquée au site public ══ */
   function applyGradedConfig(graded){
     graded.forEach((c,i)=>{
       const n=i+1;
