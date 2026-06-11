@@ -36,6 +36,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
+select option{background:var(--obsidian-2);color:var(--text)}
 body{font-family:'Manrope',sans-serif;background:var(--obsidian);color:var(--text);
   overflow-x:hidden;-webkit-font-smoothing:antialiased;min-height:100vh;padding-bottom:44px}
 ::selection{background:var(--foil-2);color:var(--obsidian)}
@@ -2010,36 +2011,36 @@ loadAndRenderReviews();
 <div class="page" id="page-checkout">
   <section>
     <div class="sec-head reveal-up">
-      <h2>Finaliser<br><em>la commande.</em></h2>
-      <div class="sub">Paiement 100% sécurisé · Stripe &amp; PayPal</div>
+      <h2 data-i18n-html="checkout.h2">Finaliser<br><em>la commande.</em></h2>
+      <div class="sub" data-i18n="checkout.sub">Paiement 100% sécurisé · Stripe &amp; PayPal</div>
     </div>
     <!-- Indicateur 3 étapes -->
     <div class="co-steps reveal-up">
-      <div class="co-step"><div class="co-step-num done" id="coStep1Num">✓</div><span class="co-step-lbl active" id="coStep1Lbl">Panier</span></div>
+      <div class="co-step"><div class="co-step-num done" id="coStep1Num">✓</div><span class="co-step-lbl active" id="coStep1Lbl" data-i18n="checkout.step.cart">Panier</span></div>
       <div class="co-step-line"></div>
-      <div class="co-step"><div class="co-step-num active" id="coStep2Num">2</div><span class="co-step-lbl active" id="coStep2Lbl">Livraison &amp; Paiement</span></div>
+      <div class="co-step"><div class="co-step-num active" id="coStep2Num">2</div><span class="co-step-lbl active" id="coStep2Lbl" data-i18n="checkout.step.shipping">Livraison &amp; Paiement</span></div>
       <div class="co-step-line"></div>
-      <div class="co-step"><div class="co-step-num" id="coStep3Num">3</div><span class="co-step-lbl" id="coStep3Lbl">Confirmation</span></div>
+      <div class="co-step"><div class="co-step-num" id="coStep3Num">3</div><span class="co-step-lbl" id="coStep3Lbl" data-i18n="checkout.step.confirm">Confirmation</span></div>
     </div>
     <div class="checkout-wrap">
       <div>
         <div class="co-section">
-          <h3><span class="num">1</span>Livraison</h3>
+          <h3><span class="num">1</span><span data-i18n="checkout.shipping_title">Livraison</span></h3>
           <div class="ship-opts">
             <div class="ship-opt selected" data-ship="shop2shop" data-price="5.90">
-              <div class="l"><div class="n">📦 Relais Chronopost — Éco</div><div class="s">2–3 jours · Retrait en point relais Chronopost</div></div>
+              <div class="l"><div class="n" data-i18n="ship.shop2shop.name">📦 Relais Chronopost — Éco</div><div class="s" data-i18n="ship.shop2shop.desc">2–3 jours · Retrait en point relais Chronopost</div></div>
               <div class="p">5,90 €</div>
             </div>
             <div class="ship-opt" data-ship="relais13" data-price="9.50">
-              <div class="l"><div class="n">🚀 Relais Chronopost — J+1</div><div class="s">Livraison garantie le lendemain · Retrait en point relais</div></div>
+              <div class="l"><div class="n" data-i18n="ship.relais13.name">🚀 Relais Chronopost — J+1</div><div class="s" data-i18n="ship.relais13.desc">Livraison garantie le lendemain · Retrait en point relais</div></div>
               <div class="p">9,50 €</div>
             </div>
             <div class="ship-opt" data-ship="europe" data-price="10.00">
-              <div class="l"><div class="n">🇪🇺 Relais Chrono Europe</div><div class="s">2–6 jours · Allemagne, Belgique, Luxembourg, Pays-Bas, Espagne, Portugal · Retrait en point relais</div></div>
+              <div class="l"><div class="n" data-i18n="ship.europe.name">🇪🇺 Relais Chrono Europe</div><div class="s" data-i18n="ship.europe.desc">2–6 jours · Allemagne, Belgique, Luxembourg, Pays-Bas, Espagne, Portugal · Retrait en point relais</div></div>
               <div class="p">10,00 €</div>
             </div>
             <div class="ship-opt" data-ship="outremer" data-price="20.00">
-              <div class="l"><div class="n">🌴 DOM-TOM</div><div class="s">Guadeloupe, Réunion, Martinique, Guyane… · Colissimo domicile · 8–15 jours</div></div>
+              <div class="l"><div class="n" data-i18n="ship.outremer.name">🌴 DOM-TOM</div><div class="s" data-i18n="ship.outremer.desc">Guadeloupe, Réunion, Martinique, Guyane… · Colissimo domicile · 8–15 jours</div></div>
               <div class="p">20,00 €</div>
             </div>
           </div>
@@ -2047,39 +2048,39 @@ loadAndRenderReviews();
         <!-- ══ SÉLECTEUR TERRITOIRE DOM-TOM ══ -->
         <div id="domtom-section" style="display:none;margin-top:14px;">
           <div style="padding:14px 18px;border-radius:14px;background:var(--glass);border:1px solid rgba(168,255,212,.2)">
-            <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-4);font-weight:600;margin-bottom:10px">🌴 Votre territoire</div>
+            <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-4);font-weight:600;margin-bottom:10px" data-i18n="checkout.domtom.label">🌴 Votre territoire</div>
             <select id="domtomSelect" style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;appearance:auto">
-              <option value="">— Choisissez votre territoire —</option>
-              <option value="GP">🏝 Guadeloupe</option>
-              <option value="MQ">🌺 Martinique</option>
-              <option value="GF">🌊 Guyane</option>
-              <option value="RE">🏔 La Réunion</option>
-              <option value="YT">🌴 Mayotte</option>
-              <option value="PM">⛵ Saint-Pierre-et-Miquelon</option>
-              <option value="MF">🌸 Saint-Martin</option>
-              <option value="BL">🌅 Saint-Barthélemy</option>
-              <option value="NC">🐠 Nouvelle-Calédonie</option>
-              <option value="PF">🌺 Polynésie française</option>
-              <option value="WF">🏄 Wallis-et-Futuna</option>
+              <option value="" data-i18n="domtom.opt.placeholder">— Choisissez votre territoire —</option>
+              <option value="GP" data-i18n="domtom.opt.GP">🏝 Guadeloupe</option>
+              <option value="MQ" data-i18n="domtom.opt.MQ">🌺 Martinique</option>
+              <option value="GF" data-i18n="domtom.opt.GF">🌊 Guyane</option>
+              <option value="RE" data-i18n="domtom.opt.RE">🏔 La Réunion</option>
+              <option value="YT" data-i18n="domtom.opt.YT">🌴 Mayotte</option>
+              <option value="PM" data-i18n="domtom.opt.PM">⛵ Saint-Pierre-et-Miquelon</option>
+              <option value="MF" data-i18n="domtom.opt.MF">🌸 Saint-Martin</option>
+              <option value="BL" data-i18n="domtom.opt.BL">🌅 Saint-Barthélemy</option>
+              <option value="NC" data-i18n="domtom.opt.NC">🐠 Nouvelle-Calédonie</option>
+              <option value="PF" data-i18n="domtom.opt.PF">🌺 Polynésie française</option>
+              <option value="WF" data-i18n="domtom.opt.WF">🏄 Wallis-et-Futuna</option>
             </select>
-            <div id="domtom-err" style="display:none;margin-top:6px;font-size:12px;color:var(--danger)">⚠️ Veuillez sélectionner votre territoire.</div>
+            <div id="domtom-err" style="display:none;margin-top:6px;font-size:12px;color:var(--danger)" data-i18n="checkout.domtom.err">⚠️ Veuillez sélectionner votre territoire.</div>
           </div>
         </div>
 
         <!-- ══ SÉLECTEUR PAYS — RELAIS CHRONO EUROPE ══ -->
         <div id="europe-section" style="display:none;margin-top:14px;">
           <div style="padding:14px 18px;border-radius:14px;background:var(--glass);border:1px solid rgba(127,217,255,.2)">
-            <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-1);font-weight:600;margin-bottom:10px">🇪🇺 Votre pays</div>
+            <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-1);font-weight:600;margin-bottom:10px" data-i18n="checkout.europe.label">🇪🇺 Votre pays</div>
             <select id="europeCountrySelect" style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;appearance:auto">
-              <option value="">— Choisissez votre pays —</option>
-              <option value="DE">🇩🇪 Allemagne</option>
-              <option value="BE">🇧🇪 Belgique</option>
-              <option value="LU">🇱🇺 Luxembourg</option>
-              <option value="NL">🇳🇱 Pays-Bas</option>
-              <option value="ES">🇪🇸 Espagne</option>
-              <option value="PT">🇵🇹 Portugal</option>
+              <option value="" data-i18n="europe.opt.placeholder">— Choisissez votre pays —</option>
+              <option value="DE" data-i18n="europe.opt.DE">🇩🇪 Allemagne</option>
+              <option value="BE" data-i18n="europe.opt.BE">🇧🇪 Belgique</option>
+              <option value="LU" data-i18n="europe.opt.LU">🇱🇺 Luxembourg</option>
+              <option value="NL" data-i18n="europe.opt.NL">🇳🇱 Pays-Bas</option>
+              <option value="ES" data-i18n="europe.opt.ES">🇪🇸 Espagne</option>
+              <option value="PT" data-i18n="europe.opt.PT">🇵🇹 Portugal</option>
             </select>
-            <div id="europe-err" style="display:none;margin-top:6px;font-size:12px;color:var(--danger)">⚠️ Veuillez sélectionner votre pays.</div>
+            <div id="europe-err" style="display:none;margin-top:6px;font-size:12px;color:var(--danger)" data-i18n="checkout.europe.err">⚠️ Veuillez sélectionner votre pays.</div>
           </div>
         </div>
 
@@ -2087,23 +2088,23 @@ loadAndRenderReviews();
         <!-- Boxtal détermine automatiquement le relais Chronopost le plus proche de cette adresse -->
         <div id="colissimo-address-section" style="margin-top:16px;">
           <div style="padding:18px 20px;border-radius:14px;background:var(--glass);border:1px solid rgba(127,217,255,.2)">
-            <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-1);margin-bottom:14px;font-weight:600">📍 Adresse pour localiser le relais Chronopost</div>
+            <div id="coAddrLabel" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-1);margin-bottom:14px;font-weight:600" data-i18n="checkout.addr.label">📍 Adresse pour localiser le relais Chronopost</div>
             <div style="display:grid;gap:10px">
-              <input id="coAddr_name" type="text" placeholder="Nom complet *" maxlength="80" autocomplete="name"
+              <input id="coAddr_name" type="text" placeholder="Nom complet *" maxlength="80" autocomplete="name" data-i18n-placeholder="checkout.addr.name"
                 style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
-              <input id="coAddr_line1" type="text" placeholder="Adresse (numéro et rue) *" maxlength="100" autocomplete="street-address"
+              <input id="coAddr_line1" type="text" placeholder="Adresse (numéro et rue) *" maxlength="100" autocomplete="street-address" data-i18n-placeholder="checkout.addr.line1"
                 style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
-              <input id="coAddr_line2" type="text" placeholder="Complément d'adresse (optionnel)" maxlength="100" autocomplete="address-line2"
+              <input id="coAddr_line2" type="text" placeholder="Complément d'adresse (optionnel)" maxlength="100" autocomplete="address-line2" data-i18n-placeholder="checkout.addr.line2"
                 style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
               <div style="display:grid;grid-template-columns:130px 1fr;gap:10px">
-                <input id="coAddr_cp" type="text" placeholder="Code postal *" maxlength="10" inputmode="numeric" autocomplete="postal-code"
+                <input id="coAddr_cp" type="text" placeholder="Code postal *" maxlength="10" inputmode="numeric" autocomplete="postal-code" data-i18n-placeholder="checkout.addr.cp"
                   style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
-                <input id="coAddr_city" type="text" placeholder="Ville *" maxlength="60" autocomplete="address-level2"
+                <input id="coAddr_city" type="text" placeholder="Ville *" maxlength="60" autocomplete="address-level2" data-i18n-placeholder="checkout.addr.city"
                   style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
               </div>
-              <input id="coAddr_tel" type="tel" placeholder="Téléphone *" maxlength="15" inputmode="tel" autocomplete="tel"
+              <input id="coAddr_tel" type="tel" placeholder="Téléphone *" maxlength="15" inputmode="tel" autocomplete="tel" data-i18n-placeholder="checkout.addr.tel"
                 style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
-              <input id="coAddr_email" type="email" placeholder="Email de livraison *" maxlength="100" autocomplete="email"
+              <input id="coAddr_email" type="email" placeholder="Email de livraison *" maxlength="100" autocomplete="email" data-i18n-placeholder="checkout.addr.email"
                 style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border .2s">
             </div>
             <div id="coAddr_err" style="display:none;margin-top:8px;font-size:12px;color:var(--danger)"></div>
@@ -2114,49 +2115,49 @@ loadAndRenderReviews();
         <div id="relay-picker-section" style="margin-top:14px;">
           <div style="padding:16px 18px;border-radius:14px;background:var(--glass);border:1px solid rgba(127,217,255,.2)">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-              <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-1);font-weight:600">📍 Relais Chronopost près de chez vous</div>
+              <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-1);font-weight:600" data-i18n="checkout.relay.label">📍 Relais Chronopost près de chez vous</div>
               <div id="relay-search-status" style="font-size:11px;color:var(--text-dim)"></div>
             </div>
             <div id="relay-list" style="display:flex;flex-direction:column;gap:8px;">
-              <div style="font-size:12.5px;color:var(--text-dim)">Remplissez votre code postal et ville pour voir les relais disponibles.</div>
+              <div style="font-size:12.5px;color:var(--text-dim)" data-i18n="checkout.relay.fillform">Remplissez votre code postal et ville pour voir les relais disponibles.</div>
             </div>
             <div id="relay-selected-banner" style="display:none;margin-top:10px;padding:10px 13px;border-radius:10px;background:rgba(127,217,255,.1);border:1px solid rgba(127,217,255,.35);font-size:12.5px;">
               <span style="color:var(--foil-1);font-weight:600" id="relay-selected-name"></span>
               <span style="color:var(--text-dim);margin-left:8px" id="relay-selected-addr"></span>
             </div>
-            <div id="relay-err" style="display:none;margin-top:8px;font-size:12px;color:var(--danger)">⚠️ Veuillez sélectionner un point relais Chronopost.</div>
+            <div id="relay-err" style="display:none;margin-top:8px;font-size:12px;color:var(--danger)" data-i18n="checkout.relay.err">⚠️ Veuillez sélectionner un point relais Chronopost.</div>
           </div>
         </div>
       </div>
       <div class="co-summary">
-        <h3>Récapitulatif</h3>
+        <h3 data-i18n="checkout.summary">Récapitulatif</h3>
         <div id="coLines"></div>
-        <div class="co-line"><span>Sous-total</span><span id="coSub">0 €</span></div>
-        <div class="co-line discount" id="coDiscountRow" style="display:none"><span id="coDiscountLabel">Réduction</span><span id="coDiscount">-0 €</span></div>
-        <div class="co-line"><span>Livraison</span><span id="coShip">4,90 €</span></div>
+        <div class="co-line"><span data-i18n="cart.subtotal">Sous-total</span><span id="coSub">0 €</span></div>
+        <div class="co-line discount" id="coDiscountRow" style="display:none"><span id="coDiscountLabel" data-i18n="checkout.discount.label">Réduction</span><span id="coDiscount">-0 €</span></div>
+        <div class="co-line"><span data-i18n="cart.shipping">Livraison</span><span id="coShip">4,90 €</span></div>
         <div class="promo-row">
-          <input type="text" id="promoInput" placeholder="Code promo">
-          <button id="promoBtn">Appliquer</button>
+          <input type="text" id="promoInput" placeholder="Code promo" data-i18n-placeholder="checkout.promo.placeholder">
+          <button id="promoBtn" data-i18n="checkout.promo.apply">Appliquer</button>
         </div>
         <div class="promo-msg" id="promoMsg"></div>
-        <div class="co-line grand"><span>Total</span><span id="coTotal">0 €</span></div>
-        <button class="btn-primary" id="payBtn" style="width:100%;margin-top:18px">💳 Payer par carte bancaire</button>
-        <div style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:8px">TVA non applicable, art. 293 B du CGI</div>
-        <button class="btn-ghost" id="paypalBtn" style="width:100%;margin-top:10px;display:none">🅿 Payer avec PayPal</button>
+        <div class="co-line grand"><span data-i18n="cart.total">Total</span><span id="coTotal">0 €</span></div>
+        <button class="btn-primary" id="payBtn" style="width:100%;margin-top:18px" data-i18n="checkout.pay.card">💳 Payer par carte bancaire</button>
+        <div style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:8px" data-i18n="checkout.tva">TVA non applicable, art. 293 B du CGI</div>
+        <button class="btn-ghost" id="paypalBtn" style="width:100%;margin-top:10px;display:none" data-i18n="checkout.pay.paypal">🅿 Payer avec PayPal</button>
         <div id="payErrorMsg" style="display:none;margin-top:12px;padding:10px 13px;border-radius:9px;font-size:12px;background:rgba(255,122,122,.1);border:1px solid rgba(255,122,122,.3);color:var(--danger)"></div>
         <!-- Trust signals -->
         <div style="margin-top:18px;padding:14px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-            Paiement 100% sécurisé — chiffrement SSL 256 bits
+            <span data-i18n="checkout.trust.ssl">Paiement 100% sécurisé — chiffrement SSL 256 bits</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--foil-4)" stroke-width="2.5"><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4Z"/></svg>
-            Produits authentifiés · Retour 14 jours · Expédition 24h
+            <span data-i18n="checkout.trust.auth">Produits authentifiés · Retour 14 jours · Expédition 24h</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--foil-1)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            Stripe &amp; PayPal · Aucun stockage de données bancaires
+            <span data-i18n="checkout.trust.stripe">Stripe &amp; PayPal · Aucun stockage de données bancaires</span>
           </div>
         </div>
       </div>
@@ -2885,6 +2886,53 @@ loadAndRenderReviews();
       'case.modal.shipping':'Livraison :','case.modal.shipping_detail':'Expédition directe depuis l\'Asie · livraison incluse',
       'case.modal.delay':'Délai :','case.modal.delay_detail':'14 jours en moyenne',
       'modal.stock_in_stock_label':'en stock !',
+      'checkout.h2':'Finaliser<br><em>la commande.</em>',
+      'checkout.sub':'Paiement 100% sécurisé · Stripe & PayPal',
+      'checkout.step.cart':'Panier','checkout.step.shipping':'Livraison & Paiement','checkout.step.confirm':'Confirmation',
+      'checkout.shipping_title':'Livraison',
+      'ship.shop2shop.name':'📦 Relais Chronopost — Éco',
+      'ship.shop2shop.desc':'2–3 jours · Retrait en point relais Chronopost',
+      'ship.relais13.name':'🚀 Relais Chronopost — J+1',
+      'ship.relais13.desc':'Livraison garantie le lendemain · Retrait en point relais',
+      'ship.europe.name':'🇪🇺 Relais Chrono Europe',
+      'ship.europe.desc':'2–6 jours · Allemagne, Belgique, Luxembourg, Pays-Bas, Espagne, Portugal · Retrait en point relais',
+      'ship.outremer.name':'🌴 DOM-TOM',
+      'ship.outremer.desc':'Guadeloupe, Réunion, Martinique, Guyane… · Colissimo domicile · 8–15 jours',
+      'checkout.domtom.label':'🌴 Votre territoire',
+      'domtom.opt.placeholder':'— Choisissez votre territoire —',
+      'domtom.opt.GP':'🏝 Guadeloupe','domtom.opt.MQ':'🌺 Martinique','domtom.opt.GF':'🌊 Guyane',
+      'domtom.opt.RE':'🏔 La Réunion','domtom.opt.YT':'🌴 Mayotte','domtom.opt.PM':'⛵ Saint-Pierre-et-Miquelon',
+      'domtom.opt.MF':'🌸 Saint-Martin','domtom.opt.BL':'🌅 Saint-Barthélemy','domtom.opt.NC':'🐠 Nouvelle-Calédonie',
+      'domtom.opt.PF':'🌺 Polynésie française','domtom.opt.WF':'🏄 Wallis-et-Futuna',
+      'checkout.domtom.err':'⚠️ Veuillez sélectionner votre territoire.',
+      'checkout.europe.label':'🇪🇺 Votre pays',
+      'europe.opt.placeholder':'— Choisissez votre pays —',
+      'europe.opt.DE':'🇩🇪 Allemagne','europe.opt.BE':'🇧🇪 Belgique','europe.opt.LU':'🇱🇺 Luxembourg',
+      'europe.opt.NL':'🇳🇱 Pays-Bas','europe.opt.ES':'🇪🇸 Espagne','europe.opt.PT':'🇵🇹 Portugal',
+      'checkout.europe.err':'⚠️ Veuillez sélectionner votre pays.',
+      'checkout.addr.label':'📍 Adresse pour localiser le relais Chronopost',
+      'checkout.addr.label_outremer':'📦 Adresse de livraison domicile',
+      'checkout.addr.name':'Nom complet *','checkout.addr.line1':'Adresse (numéro et rue) *',
+      'checkout.addr.line2':'Complément d\'adresse (optionnel)','checkout.addr.cp':'Code postal *',
+      'checkout.addr.city':'Ville *','checkout.addr.tel':'Téléphone *','checkout.addr.email':'Email de livraison *',
+      'checkout.addr.err_required':'Veuillez remplir tous les champs obligatoires (*)',
+      'checkout.relay.label':'📍 Relais Chronopost près de chez vous',
+      'checkout.relay.fillform':'Remplissez votre code postal et ville pour voir les relais disponibles.',
+      'checkout.relay.searching':'Recherche…','checkout.relay.loading':'Chargement des relais…',
+      'checkout.relay.choose_country_first':'Choisissez d\'abord votre pays ci-dessus.',
+      'checkout.relay.none_found':'Aucun relais Chronopost trouvé dans cette zone.',
+      'checkout.relay.load_error':'Impossible de charger les relais.',
+      'checkout.relay.err':'⚠️ Veuillez sélectionner un point relais Chronopost.',
+      'checkout.summary':'Récapitulatif',
+      'checkout.discount.label':'Réduction','checkout.discount.code':'Code promo','checkout.discount.auto':'Remise auto',
+      'checkout.promo.placeholder':'Code promo','checkout.promo.apply':'Appliquer',
+      'checkout.pay.card':'💳 Payer par carte bancaire','checkout.pay.loading':'Chargement…',
+      'checkout.pay.paypal':'🅿 Payer avec PayPal',
+      'checkout.pay.error_prefix':'Erreur paiement : ','checkout.paypal.error_prefix':'Erreur PayPal : ',
+      'checkout.tva':'TVA non applicable, art. 293 B du CGI',
+      'checkout.trust.ssl':'Paiement 100% sécurisé — chiffrement SSL 256 bits',
+      'checkout.trust.auth':'Produits authentifiés · Retour 14 jours · Expédition 24h',
+      'checkout.trust.stripe':'Stripe & PayPal · Aucun stockage de données bancaires',
     },
     en: {
       'nav.marketplace':'Marketplace','nav.case':'Case','nav.graded':'Graded',
@@ -2968,6 +3016,53 @@ loadAndRenderReviews();
       'case.modal.shipping':'Shipping:','case.modal.shipping_detail':'Direct shipment from Asia · shipping included',
       'case.modal.delay':'Lead time:','case.modal.delay_detail':'14 days on average',
       'modal.stock_in_stock_label':'in stock!',
+      'checkout.h2':'Complete<br><em>your order.</em>',
+      'checkout.sub':'100% secure payment · Stripe & PayPal',
+      'checkout.step.cart':'Cart','checkout.step.shipping':'Shipping & Payment','checkout.step.confirm':'Confirmation',
+      'checkout.shipping_title':'Shipping',
+      'ship.shop2shop.name':'📦 Chronopost Relay — Eco',
+      'ship.shop2shop.desc':'2–3 days · Pickup at a Chronopost relay point',
+      'ship.relais13.name':'🚀 Chronopost Relay — Next Day',
+      'ship.relais13.desc':'Guaranteed next-day delivery · Pickup at a relay point',
+      'ship.europe.name':'🇪🇺 Chrono Relay Europe',
+      'ship.europe.desc':'2–6 days · Germany, Belgium, Luxembourg, Netherlands, Spain, Portugal · Pickup at a relay point',
+      'ship.outremer.name':'🌴 Overseas Territories',
+      'ship.outremer.desc':'Guadeloupe, Réunion, Martinique, French Guiana… · Colissimo home delivery · 8–15 days',
+      'checkout.domtom.label':'🌴 Your territory',
+      'domtom.opt.placeholder':'— Choose your territory —',
+      'domtom.opt.GP':'🏝 Guadeloupe','domtom.opt.MQ':'🌺 Martinique','domtom.opt.GF':'🌊 French Guiana',
+      'domtom.opt.RE':'🏔 Réunion','domtom.opt.YT':'🌴 Mayotte','domtom.opt.PM':'⛵ Saint Pierre and Miquelon',
+      'domtom.opt.MF':'🌸 Saint Martin','domtom.opt.BL':'🌅 Saint Barthélemy','domtom.opt.NC':'🐠 New Caledonia',
+      'domtom.opt.PF':'🌺 French Polynesia','domtom.opt.WF':'🏄 Wallis and Futuna',
+      'checkout.domtom.err':'⚠️ Please select your territory.',
+      'checkout.europe.label':'🇪🇺 Your country',
+      'europe.opt.placeholder':'— Choose your country —',
+      'europe.opt.DE':'🇩🇪 Germany','europe.opt.BE':'🇧🇪 Belgium','europe.opt.LU':'🇱🇺 Luxembourg',
+      'europe.opt.NL':'🇳🇱 Netherlands','europe.opt.ES':'🇪🇸 Spain','europe.opt.PT':'🇵🇹 Portugal',
+      'checkout.europe.err':'⚠️ Please select your country.',
+      'checkout.addr.label':'📍 Address to locate the Chronopost relay point',
+      'checkout.addr.label_outremer':'📦 Home delivery address',
+      'checkout.addr.name':'Full name *','checkout.addr.line1':'Address (number and street) *',
+      'checkout.addr.line2':'Address line 2 (optional)','checkout.addr.cp':'Postal code *',
+      'checkout.addr.city':'City *','checkout.addr.tel':'Phone *','checkout.addr.email':'Delivery email *',
+      'checkout.addr.err_required':'Please fill in all required fields (*)',
+      'checkout.relay.label':'📍 Chronopost relay points near you',
+      'checkout.relay.fillform':'Fill in your postal code and city to see available relay points.',
+      'checkout.relay.searching':'Searching…','checkout.relay.loading':'Loading relay points…',
+      'checkout.relay.choose_country_first':'Please choose your country above first.',
+      'checkout.relay.none_found':'No Chronopost relay point found in this area.',
+      'checkout.relay.load_error':'Unable to load relay points.',
+      'checkout.relay.err':'⚠️ Please select a Chronopost relay point.',
+      'checkout.summary':'Order summary',
+      'checkout.discount.label':'Discount','checkout.discount.code':'Promo code','checkout.discount.auto':'Auto discount',
+      'checkout.promo.placeholder':'Promo code','checkout.promo.apply':'Apply',
+      'checkout.pay.card':'💳 Pay by card','checkout.pay.loading':'Loading…',
+      'checkout.pay.paypal':'🅿 Pay with PayPal',
+      'checkout.pay.error_prefix':'Payment error: ','checkout.paypal.error_prefix':'PayPal error: ',
+      'checkout.tva':'VAT not applicable, art. 293 B of the French Tax Code',
+      'checkout.trust.ssl':'100% secure payment — 256-bit SSL encryption',
+      'checkout.trust.auth':'Authenticated products · 14-day returns · 24h dispatch',
+      'checkout.trust.stripe':'Stripe & PayPal · No card data stored',
     }
   };
 
@@ -3014,6 +3109,7 @@ loadAndRenderReviews();
     if(window._renderGrid)  window._renderGrid(window._currentFilter||'all', window._searchQuery||'');
     if(window._renderCases) window._renderCases();
     if(window._renderCart)  window._renderCart();
+    if(window._renderCheckout && document.getElementById('page-checkout')?.classList.contains('active')) window._renderCheckout();
   };
 
   document.addEventListener('click', function(e){
@@ -4947,9 +5043,9 @@ window.addEventListener('load', () => {
   function renderCheckout(){
     // Reset boutons paiement (ils peuvent être bloqués si l'user revient en arrière)
     const _pb=document.getElementById('payBtn');
-    if(_pb){_pb.textContent='💳 Payer par carte bancaire';_pb.disabled=false;}
+    if(_pb){_pb.textContent=window.t('checkout.pay.card');_pb.disabled=false;}
     const _pp=document.getElementById('paypalBtn');
-    if(_pp){_pp.textContent='🅿 Payer avec PayPal';_pp.disabled=false;}
+    if(_pp){_pp.textContent=window.t('checkout.pay.paypal');_pp.disabled=false;}
     // Pré-remplir adresse si connecté
     if(typeof prefillShippingAddress==='function') prefillShippingAddress();
     const sub=cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
@@ -4968,11 +5064,13 @@ window.addEventListener('load', () => {
     const discRow=document.getElementById('coDiscountRow');
     if(effectivePct>0){
       discRow.style.display='flex';
-      document.getElementById('coDiscountLabel').textContent=(promoDiscount?'Code promo':'Remise auto')+' -'+effectivePct+'%';
+      document.getElementById('coDiscountLabel').textContent=window.t(promoDiscount?'checkout.discount.code':'checkout.discount.auto')+' -'+effectivePct+'%';
       document.getElementById('coDiscount').textContent='-'+(discAmount).toFixed(2).replace('.',',')+' €';
     } else discRow.style.display='none';
     document.getElementById('coTotal').textContent=(discounted+(shipFreeApplied?0:currentShip)).toFixed(2).replace('.',',')+' €';
   }
+  // Expose pour le switch de langue
+  window._renderCheckout = renderCheckout;
   // ══ LIVRAISON CHRONOPOST (shop2shop + relais13) ══
   // Pas de widget relais : Boxtal détermine le relais le plus proche de l'adresse client automatiquement
 
@@ -5005,13 +5103,13 @@ window.addEventListener('load', () => {
     if(mode === 'europe'){
       pays = document.getElementById('europeCountrySelect')?.value || '';
       if(!pays){
-        if(list) list.innerHTML = '<div style="font-size:12px;color:var(--text-dim)">Choisissez d\'abord votre pays ci-dessus.</div>';
+        if(list) list.innerHTML = `<div style="font-size:12px;color:var(--text-dim)">${window.t('checkout.relay.choose_country_first')}</div>`;
         return;
       }
     }
 
-    if(status) status.textContent = 'Recherche…';
-    if(list)   list.innerHTML     = '<div style="font-size:12px;color:var(--text-dim)">Chargement des relais…</div>';
+    if(status) status.textContent = window.t('checkout.relay.searching');
+    if(list)   list.innerHTML     = `<div style="font-size:12px;color:var(--text-dim)">${window.t('checkout.relay.loading')}</div>`;
 
     fetch(`/api/relay-points?cp=${encodeURIComponent(cp)}&ville=${encodeURIComponent(ville)}&pays=${encodeURIComponent(pays)}`)
       .then(r => r.json())
@@ -5019,7 +5117,7 @@ window.addEventListener('load', () => {
         if(status) status.textContent = '';
         const points = data.points || [];
         if(!points.length){
-          if(list) list.innerHTML = '<div style="font-size:12px;color:var(--text-dim)">Aucun relais Chronopost trouvé dans cette zone.</div>';
+          if(list) list.innerHTML = `<div style="font-size:12px;color:var(--text-dim)">${window.t('checkout.relay.none_found')}</div>`;
           return;
         }
         if(list) list.innerHTML = points.map(p => `
@@ -5057,7 +5155,7 @@ window.addEventListener('load', () => {
       })
       .catch(() => {
         if(status) status.textContent = '';
-        if(list)   list.innerHTML = '<div style="font-size:12px;color:var(--text-dim)">Impossible de charger les relais.</div>';
+        if(list)   list.innerHTML = `<div style="font-size:12px;color:var(--text-dim)">${window.t('checkout.relay.load_error')}</div>`;
       });
   }
 
@@ -5101,7 +5199,7 @@ window.addEventListener('load', () => {
     const a = getColissimoAddress();
     const errEl = document.getElementById('coAddr_err');
     if(!a.name || !a.line1 || !a.postal_code || !a.city || !a.tel || !a.email){
-      if(errEl){ errEl.textContent='Veuillez remplir tous les champs obligatoires (*)'; errEl.style.display='block'; }
+      if(errEl){ errEl.textContent=window.t('checkout.addr.err_required'); errEl.style.display='block'; }
       return false;
     }
     if(errEl) errEl.style.display='none';
@@ -5120,10 +5218,12 @@ window.addEventListener('load', () => {
     if(europeSec)   europeSec.style.display   = isEurope ? 'block' : 'none';
     if(relayPicker) relayPicker.style.display  = isOutremer ? 'none'  : 'block';
     // Changer le label du formulaire adresse selon le mode
-    const addrLabel = document.querySelector('#colissimo-address-section [style*="letter-spacing"]');
-    if(addrLabel) addrLabel.textContent = isOutremer
-      ? '📦 Adresse de livraison domicile'
-      : '📍 Adresse pour localiser le relais Chronopost';
+    const addrLabel = document.getElementById('coAddrLabel');
+    if(addrLabel){
+      const key = isOutremer ? 'checkout.addr.label_outremer' : 'checkout.addr.label';
+      addrLabel.textContent = window.t(key);
+      addrLabel.dataset.i18n = key;
+    }
   }
 
   document.querySelectorAll('.ship-opt').forEach(o=>o.addEventListener('click',()=>{
@@ -5207,7 +5307,7 @@ window.addEventListener('load', () => {
       document.getElementById('relay-picker-section')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
-    const btn=document.getElementById('payBtn'); btn.textContent='Chargement…'; btn.disabled=true;
+    const btn=document.getElementById('payBtn'); btn.textContent=window.t('checkout.pay.loading'); btn.disabled=true;
     try{
       const headers={'Content-Type':'application/json'};
       if(authToken) headers['Authorization']='Bearer '+authToken;
@@ -5239,10 +5339,10 @@ window.addEventListener('load', () => {
         if(data.sessionId) sessionStorage.setItem('eden_pending_ref','EDN-'+data.sessionId.slice(-6).toUpperCase());
         // Redirection dans le même onglet — le panier est sauvé en localStorage
         location.href=data.url;
-      } else throw new Error(data.error||'Erreur paiement');
+      } else throw new Error(data.error||window.t('checkout.pay.error_prefix').trim());
     }catch(err){
-      showPayError('Erreur paiement : '+err.message);
-      btn.textContent='💳 Payer par carte bancaire'; btn.disabled=false;
+      showPayError(window.t('checkout.pay.error_prefix')+err.message);
+      btn.textContent=window.t('checkout.pay.card'); btn.disabled=false;
     }
   }
 
@@ -5268,7 +5368,7 @@ window.addEventListener('load', () => {
       document.getElementById('relay-picker-section')?.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
-    const btn=document.getElementById('paypalBtn'); btn.textContent='Chargement…'; btn.disabled=true;
+    const btn=document.getElementById('paypalBtn'); btn.textContent=window.t('checkout.pay.loading'); btn.disabled=true;
     try{
       const headers={'Content-Type':'application/json'};
       if(authToken) headers['Authorization']='Bearer '+authToken;
@@ -5287,9 +5387,9 @@ window.addEventListener('load', () => {
         })});
       const data=await res.json();
       if(data.approveUrl) location.href=data.approveUrl;
-      else throw new Error(data.error||'Erreur PayPal');
+      else throw new Error(data.error||window.t('checkout.paypal.error_prefix').trim());
     }catch(err){
-      showPayError('Erreur PayPal : '+err.message); btn.textContent='🅿 Payer avec PayPal'; btn.disabled=false;
+      showPayError(window.t('checkout.paypal.error_prefix')+err.message); btn.textContent=window.t('checkout.pay.paypal'); btn.disabled=false;
     }
   }
 
