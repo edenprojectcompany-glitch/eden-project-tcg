@@ -162,6 +162,15 @@ function parseOffers(xml) {
   }).filter(o => o.operatorCode && !isNaN(o.prixTTC));
 }
 
+// ── Sélection de l'offre Chrono Relais Europe (point relais Chronopost à l'étranger) ──
+// On ne connaît pas de code service Boxtal fixe pour l'international : on demande une
+// cotation réelle et on prend l'offre Chronopost (CHRP) PICKUP_POINT la moins chère.
+function selectEuropeOffer(offers) {
+  const pool = offers.filter(o => o.deliveryType === 'PICKUP_POINT' && o.operatorCode === 'CHRP');
+  pool.sort((a, b) => a.prixTTC - b.prixTTC);
+  return pool[0] || null;
+}
+
 // ── Sélection de la meilleure offre selon le mode d'envoi client ──────────────
 // shippingMode : 'mr' | 'colissimo' | 'dom' | 'express' | 'exp'
 function selectOffer(offers, shippingMode) {
@@ -334,18 +343,32 @@ module.exports = async (req, res) => {
 
       try {
         // 1. Résolution du service Boxtal depuis le mode d'envoi Eden
-        const mapped = SERVICE_MAP[order.shippingMode] || SERVICE_MAP['shop2shop'];
-        const offer  = {
-          operatorCode:  mapped.operator,
-          operatorLabel: 'Chronopost',
-          serviceCode:   mapped.service,
-          serviceLabel:  order.shippingMode === 'relais13' ? 'Chrono Relais 13' : 'Chrono 2Shop Direct',
-          prixTTC:       null, // sera connu après création
-        };
+        let offer;
+        if (order.shippingMode === 'europe') {
+          // International : pas de code service fixe → cotation réelle vers le pays destinataire
+          const cotationXml = await getCotation(order);
+          const offers = parseOffers(cotationXml);
+          offer = selectEuropeOffer(offers);
+          if (!offer) {
+            result.status = 'error';
+            result.error  = 'Aucune offre Chrono Relais Europe disponible pour cette destination';
+            results.push(result);
+            continue;
+          }
+        } else {
+          const mapped = SERVICE_MAP[order.shippingMode] || SERVICE_MAP['shop2shop'];
+          offer = {
+            operatorCode:  mapped.operator,
+            operatorLabel: 'Chronopost',
+            serviceCode:   mapped.service,
+            serviceLabel:  order.shippingMode === 'relais13' ? 'Chrono Relais 13' : 'Chrono 2Shop Direct',
+            prixTTC:       null, // sera connu après création
+          };
+        }
 
         result.offer = {
-          operator: offer.operatorLabel,
-          service:  offer.serviceLabel,
+          operator: offer.operatorLabel || 'Chronopost',
+          service:  offer.serviceLabel  || 'Chrono Relais Europe',
           prixTTC:  offer.prixTTC,
         };
 

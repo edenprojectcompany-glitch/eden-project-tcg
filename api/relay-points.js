@@ -16,13 +16,20 @@ function cors(res) {
 // Jours de la semaine en français
 const JOURS = ['', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
+// Pays desservis par le réseau de relais Chronopost (Chrono Relais Europe)
+const ALLOWED_COUNTRIES = new Set(['FR', 'DE', 'BE', 'LU', 'NL', 'ES', 'PT']);
+
 module.exports = async (req, res) => {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET')    return res.status(405).json({ error: 'Method not allowed' });
 
-  const { cp, ville } = req.query || {};
+  const { cp, ville, pays } = req.query || {};
   if (!cp || !ville) return res.status(400).json({ error: 'cp et ville requis' });
+
+  const paysCode = ALLOWED_COUNTRIES.has(String(pays || '').toUpperCase())
+    ? String(pays).toUpperCase()
+    : 'FR';
 
   const ak = process.env.BOXTAL_ACCESS_KEY || '';
   const sk = process.env.BOXTAL_SECRET_KEY || '';
@@ -31,7 +38,7 @@ module.exports = async (req, res) => {
   const auth = 'Basic ' + Buffer.from(`${ak}:${sk}`).toString('base64');
 
   const params = new URLSearchParams({
-    'pays':        'FR',
+    'pays':        paysCode,
     'cp':          cp.trim(),
     'ville':       ville.trim(),
     'carriers[0]': 'CHRP', // Chronopost uniquement

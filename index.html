@@ -2034,6 +2034,10 @@ loadAndRenderReviews();
               <div class="l"><div class="n">🚀 Relais Chronopost — J+1</div><div class="s">Livraison garantie le lendemain · Retrait en point relais</div></div>
               <div class="p">9,50 €</div>
             </div>
+            <div class="ship-opt" data-ship="europe" data-price="10.00">
+              <div class="l"><div class="n">🇪🇺 Relais Chrono Europe</div><div class="s">2–6 jours · Allemagne, Belgique, Luxembourg, Pays-Bas, Espagne, Portugal · Retrait en point relais</div></div>
+              <div class="p">10,00 €</div>
+            </div>
             <div class="ship-opt" data-ship="outremer" data-price="20.00">
               <div class="l"><div class="n">🌴 DOM-TOM</div><div class="s">Guadeloupe, Réunion, Martinique, Guyane… · Colissimo domicile · 8–15 jours</div></div>
               <div class="p">20,00 €</div>
@@ -2059,6 +2063,23 @@ loadAndRenderReviews();
               <option value="WF">🏄 Wallis-et-Futuna</option>
             </select>
             <div id="domtom-err" style="display:none;margin-top:6px;font-size:12px;color:var(--danger)">⚠️ Veuillez sélectionner votre territoire.</div>
+          </div>
+        </div>
+
+        <!-- ══ SÉLECTEUR PAYS — RELAIS CHRONO EUROPE ══ -->
+        <div id="europe-section" style="display:none;margin-top:14px;">
+          <div style="padding:14px 18px;border-radius:14px;background:var(--glass);border:1px solid rgba(127,217,255,.2)">
+            <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil-1);font-weight:600;margin-bottom:10px">🇪🇺 Votre pays</div>
+            <select id="europeCountrySelect" style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;appearance:auto">
+              <option value="">— Choisissez votre pays —</option>
+              <option value="DE">🇩🇪 Allemagne</option>
+              <option value="BE">🇧🇪 Belgique</option>
+              <option value="LU">🇱🇺 Luxembourg</option>
+              <option value="NL">🇳🇱 Pays-Bas</option>
+              <option value="ES">🇪🇸 Espagne</option>
+              <option value="PT">🇵🇹 Portugal</option>
+            </select>
+            <div id="europe-err" style="display:none;margin-top:6px;font-size:12px;color:var(--danger)">⚠️ Veuillez sélectionner votre pays.</div>
           </div>
         </div>
 
@@ -4978,10 +4999,21 @@ window.addEventListener('load', () => {
     if(!cp || cp.length < 4 || !ville || ville.length < 2) return;
     const status = document.getElementById('relay-search-status');
     const list   = document.getElementById('relay-list');
+
+    const mode = document.querySelector('.ship-opt.selected')?.dataset.ship || 'shop2shop';
+    let pays = 'FR';
+    if(mode === 'europe'){
+      pays = document.getElementById('europeCountrySelect')?.value || '';
+      if(!pays){
+        if(list) list.innerHTML = '<div style="font-size:12px;color:var(--text-dim)">Choisissez d\'abord votre pays ci-dessus.</div>';
+        return;
+      }
+    }
+
     if(status) status.textContent = 'Recherche…';
     if(list)   list.innerHTML     = '<div style="font-size:12px;color:var(--text-dim)">Chargement des relais…</div>';
 
-    fetch(`/api/relay-points?cp=${encodeURIComponent(cp)}&ville=${encodeURIComponent(ville)}`)
+    fetch(`/api/relay-points?cp=${encodeURIComponent(cp)}&ville=${encodeURIComponent(ville)}&pays=${encodeURIComponent(pays)}`)
       .then(r => r.json())
       .then(data => {
         if(status) status.textContent = '';
@@ -5040,8 +5072,19 @@ window.addEventListener('load', () => {
       }, 700);
     });
   });
+  // Relancer la recherche de relais quand le pays Europe change
+  document.getElementById('europeCountrySelect')?.addEventListener('change', () => {
+    document.getElementById('europe-err').style.display='none';
+    const cp   = document.getElementById('coAddr_cp')?.value.trim();
+    const ville= document.getElementById('coAddr_city')?.value.trim();
+    selectedRelaisPoint = null;
+    document.getElementById('relay-selected-banner').style.display = 'none';
+    searchRelais(cp, ville);
+  });
 
   function getColissimoAddress(){
+    const mode = document.querySelector('.ship-opt.selected')?.dataset.ship || 'shop2shop';
+    const country = mode==='europe' ? (document.getElementById('europeCountrySelect')?.value || 'FR') : 'FR';
     return {
       name:  document.getElementById('coAddr_name')?.value.trim()  || '',
       line1: document.getElementById('coAddr_line1')?.value.trim() || '',
@@ -5050,7 +5093,7 @@ window.addEventListener('load', () => {
       city:  document.getElementById('coAddr_city')?.value.trim()  || '',
       tel:   document.getElementById('coAddr_tel')?.value.trim()   || '',
       email: document.getElementById('coAddr_email')?.value.trim() || '',
-      country: 'FR',
+      country,
     };
   }
 
@@ -5069,9 +5112,12 @@ window.addEventListener('load', () => {
   function updateShippingSections(){
     const mode = document.querySelector('.ship-opt.selected')?.dataset.ship || 'shop2shop';
     const isOutremer  = mode === 'outremer';
+    const isEurope    = mode === 'europe';
     const domtomSec   = document.getElementById('domtom-section');
+    const europeSec   = document.getElementById('europe-section');
     const relayPicker = document.getElementById('relay-picker-section');
     if(domtomSec)   domtomSec.style.display   = isOutremer ? 'block' : 'none';
+    if(europeSec)   europeSec.style.display   = isEurope ? 'block' : 'none';
     if(relayPicker) relayPicker.style.display  = isOutremer ? 'none'  : 'block';
     // Changer le label du formulaire adresse selon le mode
     const addrLabel = document.querySelector('#colissimo-address-section [style*="letter-spacing"]');
@@ -5152,6 +5198,10 @@ window.addEventListener('load', () => {
     if(currentShipMode==='outremer'){
       const terr=document.getElementById('domtomSelect')?.value;
       if(!terr){ document.getElementById('domtom-err').style.display='block'; document.getElementById('domtom-section')?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    } else if(currentShipMode==='europe' && !document.getElementById('europeCountrySelect')?.value){
+      document.getElementById('europe-err').style.display='block';
+      document.getElementById('europe-section')?.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
     } else if(!selectedRelaisPoint){
       document.getElementById('relay-err').style.display='block';
       document.getElementById('relay-picker-section')?.scrollIntoView({behavior:'smooth',block:'center'});
@@ -5209,6 +5259,10 @@ window.addEventListener('load', () => {
     if(currentShipModeP==='outremer'){
       const terr=document.getElementById('domtomSelect')?.value;
       if(!terr){ document.getElementById('domtom-err').style.display='block'; document.getElementById('domtom-section')?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    } else if(currentShipModeP==='europe' && !document.getElementById('europeCountrySelect')?.value){
+      document.getElementById('europe-err').style.display='block';
+      document.getElementById('europe-section')?.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
     } else if(!selectedRelaisPoint){
       document.getElementById('relay-err').style.display='block';
       document.getElementById('relay-picker-section')?.scrollIntoView({behavior:'smooth',block:'center'});
@@ -5270,6 +5324,7 @@ window.addEventListener('load', () => {
     const priceMap={
       'shop2shop': cfg.shop2shop ?? 5.90,
       'relais13':  cfg.relais13  ?? 9.50,
+      'europe':    cfg.europe    ?? 10.00,
       'outremer':  cfg.outremer  ?? 20.00,
       // rétrocompatibilité
       'mr':        cfg.relay     ?? 5.90,
