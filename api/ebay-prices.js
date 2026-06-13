@@ -26,7 +26,7 @@ async function fetchEbayPrice(token, query, kv) {
 
   const url = new URL('https://api.ebay.com/buy/browse/v1/item_summary/search');
   url.searchParams.set('q', query);
-  url.searchParams.set('filter', 'categoryIds:{183454},conditions:{NEW},deliveryCountry:FR');
+  url.searchParams.set('filter', 'categoryIds:{183454},conditions:{NEW}');
   url.searchParams.set('sort', 'price');
   url.searchParams.set('limit', '10');
 
@@ -34,7 +34,6 @@ async function fetchEbayPrice(token, query, kv) {
     headers: {
       'Authorization': `Bearer ${token}`,
       'X-EBAY-C-MARKETPLACE-ID': 'EBAY_FR',
-      'X-EBAY-C-ENDUSERCTX': 'contextualLocation=country=FR',
     },
   });
   const data = await res.json();
