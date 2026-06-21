@@ -1783,7 +1783,7 @@ loadAndRenderReviews();
     </div>
     <div class="catalog-wrap">
       <!-- Mystery Box Banner -->
-      <div class="mystery-banner reveal-up" id="mysteryBanner" style="margin-bottom:24px;padding:18px 22px;border-radius:18px;background:linear-gradient(135deg,rgba(201,168,255,.1),rgba(255,179,230,.06));border:1px solid rgba(201,168,255,.25);display:flex;align-items:center;gap:18px;cursor:pointer" onclick="openMysteryModal()">
+      <div class="mystery-banner reveal-up" id="mysteryBanner" style="margin-bottom:24px;padding:18px 22px;border-radius:18px;background:linear-gradient(135deg,rgba(201,168,255,.1),rgba(255,179,230,.06));border:1px solid rgba(201,168,255,.25);display:flex;align-items:center;gap:18px;cursor:pointer" onclick="handleMysteryBannerClick()">
         <div style="font-size:36px">🎁</div>
         <div style="flex:1">
           <div style="font-family:'Fraunces',serif;font-size:17px;color:var(--foil-2);margin-bottom:3px">Eden Mystery Box</div>
@@ -1793,7 +1793,7 @@ loadAndRenderReviews();
           <div style="font-size:22px;font-weight:700;color:var(--foil-2)">249 €</div>
           <div style="font-size:11px;color:var(--text-dim);text-decoration:line-through">≈310 €</div>
         </div>
-        <span class="badge-soon" style="flex-shrink:0">Bientôt de retour</span>
+        <span class="badge-soon" id="mysteryBadge" style="flex-shrink:0">Bientôt de retour</span>
       </div>
       <div class="filters">
         <button class="chip active" data-filter="all">Tous (22)</button>
@@ -3157,6 +3157,24 @@ window.addEventListener('load', () => {
   // Mystery Box — product id:0 (special)
   const MYSTERY_BOX = {id:0,name:'Eden Mystery Box',sub:'Une sélection de display',price:249,tag:'Mystery Box',cat:'mystery',lang:'all',rare:'ÉDITION LIMITÉE',urgent:true,img:'mega-dream-ex-m2a.png',tiers:[{q:1,p:249}],desc:'Chaque Eden Mystery Box contient 4 displays Pokémon sélectionnées avec soin. JP/CN mixte selon arrivages. Scellé, authentifié, expédié avec soin depuis Brest.',mystery:true};
 
+  // Reflète mysteryStock (alimenté par loadProductOverrides) sur le bandeau — fermé par défaut
+  function renderMysteryBanner(){
+    const badge=document.getElementById('mysteryBadge');
+    const banner=document.getElementById('mysteryBanner');
+    if(!badge||!banner) return;
+    if(mysteryStock>0){
+      badge.style.display='none';
+      banner.style.opacity='1'; banner.style.cursor='pointer';
+    } else {
+      badge.style.display='';
+      banner.style.opacity='.7'; banner.style.cursor='default';
+    }
+  }
+  window.handleMysteryBannerClick = function(){
+    if(mysteryStock>0) openMysteryModal();
+    else showNotif('🎁 Mystery Box bientôt de retour — revenez vite !', 'info');
+  };
+
   // Bundles — paires suggérées
   const BUNDLES = [
     {ids:[18,10],label:'SV10 Glory Rocket + M2a Dream EX',saving:10,desc:'-10% sur le duo le plus demandé'},
@@ -3737,6 +3755,7 @@ window.addEventListener('load', () => {
   // Déclarés ICI pour être accessibles dans renderCases avant loadProductOverrides
   let caseStocks = {};
   let casePricesOverride = {};
+  let mysteryStock = 0; // fermée par défaut tant que l'admin ne l'active pas explicitement (cf. loadProductOverrides)
 
   // Cases disponibles — JP : 12 displays/case · CN : 20 displays/case · +150€ logistique
   const CASE_CATALOG = [
@@ -4134,6 +4153,7 @@ window.addEventListener('load', () => {
   function addToCart(id){
     // Mystery Box
     if(id === 0) {
+      if(mysteryStock<=0){ showNotif('🎁 Mystery Box bientôt de retour — revenez vite !', 'info'); return; }
       const ex = cart.find(c=>c.id===0);
       if(ex) ex.qty++;
       else cart.push({...MYSTERY_BOX, qty:1, unitPrice:249});
@@ -5484,6 +5504,9 @@ window.addEventListener('load', () => {
       casePricesOverride={};
       Object.keys(stocks||{}).forEach(k=>{if(k.startsWith('case_'))caseStocks[k]=stocks[k];});
       Object.keys(prices||{}).forEach(k=>{if(k.startsWith('case_'))casePricesOverride[k]=prices[k];});
+      // Mystery Box : fermée par défaut, vente possible uniquement si stock[0] explicitement > 0 en admin
+      mysteryStock = (stocks && stocks[0] > 0) ? stocks[0] : 0;
+      renderMysteryBanner();
       products.forEach(p=>{
         if(prices[p.id]!=null){ p.price=prices[p.id]; p.adminPrice=prices[p.id]; }
         if(stocks[p.id]!=null) p.stock=stocks[p.id];

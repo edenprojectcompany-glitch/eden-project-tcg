@@ -132,6 +132,18 @@ module.exports = async (req, res) => {
       const pooledQty = lang && langPools[lang] ? langPools[lang] : qty;
       const serverPrice = getServerPrice(item.id, qty, adminPrices, pooledQty);
       if (serverPrice === null) continue;
+      // Vérification stock côté serveur
+      const availableStock = adminStocks[String(item.id)];
+      // Mystery Box (id 0) : fermée par défaut, vente possible uniquement si explicitement activée en admin
+      if (item.id === 0 && !(availableStock > 0)) {
+        return res.status(400).json({ error: `${item.name || 'Mystery Box'} n'est plus en stock` });
+      }
+      if (availableStock != null && availableStock > 0 && qty > availableStock) {
+        return res.status(400).json({ error: `Stock insuffisant pour ${item.name || 'article'} — ${availableStock} disponible${availableStock > 1 ? 's' : ''}` });
+      }
+      if (availableStock != null && availableStock === 0) {
+        return res.status(400).json({ error: `${item.name || 'Article'} n'est plus en stock` });
+      }
       rawSubtotal += serverPrice * qty;
       rawItems.push({ item, qty, serverPrice });
     }

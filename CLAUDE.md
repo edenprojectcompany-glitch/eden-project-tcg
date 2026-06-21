@@ -141,17 +141,21 @@ Retourne `{ prize, winIndex, wheelConfig }`. Cooldown 30 jours par utilisateur.
 Header : `X-Admin-Code: <ADMIN_CODE>`
 - GET : retourne `{ prices, stocks, wheel }`
 - POST `set_prices` : met à jour les prix dans KV
-- POST `set_stocks` : met à jour les stocks dans KV
+- POST `set_stocks` : met à jour les stocks dans KV (clé `"0"` = stock Mystery Box, 0 = "Bientôt de retour")
 - POST `set_wheel` : met à jour la roue (2–16 segments, somme probs = 100%)
+
+### `GET /api/admin-users` — Admin protégé (onglet Clients)
+Header : `X-Admin-Code: <ADMIN_CODE>`
+Scanne toutes les clés `user:*` (via `kv.keys`) et retourne `{ users: [...] }` triés par date d'inscription décroissante. Chaque entrée : `{ id, name, email, createdAt, emailVerified, lastLoginAt, loginCount, loyalty, deliveryAddress, orders[], wonCodes[] }`. N'expose jamais le hash du mot de passe.
 
 ---
 
 ## Modèle de données KV (Upstash)
 
 ```
-user:{email}          → { id, name, email, hash, createdAt, lastSpin, orders[], loyalty }
+user:{email}          → { id, name, email, hash, createdAt, lastSpin, lastLoginAt, loginCount, orders[], wonCodes[], loyalty }
 admin:prices          → { "10": 85, "11": 99, ... }   ← overrides prix par ID produit
-admin:stocks          → { "10": 50, "11": 20, ... }   ← stocks par ID produit
+admin:stocks          → { "0": 5, "10": 50, "11": 20, ... }   ← stocks par ID produit (ID 0 = Mystery Box)
 admin:wheel           → [ { label, prob, code, color }, ... ]
 ebay:{query_key}      → prix moyen (TTL 3600s natif Upstash)
 ratelimit:login:{ip}  → compteur (TTL 900s)
@@ -292,6 +296,13 @@ Les overrides admin (KV `admin:prices`) prennent la priorité sur tous les tiers
 - Trust signals dans checkout ✅
 - Bug facturation auto-promo corrigé côté serveur ✅
 - STRIPE_WEBHOOK_SECRET configuré dans Vercel + endpoint Stripe actif ✅
+
+### ✅ Implémenté en audit 4 (juin 2026)
+- Fix Mystery Box : fermée par défaut (stock id `0`), vérifiée côté serveur (Stripe + PayPal) et non plus seulement décorative côté front ✅
+- Fix vérification stock manquante côté PayPal (`create-paypal-order.js` ne bloquait aucun produit en rupture avant ce correctif) ✅
+- Panneau admin → onglet Produits : champ stock dédié Mystery Box ✅
+- Panneau admin → nouvel onglet Clients (`/api/admin-users`) : connexions, achats, codes promo obtenus/utilisés par client ✅
+- Traçabilité connexion (`lastLoginAt`, `loginCount`) ajoutée dans `api/login.js` ✅
 
 ### ❌ Pas encore implémenté (backlog)
 - Historique commandes front (`user.orders[]` rempli par webhook mais pas affiché dans le dashboard)

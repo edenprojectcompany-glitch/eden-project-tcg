@@ -145,6 +145,10 @@ module.exports = async (req, res) => {
       // Vérification stock côté serveur
       const stockKey = String(item.id);
       const availableStock = adminStocks[stockKey];
+      // Mystery Box (id 0) : fermée par défaut, vente possible uniquement si explicitement activée en admin
+      if (item.id === 0 && !(availableStock > 0)) {
+        return res.status(400).json({ error: `${item.name || 'Mystery Box'} n'est plus en stock` });
+      }
       if (availableStock != null && availableStock > 0 && qty > availableStock) {
         return res.status(400).json({ error: `Stock insuffisant pour ${item.name || 'article'} — ${availableStock} disponible${availableStock > 1 ? 's' : ''}` });
       }

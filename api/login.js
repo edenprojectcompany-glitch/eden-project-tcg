@@ -40,6 +40,11 @@ module.exports = async (req, res) => {
     const ok = await bcrypt.compare(password, user.hash);
     if (!ok) return res.status(401).json({ error: 'E-mail ou mot de passe incorrect' });
 
+    // Traçabilité connexion — utilisé par le panneau admin (onglet Clients)
+    user.lastLoginAt = new Date().toISOString();
+    user.loginCount = (user.loginCount || 0) + 1;
+    await kv.set(key, user);
+
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name, tokenVersion: user.tokenVersion || 0 },
       process.env.JWT_SECRET,
