@@ -397,14 +397,6 @@ h1 span{display:block}
   background:rgba(127,217,255,.06);border:1px solid rgba(127,217,255,.15);margin:7px 0;font-size:10.5px}
 .ebay-lbl{color:var(--text-dim)}.ebay-val{font-weight:700;color:var(--foil-1);font-family:'Fraunces',serif}
 .ebay-save{color:var(--foil-4);font-weight:600;margin-left:auto}
-/* Auto-promo badge in cart */
-.promo-auto-bar{background:rgba(168,255,212,.06);border:1px solid rgba(168,255,212,.2);
-  border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px}
-.promo-auto-bar .lbl{color:var(--foil-4);font-weight:600;margin-bottom:4px}
-.promo-auto-bar .prog-track{height:4px;background:var(--glass);border-radius:2px;overflow:hidden;margin-top:6px}
-.promo-auto-bar .prog-fill{height:100%;background:linear-gradient(90deg,var(--foil-4),var(--foil-1));
-  border-radius:2px;transition:width .5s var(--spring)}
-
 /* ── CASE PAGE ── */
 .case-grid{max-width:1300px;margin:0 auto;display:grid;
   grid-template-columns:repeat(3,1fr);gap:24px;perspective:1200px}
@@ -659,7 +651,6 @@ h1 span{display:block}
 .tot-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13.5px;color:var(--text-dim)}
 .tot-row.grand{padding-top:12px;border-top:1px solid var(--glass-border);
   margin-top:6px;color:var(--text);font-size:16px;font-weight:600}
-.tot-row.promo{color:var(--success)}
 .cart-empty{text-align:center;padding:55px 20px;color:var(--text-dim);font-size:13.5px;line-height:1.6}
 
 /* ── CHECKOUT ── */
@@ -2602,10 +2593,8 @@ loadAndRenderReviews();
   </div>
   <div class="cart-items" id="cartItems"></div>
   <div class="cart-foot">
-    <div id="promoAutoBar"></div>
     <div class="cart-totals">
       <div class="tot-row"><span data-i18n="cart.subtotal">Sous-total</span><span id="cartSub">0 €</span></div>
-      <div class="tot-row promo" id="cartAutoPromoRow" style="display:none"><span id="cartAutoPromoLabel" data-i18n="cart.auto_promo">Remise auto</span><span id="cartAutoPromoAmt"></span></div>
       <div class="tot-row"><span data-i18n="cart.shipping">Livraison</span><span data-i18n="cart.shipping.from">dès 4,90 €</span></div>
       <div class="tot-row grand"><span data-i18n="cart.total">Total</span><span id="cartTotal">0 €</span></div>
     </div>
@@ -2831,7 +2820,7 @@ loadAndRenderReviews();
       'case.qty':'Case de','case.displays':'displays','case.save':'Économie :','case.vs':'vs prix unitaire','case.soon':'Bientôt',
       'cart.title':'Votre panier','cart.subtotal':'Sous-total','cart.shipping':'Livraison',
       'cart.shipping.from':'dès 4,90 €','cart.total':'Total','cart.checkout':'Finaliser la commande →',
-      'cart.auto_promo':'Remise auto','cart.empty':'Votre panier est vide.',
+      'cart.empty':'Votre panier est vide.',
       'product.price_on_demand':'Prix sur demande','product.per_box':'€/boîte',
       'product.sealed':'SCELLÉ','product.soon':'Bientôt de retour','product.coming_soon':'Bientôt',
       'product.last_boxes':'⚠️ Dernières','product.boxes':'boîtes !',
@@ -2924,7 +2913,7 @@ loadAndRenderReviews();
       'checkout.relay.load_error':'Impossible de charger les relais.',
       'checkout.relay.err':'⚠️ Veuillez sélectionner un point relais Chronopost.',
       'checkout.summary':'Récapitulatif',
-      'checkout.discount.label':'Réduction','checkout.discount.code':'Code promo','checkout.discount.auto':'Remise auto',
+      'checkout.discount.label':'Réduction','checkout.discount.code':'Code promo',
       'checkout.promo.placeholder':'Code promo','checkout.promo.apply':'Appliquer',
       'checkout.pay.card':'💳 Payer par carte bancaire','checkout.pay.loading':'Chargement…',
       'checkout.pay.paypal':'🅿 Payer avec PayPal',
@@ -2961,7 +2950,7 @@ loadAndRenderReviews();
       'case.qty':'Case of','case.displays':'displays','case.save':'Saving:','case.vs':'vs unit price','case.soon':'Coming Soon',
       'cart.title':'Your cart','cart.subtotal':'Subtotal','cart.shipping':'Shipping',
       'cart.shipping.from':'from €4.90','cart.total':'Total','cart.checkout':'Checkout →',
-      'cart.auto_promo':'Auto discount','cart.empty':'Your cart is empty.',
+      'cart.empty':'Your cart is empty.',
       'product.price_on_demand':'Price on request','product.per_box':'€/box',
       'product.sealed':'SEALED','product.soon':'Coming back soon','product.coming_soon':'Coming Soon',
       'product.last_boxes':'⚠️ Last','product.boxes':'boxes!',
@@ -3054,7 +3043,7 @@ loadAndRenderReviews();
       'checkout.relay.load_error':'Unable to load relay points.',
       'checkout.relay.err':'⚠️ Please select a Chronopost relay point.',
       'checkout.summary':'Order summary',
-      'checkout.discount.label':'Discount','checkout.discount.code':'Promo code','checkout.discount.auto':'Auto discount',
+      'checkout.discount.label':'Discount','checkout.discount.code':'Promo code',
       'checkout.promo.placeholder':'Promo code','checkout.promo.apply':'Apply',
       'checkout.pay.card':'💳 Pay by card','checkout.pay.loading':'Loading…',
       'checkout.pay.paypal':'🅿 Pay with PayPal',
@@ -3142,7 +3131,6 @@ window.addEventListener('load', () => {
     BOOSTER:{pct:0,type:'info',msg:'🎁 Un booster sera joint à votre commande !'},
     FREE_DISPLAY:{pct:0,type:'info',msg:'🎁 Contactez-nous pour réclamer votre display gratuite !'},
   };
-  const AUTO_PROMOS = [];
   const DEFAULT_WHEEL = [
     {label:'-5%  EDEN5',         prob:35,  code:'EDEN5',        color:'#5ec4ef'},
     {label:'-10% EDEN10',        prob:28,  code:'EDEN10',       color:'#b08fe8'},
@@ -4098,11 +4086,6 @@ window.addEventListener('load', () => {
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();}});
 
   /* ══ CART ══ */
-  function getAutoPromo(sub){for(const p of AUTO_PROMOS)if(sub>=p.min)return p;return null;}
-  function getNextPromo(sub){
-    for(let i=AUTO_PROMOS.length-1;i>=0;i--)if(sub<AUTO_PROMOS[i].min)return AUTO_PROMOS[i];
-    return null;
-  }
   /* ══ MYSTERY BOX MODAL ══ */
   window.openMysteryModal = function() {
     const p = MYSTERY_BOX;
@@ -4366,8 +4349,6 @@ window.addEventListener('load', () => {
       wrap.innerHTML=`<div class="cart-empty">${t('cart.empty')}</div>`;
       document.getElementById('cartSub').textContent='0 €';
       document.getElementById('cartTotal').textContent='0 €';
-      document.getElementById('promoAutoBar').innerHTML='';
-      document.getElementById('cartAutoPromoRow').style.display='none';
       saveCart(); // Important : vide aussi le localStorage
       updateCardQtys();
       const cb=document.getElementById('cartBtn');if(cb)cb.classList.remove('cart-has-items');
@@ -4430,25 +4411,7 @@ window.addEventListener('load', () => {
         </button>
       </div>`;}).join('');
     const sub=cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
-    const auto=getAutoPromo(sub);
-    const autoBar=document.getElementById('promoAutoBar');
-    const autoRow=document.getElementById('cartAutoPromoRow');
-    if(auto&&!promoDiscount){
-      autoRow.style.display='flex';
-      document.getElementById('cartAutoPromoLabel').textContent=auto.label;
-      document.getElementById('cartAutoPromoAmt').textContent=`-${(sub*auto.pct/100).toFixed(2).replace('.',',')} €`;
-      autoBar.innerHTML='';
-    } else {
-      autoRow.style.display='none';
-      const next=getNextPromo(sub);
-      if(next&&!auto){
-        const pct=Math.min(100,(sub/next.min)*100);
-        const needed=(next.min-sub).toFixed(2);
-        autoBar.innerHTML=`<div class="promo-auto-bar"><div class="lbl">+${needed}€ → -${next.pct}% automatique</div><div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div></div>`;
-      } else autoBar.innerHTML='';
-    }
-    const effectivePct=promoDiscount||(auto&&!promoDiscount?auto.pct:0);
-    const discounted=sub*(1-effectivePct/100);
+    const discounted=sub*(1-promoDiscount/100);
     const _selShipMode=document.querySelector('.ship-opt.selected')?.dataset.ship;
     const ship=(shipPromo&&_selShipMode==='mr')?0:currentShip;
     document.getElementById('cartSub').textContent=sub.toFixed(2).replace('.',',')+' €';
@@ -5069,8 +5032,7 @@ window.addEventListener('load', () => {
     // Pré-remplir adresse si connecté
     if(typeof prefillShippingAddress==='function') prefillShippingAddress();
     const sub=cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
-    const auto=getAutoPromo(sub);
-    const effectivePct=promoDiscount||(auto&&!promoDiscount?auto.pct:0);
+    const effectivePct=promoDiscount;
     const discAmount=sub*effectivePct/100;
     const discounted=sub-discAmount;
     document.getElementById('coLines').innerHTML=cart.map(i=>
@@ -5084,7 +5046,7 @@ window.addEventListener('load', () => {
     const discRow=document.getElementById('coDiscountRow');
     if(effectivePct>0){
       discRow.style.display='flex';
-      document.getElementById('coDiscountLabel').textContent=window.t(promoDiscount?'checkout.discount.code':'checkout.discount.auto')+' -'+effectivePct+'%';
+      document.getElementById('coDiscountLabel').textContent=window.t('checkout.discount.code')+' -'+effectivePct+'%';
       document.getElementById('coDiscount').textContent='-'+(discAmount).toFixed(2).replace('.',',')+' €';
     } else discRow.style.display='none';
     document.getElementById('coTotal').textContent=(discounted+(shipFreeApplied?0:currentShip)).toFixed(2).replace('.',',')+' €';
@@ -5352,9 +5314,7 @@ window.addEventListener('load', () => {
       const data=await res.json();
       if(data.url){
         const _sub=cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
-        const _auto=getAutoPromo(_sub);
-        const _pct=promoDiscount||(_auto&&!promoDiscount?_auto.pct:0);
-        const _tot=((_sub*(1-_pct/100))+((shipPromo&&currentShipMode==='mr')?0:currentShip)).toFixed(2).replace('.',',')+' €';
+        const _tot=((_sub*(1-promoDiscount/100))+((shipPromo&&currentShipMode==='mr')?0:currentShip)).toFixed(2).replace('.',',')+' €';
         sessionStorage.setItem('eden_pending_total',_tot);
         if(data.sessionId) sessionStorage.setItem('eden_pending_ref','EDN-'+data.sessionId.slice(-6).toUpperCase());
         // Redirection dans le même onglet — le panier est sauvé en localStorage

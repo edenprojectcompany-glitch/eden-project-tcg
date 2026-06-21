@@ -3,7 +3,7 @@
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const jwt = require('jsonwebtoken');
-const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, getServerPrice, getAutoPromoPct, computeLangPools, CASE_CATALOG, getCasePrice } = require('../lib/prices');
+const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, getServerPrice, computeLangPools, CASE_CATALOG, getCasePrice } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -178,8 +178,8 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Remise effective : code promo prioritaire, sinon auto-promo sur le sous-total
-    const discountPct = promoCodePct || (!isPrizeCode ? getAutoPromoPct(rawSubtotal) : 0);
+    // Remise effective : uniquement via code promo explicite — aucune remise automatique
+    const discountPct = promoCodePct;
 
     // Réserver le code roue avant de créer la session (anti double-usage)
     if (wheelCodeConfig && wonCodeIndex !== -1 && verifiedUserEmail) {

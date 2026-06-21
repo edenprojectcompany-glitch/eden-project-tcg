@@ -303,6 +303,7 @@ Les overrides admin (KV `admin:prices`) prennent la priorité sur tous les tiers
 - Panneau admin → onglet Produits : champ stock dédié Mystery Box ✅
 - Panneau admin → nouvel onglet Clients (`/api/admin-users`) : connexions, achats, codes promo obtenus/utilisés par client ✅
 - Traçabilité connexion (`lastLoginAt`, `loginCount`) ajoutée dans `api/login.js` ✅
+- Suppression des remises automatiques par paliers de sous-total (≥150€: -3%, ≥300€: -5%, ≥500€: -8%) — jamais voulues par Vincent. Seules restent les remises explicites : code promo et prix dégressifs à la quantité (`BASE_PRICES` tiers). Retiré de `lib/prices.js`, `create-payment.js`, `create-paypal-order.js` ✅
 
 ### ❌ Pas encore implémenté (backlog)
 - Historique commandes front (`user.orders[]` rempli par webhook mais pas affiché dans le dashboard)

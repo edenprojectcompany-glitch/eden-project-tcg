@@ -3,7 +3,7 @@
 
 const { PAYPAL_BASE, getPayPalToken } = require('../lib/paypal');
 const jwt = require('jsonwebtoken');
-const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, PRODUCT_LANG, getServerPrice, getAutoPromoPct, computeLangPools, CASE_CATALOG, getCasePrice } = require('../lib/prices');
+const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, PRODUCT_LANG, getServerPrice, computeLangPools, CASE_CATALOG, getCasePrice } = require('../lib/prices');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 
@@ -166,8 +166,8 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Remise effective
-    const discountPct = promoCodePct || (!isPrizeCode ? getAutoPromoPct(rawSubtotal) : 0);
+    // Remise effective : uniquement via code promo explicite — aucune remise automatique
+    const discountPct = promoCodePct;
 
     // Passe 2 : items validés avec remise
     const validatedItems = rawItems.map(({ item, qty, serverPrice }) => ({
