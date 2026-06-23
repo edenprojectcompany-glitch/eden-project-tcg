@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devis — Eden Project TCG</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0c;--bg2:#111114;--bg3:#16161b;
+  --glass:rgba(255,255,255,.04);--gb:rgba(255,255,255,.09);
+  --text:#f4f4f6;--dim:#8a8a93;
+  --c1:#7fd9ff;--c2:#c9a8ff;--c3:#ffb3e6;--c4:#a8ffd4;
+  --danger:#ff7a7a;--success:#7fffaa;--warn:#ffb300;
+}
+body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;min-height:100vh;padding:40px 20px}
+.wrap{max-width:680px;margin:0 auto}
+.logo{font-family:'Fraunces',serif;font-size:24px;font-weight:500;margin-bottom:6px;text-align:center}
+.logo span{background:linear-gradient(135deg,var(--c1),var(--c2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:13px;color:var(--dim);text-align:center;margin-bottom:32px}
+.card{background:var(--bg2);border:1px solid var(--gb);border-radius:20px;overflow:hidden;margin-bottom:20px}
+.card-bar{height:4px;background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3))}
+.card-body{padding:32px}
+.head-row{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:24px}
+.ref{font-family:monospace;color:var(--c1);font-size:15px;font-weight:700}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:600}
+.b-brouillon{background:rgba(138,138,147,.12);color:var(--dim);border:1px solid rgba(138,138,147,.3)}
+.b-envoye{background:rgba(127,217,255,.1);color:var(--c1);border:1px solid rgba(127,217,255,.25)}
+.b-accepte{background:rgba(127,255,170,.1);color:var(--success);border:1px solid rgba(127,255,170,.25)}
+.b-refuse{background:rgba(255,122,122,.1);color:var(--danger);border:1px solid rgba(255,122,122,.25)}
+.b-expire{background:rgba(255,179,0,.1);color:var(--warn);border:1px solid rgba(255,179,0,.25)}
+.client-block{font-size:13.5px;color:var(--dim);line-height:1.6}
+.client-block strong{color:var(--text)}
+table{width:100%;border-collapse:collapse;margin-bottom:20px}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);padding-bottom:10px;border-bottom:1px solid var(--gb)}
+th.num,td.num{text-align:right}
+td{padding:12px 0;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04)}
+.totals{margin-left:auto;max-width:280px}
+.totals-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13.5px;color:var(--dim)}
+.totals-row.total{border-top:1px solid var(--gb);margin-top:8px;padding-top:14px;font-weight:700;font-size:18px;color:var(--text)}
+.totals-row.total span:last-child{color:var(--c4)}
+.notes{background:var(--bg3);border-radius:12px;padding:16px 20px;font-size:13px;color:var(--dim);white-space:pre-line;margin-bottom:4px}
+.rib{background:var(--bg3);border-radius:12px;padding:20px;margin-top:20px}
+.rib-title{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:12px}
+.rib-row{font-size:13.5px;color:var(--dim);margin-bottom:6px}
+.rib-row strong{color:var(--c1);font-family:monospace}
+.actions{display:flex;justify-content:center;gap:10px;margin-top:24px}
+.btn{background:var(--glass);border:1px solid var(--gb);color:var(--text);padding:11px 22px;border-radius:100px;font-size:13.5px;cursor:pointer;font-family:inherit}
+.footer-note{text-align:center;font-size:11.5px;color:var(--dim);margin-top:24px;line-height:1.6}
+.state{text-align:center;padding:80px 20px;color:var(--dim)}
+@media print{
+  body{background:#fff;color:#111;padding:0}
+  .card{border:1px solid #ccc;background:#fff}
+  .actions,.sub{display:none}
+  .ref,.client-block strong,th{color:#111}
+  td,.totals-row,.rib-row,.notes{color:#333}
+  .rib-row strong{color:#111}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">Eden <span>Project TCG</span></div>
+  <div class="sub">Marketplace Pokémon Premium · Brest, France</div>
+  <div id="content"><div class="state">Chargement du devis…</div></div>
+</div>
+<script>
+const STATUS_LABEL={brouillon:'📝 Brouillon',envoye:'✉️ Envoyé',accepte:'✅ Accepté',refuse:'❌ Refusé',expire:'⏳ Expiré'};
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+async function load(){
+  const id=new URLSearchParams(location.search).get('id');
+  const el=document.getElementById('content');
+  if(!id){el.innerHTML='<div class="state">Lien de devis invalide.</div>';return;}
+  try{
+    const r=await fetch('/api/devis-public?id='+encodeURIComponent(id));
+    if(!r.ok) throw new Error();
+    const {quote,totals,settings}=await r.json();
+    render(quote,totals,settings);
+  }catch{
+    el.innerHTML='<div class="state">Devis introuvable ou expiré.</div>';
+  }
+}
+function render(q,t,s){
+  const date=new Date(q.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  const valid=q.validUntil?new Date(q.validUntil).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}):null;
+  const itemRows=(q.items||[]).map(i=>`
+    <tr><td>${esc(i.name)}</td><td class="num">${i.qty}</td><td class="num">${parseFloat(i.unitPrice).toFixed(2)} €</td><td class="num">${(i.qty*i.unitPrice).toFixed(2)} €</td></tr>`).join('');
+  const ribHtml=s.iban?`
+    <div class="rib">
+      <div class="rib-title">🏦 Coordonnées bancaires — virement</div>
+      ${s.titulaire?`<div class="rib-row">Titulaire : <strong>${esc(s.titulaire)}</strong></div>`:''}
+      <div class="rib-row">IBAN : <strong>${esc(s.iban)}</strong></div>
+      ${s.bic?`<div class="rib-row">BIC : <strong>${esc(s.bic)}</strong></div>`:''}
+      ${s.banque?`<div class="rib-row">Banque : ${esc(s.banque)}</div>`:''}
+    </div>`:'';
+  document.getElementById('content').innerHTML=`
+    <div class="card">
+      <div class="card-bar"></div>
+      <div class="card-body">
+        <div class="head-row">
+          <div>
+            <div class="ref">${esc(q.ref)}</div>
+            <div style="font-size:12px;color:var(--dim);margin-top:4px">Émis le ${date}${valid?` · Valable jusqu'au ${valid}`:''}</div>
+          </div>
+          <span class="badge ${'b-'+(q.status||'brouillon')}">${STATUS_LABEL[q.status]||q.status}</span>
+        </div>
+        <div class="client-block" style="margin-bottom:24px">
+          <strong>${esc(q.client?.name)}</strong>${q.client?.company?' — '+esc(q.client.company):''}<br>
+          ${q.client?.address?esc(q.client.address).replace(/\n/g,'<br>')+'<br>':''}${q.client?.email?esc(q.client.email)+'<br>':''}${q.client?.phone?esc(q.client.phone):''}
+        </div>
+        <table>
+          <thead><tr><th>Article</th><th class="num">Qté</th><th class="num">Prix unit.</th><th class="num">Sous-total</th></tr></thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+        <div class="totals">
+          <div class="totals-row"><span>Sous-total</span><span>${t.subtotal.toFixed(2)} €</span></div>
+          ${t.discount>0?`<div class="totals-row"><span>Remise</span><span>-${t.discount.toFixed(2)} €</span></div>`:''}
+          <div class="totals-row"><span>${esc(q.shippingLabel)||'Livraison'}</span><span>${t.shipping.toFixed(2)} €</span></div>
+          <div class="totals-row total"><span>Total</span><span>${t.total.toFixed(2)} €</span></div>
+        </div>
+        ${q.notes?`<div class="notes">${esc(q.notes)}</div>`:''}
+        ${ribHtml}
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="window.print()">🖨️ Imprimer / PDF</button>
+    </div>
+    ${s.footerNote?`<div class="footer-note">${esc(s.footerNote)}</div>`:''}
+  `;
+}
+load();
+</script>
+</body>
+</html>

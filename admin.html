@@ -77,6 +77,19 @@ tr:hover td{background:rgba(255,255,255,.015)}
 .abtn.act-shipped{border-color:var(--success);color:var(--success)}
 .empty-row td{text-align:center;color:var(--dim);padding:32px}
 
+/* ── DEVIS ── */
+.devis-input{width:100%;padding:10px 14px;background:var(--glass);border:1px solid var(--gb);border-radius:10px;color:var(--text);font-family:inherit;font-size:13.5px;outline:none;resize:vertical}
+.devis-input:focus{border-color:var(--c1)}
+.devis-item-row{display:grid;grid-template-columns:2fr 90px 110px 110px 32px;gap:8px;align-items:center}
+.devis-item-rm{background:transparent;border:1px solid var(--gb);color:var(--dim);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:14px}
+.devis-item-rm:hover{border-color:var(--danger);color:var(--danger)}
+.b-brouillon{background:rgba(138,138,147,.12);color:var(--dim);border:1px solid rgba(138,138,147,.3)}
+.b-envoye{background:rgba(127,217,255,.1);color:var(--c1);border:1px solid rgba(127,217,255,.25)}
+.b-accepte{background:rgba(127,255,170,.1);color:var(--success);border:1px solid rgba(127,255,170,.25)}
+.b-refuse{background:rgba(255,122,122,.1);color:var(--danger);border:1px solid rgba(255,122,122,.25)}
+.b-expire{background:rgba(255,179,0,.1);color:var(--warn);border:1px solid rgba(255,179,0,.25)}
+@media(max-width:640px){.devis-item-row{grid-template-columns:1fr;gap:6px;padding-bottom:10px;border-bottom:1px solid var(--gb)}}
+
 /* ── STATS ── */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:28px}
 .stat-card{background:var(--bg2);border:1px solid var(--gb);border-radius:16px;padding:18px 20px}
@@ -234,6 +247,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
     <button class="nav-tab" data-tab="roue">🎡 Roue</button>
     <button class="nav-tab" data-tab="livraison">🚚 Livraison</button>
     <button class="nav-tab" data-tab="gradees">🏅 Gradées</button>
+    <button class="nav-tab" data-tab="devis">📝 Devis</button>
   </div>
 
   <div class="app-body">
@@ -421,6 +435,87 @@ tr:hover td{background:rgba(255,255,255,.015)}
       <div id="gradedMsg" style="margin-top:10px;font-size:12.5px"></div>
     </div>
 
+    <!-- DEVIS -->
+    <div class="tab" id="tab-devis">
+      <div class="sec-head">
+        <div class="sec-title">📝 Devis clients <span class="sec-meta" id="devisMeta"></span></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn-sm" id="devisRibBtn">🏦 Mes coordonnées bancaires</button>
+          <button class="btn-sm" id="devisNewBtn" style="background:rgba(127,217,255,.15);border-color:rgba(127,217,255,.4);color:var(--c1);font-weight:600">+ Nouveau devis</button>
+        </div>
+      </div>
+
+      <!-- Liste des devis -->
+      <div id="devisListView">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Référence</th><th>Client</th><th>Total</th><th>Validité</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody id="devisBody"><tr class="empty-row"><td colspan="6">Chargement…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RIB settings (masqué par défaut) -->
+      <div id="devisRibPanel" style="display:none;margin-top:20px;background:var(--bg2);border:1px solid var(--gb);border-radius:16px;padding:22px">
+        <div class="sec-title" style="margin-bottom:16px">🏦 Coordonnées bancaires (affichées sur chaque devis)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px">
+          <div style="grid-column:1/-1"><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Titulaire du compte</label><input type="text" id="ribTitulaire" class="devis-input" placeholder="Eden Project"></div>
+          <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">IBAN</label><input type="text" id="ribIban" class="devis-input" placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"></div>
+          <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">BIC / SWIFT</label><input type="text" id="ribBic" class="devis-input" placeholder="XXXXXXXX"></div>
+          <div style="grid-column:1/-1"><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Banque</label><input type="text" id="ribBanque" class="devis-input" placeholder="Nom de la banque"></div>
+          <div style="grid-column:1/-1"><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Note de pied de page (conditions, mentions…)</label><textarea id="ribFooter" class="devis-input" rows="3" placeholder="Devis valable 15 jours. Paiement par virement bancaire à réception."></textarea></div>
+        </div>
+        <button class="btn-sm" id="saveRibBtn" style="margin-top:16px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer</button>
+        <div id="ribMsg" style="margin-top:10px;font-size:12.5px"></div>
+      </div>
+
+      <!-- Formulaire devis (masqué par défaut) -->
+      <div id="devisFormPanel" style="display:none;margin-top:20px;background:var(--bg2);border:1px solid var(--gb);border-radius:16px;padding:22px">
+        <div class="sec-title" id="devisFormTitle" style="margin-bottom:18px">Nouveau devis</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+          <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Nom du client *</label><input type="text" id="devisClientName" class="devis-input"></div>
+          <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Société (optionnel)</label><input type="text" id="devisClientCompany" class="devis-input"></div>
+          <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Email</label><input type="email" id="devisClientEmail" class="devis-input"></div>
+          <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Téléphone (WhatsApp)</label><input type="text" id="devisClientPhone" class="devis-input" placeholder="+33612345678"></div>
+          <div style="grid-column:1/-1"><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Adresse</label><textarea id="devisClientAddress" class="devis-input" rows="2" placeholder="N° et rue, code postal, ville, pays"></textarea></div>
+        </div>
+
+        <div style="font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Articles</div>
+        <div id="devisItemsRows" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+        <button class="btn-sm" id="devisAddItemBtn">+ Ajouter un article</button>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;max-width:640px">
+          <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Libellé livraison</label><input type="text" id="devisShipLabel" class="devis-input" placeholder="Livraison Chronopost"></div>
+          <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Frais de livraison (€)</label><input type="number" id="devisShipCost" class="devis-input" step="0.01" min="0" value="0"></div>
+          <div>
+            <label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Remise</label>
+            <div style="display:flex;gap:8px">
+              <select id="devisDiscountType" class="devis-input" style="flex:0 0 90px">
+                <option value="pct">%</option>
+                <option value="fixed">€</option>
+              </select>
+              <input type="number" id="devisDiscountValue" class="devis-input" step="0.01" min="0" value="0">
+            </div>
+          </div>
+          <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Valable jusqu'au</label><input type="date" id="devisValidUntil" class="devis-input"></div>
+        </div>
+
+        <div style="margin-top:14px;max-width:640px">
+          <label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Notes / conditions (visibles sur le devis)</label>
+          <textarea id="devisNotes" class="devis-input" rows="3"></textarea>
+        </div>
+
+        <div style="margin-top:20px;padding:16px 20px;background:var(--bg3);border-radius:12px;max-width:340px;font-size:13px" id="devisTotalsBox"></div>
+
+        <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+          <button class="btn-sm" id="devisCancelBtn">Annuler</button>
+          <button class="btn-sm" id="devisSaveBtn" style="background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer</button>
+        </div>
+        <div id="devisFormMsg" style="margin-top:10px;font-size:12.5px"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -534,6 +629,7 @@ document.querySelectorAll('.nav-tab').forEach(t=>t.addEventListener('click',()=>
   if(t.dataset.tab==='roue'&&_adminData) buildRoue(_adminData.wheel||[]);
   if(t.dataset.tab==='livraison'&&_adminData) buildLivraison(_adminData.shipping||{});
   if(t.dataset.tab==='gradees'&&_adminData) buildGradees(_adminData.graded||[]);
+  if(t.dataset.tab==='devis') loadDevis();
 }));
 
 /* ══ COMMANDES ══ */
@@ -1217,6 +1313,278 @@ document.getElementById('saveGradedBtn').addEventListener('click',async()=>{
     msg.style.color='var(--success)';msg.textContent='✓ Cartes gradées mises à jour';
   }catch{msg.style.color='var(--danger)';msg.textContent='Erreur';}
   setTimeout(()=>msg.textContent='',3000);
+});
+
+/* ══ DEVIS ══ */
+let _devisList=[], _devisSettings={}, _devisEditingId=null;
+const DEVIS_CATALOG=PRODUCTS.filter(p=>p.price!=null).map(p=>({name:p.name,price:p.price}))
+  .concat(CASE_CATALOG.map(c=>({name:'Case — '+c.name,price:+(c.basePrice*c.qty+CASE_SURCHARGE).toFixed(2)})));
+const DEVIS_STATUS_LABEL={brouillon:'📝 Brouillon',envoye:'✉️ Envoyé',accepte:'✅ Accepté',refuse:'❌ Refusé',expire:'⏳ Expiré'};
+
+async function loadDevis(){
+  const body=document.getElementById('devisBody');
+  try{
+    const r=await fetch('/api/devis',{headers:{'X-Admin-Code':_code}});
+    const d=await r.json();
+    _devisList=d.quotes||[]; _devisSettings=d.settings||{};
+    document.getElementById('devisMeta').textContent='· '+_devisList.length+' devis';
+    renderDevisList();
+  }catch{body.innerHTML='<tr class="empty-row"><td colspan="6">Erreur de chargement</td></tr>';}
+}
+function devisTotals(q){
+  const subtotal=(q.items||[]).reduce((s,i)=>s+(parseFloat(i.qty)||0)*(parseFloat(i.unitPrice)||0),0);
+  const discount=q.discountType==='pct'?subtotal*(parseFloat(q.discountValue)||0)/100:(parseFloat(q.discountValue)||0);
+  const shipping=parseFloat(q.shippingCost)||0;
+  const total=Math.max(0,subtotal-discount)+shipping;
+  return {subtotal,discount,shipping,total};
+}
+function renderDevisList(){
+  const body=document.getElementById('devisBody');
+  if(!_devisList.length){body.innerHTML='<tr class="empty-row"><td colspan="6">Aucun devis pour l\'instant</td></tr>';return;}
+  body.innerHTML=_devisList.map(q=>{
+    const t=devisTotals(q);
+    const date=new Date(q.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const valid=q.validUntil?new Date(q.validUntil).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+    return `<tr>
+      <td><span class="ref">${q.ref}</span><div style="font-size:11px;color:var(--dim);margin-top:2px">${date}</div></td>
+      <td>${q.client?.name||'—'}${q.client?.company?` <span style="color:var(--dim);font-size:11.5px">(${q.client.company})</span>`:''}</td>
+      <td style="font-weight:700;color:var(--c4)">${t.total.toFixed(2)} €</td>
+      <td>${valid}</td>
+      <td>
+        <select onchange="setDevisStatus('${q.id}',this.value)" style="background:var(--bg3);border:1px solid var(--gb);color:var(--text);border-radius:8px;padding:5px 8px;font-size:11.5px;font-family:inherit">
+          ${Object.entries(DEVIS_STATUS_LABEL).map(([k,l])=>`<option value="${k}" ${q.status===k?'selected':''}>${l}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <div class="action-row">
+          <button class="abtn" onclick="openDevisForm('${q.id}')">✏️ Éditer</button>
+          <button class="abtn" onclick="copyDevisLink('${q.id}')">🔗 Lien</button>
+          <button class="abtn" onclick="sendDevisEmail('${q.id}')" ${!q.client?.email?'disabled title="Pas d\'email client"':''}>✉️ Email</button>
+          <button class="abtn" onclick="sendDevisWhatsapp('${q.id}')">💬 WhatsApp</button>
+          <button class="abtn" onclick="duplicateDevis('${q.id}')">📑 Dupliquer</button>
+          <button class="abtn" style="border-color:var(--danger);color:var(--danger)" onclick="deleteDevis('${q.id}')">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+async function setDevisStatus(id,status){
+  try{
+    const r=await fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_status',data:{id,status}})});
+    if(!r.ok) throw new Error();
+    toast('Statut mis à jour');
+    loadDevis();
+  }catch{toast('Erreur','err');}
+}
+async function deleteDevis(id){
+  if(!confirm('Supprimer ce devis ?')) return;
+  try{
+    const r=await fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'delete',data:{id}})});
+    if(!r.ok) throw new Error();
+    toast('Devis supprimé');
+    loadDevis();
+  }catch{toast('Erreur','err');}
+}
+function duplicateDevis(id){
+  const q=_devisList.find(x=>x.id===id);
+  if(!q) return;
+  openDevisForm(null);
+  setTimeout(()=>fillDevisForm({...q,id:null,ref:null,status:'brouillon'}),0);
+}
+function copyDevisLink(id){
+  const url=`${location.origin}/devis?id=${id}`;
+  navigator.clipboard.writeText(url).then(()=>toast('Lien copié : '+url)).catch(()=>prompt('Copiez ce lien :',url));
+}
+async function sendDevisEmail(id){
+  const q=_devisList.find(x=>x.id===id);
+  if(!q?.client?.email) return toast('Aucun email client','err');
+  if(!confirm(`Envoyer le devis ${q.ref} à ${q.client.email} ?`)) return;
+  try{
+    const r=await fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'send_email',data:{id}})});
+    if(!r.ok) throw new Error();
+    toast('✓ Devis envoyé par email');
+    loadDevis();
+  }catch{toast('Erreur envoi email','err');}
+}
+function sendDevisWhatsapp(id){
+  const q=_devisList.find(x=>x.id===id);
+  if(!q) return;
+  const t=devisTotals(q);
+  const url=`${location.origin}/devis?id=${id}`;
+  const msg=`Bonjour ${q.client?.name||''},\n\nVoici votre devis ${q.ref} — Eden Project TCG\nMontant total : ${t.total.toFixed(2)} €\n\nConsulter le devis : ${url}`;
+  const phone=(q.client?.phone||'').replace(/[^0-9]/g,'');
+  const waUrl=phone?`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`:`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+  window.open(waUrl,'_blank');
+}
+
+/* ── RIB panel ── */
+document.getElementById('devisRibBtn').addEventListener('click',()=>{
+  const p=document.getElementById('devisRibPanel');
+  const visible=p.style.display!=='none';
+  p.style.display=visible?'none':'block';
+  document.getElementById('devisFormPanel').style.display='none';
+  document.getElementById('devisListView').style.display=visible?'block':'none';
+  if(!visible){
+    document.getElementById('ribTitulaire').value=_devisSettings.titulaire||'';
+    document.getElementById('ribIban').value=_devisSettings.iban||'';
+    document.getElementById('ribBic').value=_devisSettings.bic||'';
+    document.getElementById('ribBanque').value=_devisSettings.banque||'';
+    document.getElementById('ribFooter').value=_devisSettings.footerNote||'';
+  }
+});
+document.getElementById('saveRibBtn').addEventListener('click',async()=>{
+  const msg=document.getElementById('ribMsg');
+  const data={
+    titulaire:document.getElementById('ribTitulaire').value.trim(),
+    iban:document.getElementById('ribIban').value.trim(),
+    bic:document.getElementById('ribBic').value.trim(),
+    banque:document.getElementById('ribBanque').value.trim(),
+    footerNote:document.getElementById('ribFooter').value.trim(),
+  };
+  try{
+    const r=await fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'save_settings',data})});
+    if(!r.ok) throw new Error();
+    _devisSettings=data;
+    msg.style.color='var(--success)';msg.textContent='✓ Coordonnées bancaires enregistrées';
+  }catch{msg.style.color='var(--danger)';msg.textContent='Erreur';}
+  setTimeout(()=>msg.textContent='',3000);
+});
+
+/* ── Form panel ── */
+function devisItemRowHtml(item={}){
+  const opts=DEVIS_CATALOG.map(p=>`<option value="${p.name}" data-price="${p.price}">${p.name} — ${p.price}€</option>`).join('');
+  return `<div class="devis-item-row">
+    <input type="text" class="devis-input devis-item-name" list="devisCatalogList" placeholder="Nom de l'article" value="${(item.name||'').replace(/"/g,'&quot;')}">
+    <input type="number" class="devis-input devis-item-qty" min="0" step="1" placeholder="Qté" value="${item.qty??1}">
+    <input type="number" class="devis-input devis-item-price" min="0" step="0.01" placeholder="Prix unit. €" value="${item.unitPrice??''}">
+    <div style="font-size:12.5px;color:var(--c4);font-weight:700;text-align:right" class="devis-item-sub">—</div>
+    <button class="devis-item-rm" onclick="this.closest('.devis-item-row').remove();updateDevisTotals()" title="Retirer">✕</button>
+  </div>`;
+}
+if(!document.getElementById('devisCatalogList')){
+  const dl=document.createElement('datalist'); dl.id='devisCatalogList';
+  dl.innerHTML=DEVIS_CATALOG.map(p=>`<option value="${p.name}" data-price="${p.price}">`).join('');
+  document.body.appendChild(dl);
+}
+function bindDevisItemRow(row){
+  const nameInp=row.querySelector('.devis-item-name');
+  const priceInp=row.querySelector('.devis-item-price');
+  nameInp.addEventListener('input',()=>{
+    const match=DEVIS_CATALOG.find(p=>p.name===nameInp.value);
+    if(match&&!priceInp.dataset.touched) priceInp.value=match.price;
+    updateDevisTotals();
+  });
+  priceInp.addEventListener('input',()=>{priceInp.dataset.touched='1';updateDevisTotals();});
+  row.querySelector('.devis-item-qty').addEventListener('input',updateDevisTotals);
+}
+function addDevisItemRow(item){
+  const wrap=document.getElementById('devisItemsRows');
+  wrap.insertAdjacentHTML('beforeend',devisItemRowHtml(item));
+  bindDevisItemRow(wrap.lastElementChild);
+  updateDevisTotals();
+}
+function collectDevisItems(){
+  return [...document.querySelectorAll('#devisItemsRows .devis-item-row')].map(row=>({
+    name:row.querySelector('.devis-item-name').value.trim(),
+    qty:parseFloat(row.querySelector('.devis-item-qty').value)||0,
+    unitPrice:parseFloat(row.querySelector('.devis-item-price').value)||0,
+  })).filter(i=>i.name&&i.qty>0);
+}
+function updateDevisTotals(){
+  document.querySelectorAll('#devisItemsRows .devis-item-row').forEach(row=>{
+    const qty=parseFloat(row.querySelector('.devis-item-qty').value)||0;
+    const price=parseFloat(row.querySelector('.devis-item-price').value)||0;
+    row.querySelector('.devis-item-sub').textContent=(qty*price).toFixed(2)+' €';
+  });
+  const items=collectDevisItems();
+  const shipping=parseFloat(document.getElementById('devisShipCost').value)||0;
+  const discType=document.getElementById('devisDiscountType').value;
+  const discVal=parseFloat(document.getElementById('devisDiscountValue').value)||0;
+  const subtotal=items.reduce((s,i)=>s+i.qty*i.unitPrice,0);
+  const discount=discType==='pct'?subtotal*discVal/100:discVal;
+  const total=Math.max(0,subtotal-discount)+shipping;
+  document.getElementById('devisTotalsBox').innerHTML=`
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--dim)">Sous-total</span><span>${subtotal.toFixed(2)} €</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--dim)">Remise</span><span style="color:var(--c3)">-${discount.toFixed(2)} €</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--dim)">Livraison</span><span>${shipping.toFixed(2)} €</span></div>
+    <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--gb);font-weight:700;font-size:15px"><span>Total</span><span style="color:var(--c4)">${total.toFixed(2)} €</span></div>`;
+}
+['devisShipCost','devisDiscountType','devisDiscountValue'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',updateDevisTotals);
+  document.getElementById(id).addEventListener('change',updateDevisTotals);
+});
+document.getElementById('devisAddItemBtn').addEventListener('click',()=>addDevisItemRow());
+
+function openDevisForm(id){
+  _devisEditingId=id;
+  document.getElementById('devisListView').style.display='none';
+  document.getElementById('devisRibPanel').style.display='none';
+  document.getElementById('devisFormPanel').style.display='block';
+  document.getElementById('devisFormMsg').textContent='';
+  if(id){
+    const q=_devisList.find(x=>x.id===id);
+    document.getElementById('devisFormTitle').textContent='Éditer le devis '+(q?.ref||'');
+    fillDevisForm(q);
+  }else{
+    document.getElementById('devisFormTitle').textContent='Nouveau devis';
+    fillDevisForm({});
+  }
+}
+function fillDevisForm(q={}){
+  document.getElementById('devisClientName').value=q.client?.name||'';
+  document.getElementById('devisClientCompany').value=q.client?.company||'';
+  document.getElementById('devisClientEmail').value=q.client?.email||'';
+  document.getElementById('devisClientPhone').value=q.client?.phone||'';
+  document.getElementById('devisClientAddress').value=q.client?.address||'';
+  document.getElementById('devisShipLabel').value=q.shippingLabel||'';
+  document.getElementById('devisShipCost').value=q.shippingCost||0;
+  document.getElementById('devisDiscountType').value=q.discountType||'pct';
+  document.getElementById('devisDiscountValue').value=q.discountValue||0;
+  document.getElementById('devisNotes').value=q.notes||'';
+  const d=new Date(); d.setDate(d.getDate()+15);
+  document.getElementById('devisValidUntil').value=q.validUntil||d.toISOString().slice(0,10);
+  document.getElementById('devisItemsRows').innerHTML='';
+  if(q.items?.length) q.items.forEach(i=>addDevisItemRow(i));
+  else addDevisItemRow();
+  updateDevisTotals();
+}
+document.getElementById('devisCancelBtn').addEventListener('click',()=>{
+  document.getElementById('devisFormPanel').style.display='none';
+  document.getElementById('devisListView').style.display='block';
+});
+document.getElementById('devisNewBtn').addEventListener('click',()=>openDevisForm(null));
+document.getElementById('devisSaveBtn').addEventListener('click',async()=>{
+  const msg=document.getElementById('devisFormMsg');
+  const items=collectDevisItems();
+  if(!items.length){msg.style.color='var(--danger)';msg.textContent='Ajoutez au moins un article valide';return;}
+  const name=document.getElementById('devisClientName').value.trim();
+  if(!name){msg.style.color='var(--danger)';msg.textContent='Le nom du client est requis';return;}
+  const data={
+    id:_devisEditingId||undefined,
+    client:{
+      name,
+      company:document.getElementById('devisClientCompany').value.trim(),
+      email:document.getElementById('devisClientEmail').value.trim(),
+      phone:document.getElementById('devisClientPhone').value.trim(),
+      address:document.getElementById('devisClientAddress').value.trim(),
+    },
+    items,
+    shippingLabel:document.getElementById('devisShipLabel').value.trim(),
+    shippingCost:parseFloat(document.getElementById('devisShipCost').value)||0,
+    discountType:document.getElementById('devisDiscountType').value,
+    discountValue:parseFloat(document.getElementById('devisDiscountValue').value)||0,
+    notes:document.getElementById('devisNotes').value.trim(),
+    validUntil:document.getElementById('devisValidUntil').value,
+  };
+  try{
+    const r=await fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'save',data})});
+    const res=await r.json();
+    if(!r.ok) throw new Error(res.error||'Erreur');
+    toast('✓ Devis enregistré');
+    document.getElementById('devisFormPanel').style.display='none';
+    document.getElementById('devisListView').style.display='block';
+    loadDevis();
+  }catch(e){msg.style.color='var(--danger)';msg.textContent=e.message||'Erreur';}
 });
 </script>
 </body>

@@ -4,6 +4,7 @@
   "builds": [
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "admin.html", "use": "@vercel/static" },
+    { "src": "devis.html", "use": "@vercel/static" },
     { "src": "image/**", "use": "@vercel/static" },
     { "src": "api/*.js", "use": "@vercel/node", "config": { "nodeVersion": "18.x" } }
   ],
@@ -17,6 +18,7 @@
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
     { "src": "/image/(.*)", "dest": "/image/$1" },
     { "src": "/admin", "dest": "/admin.html" },
+    { "src": "/devis", "dest": "/devis.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
