@@ -80,6 +80,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
 /* ── DEVIS ── */
 .devis-input{width:100%;padding:10px 14px;background:var(--glass);border:1px solid var(--gb);border-radius:10px;color:var(--text);font-family:inherit;font-size:13.5px;outline:none;resize:vertical}
 .devis-input:focus{border-color:var(--c1)}
+.devis-input option{background:#16161b;color:#f4f4f6}
 .devis-item-row{display:grid;grid-template-columns:2fr 90px 110px 110px 32px;gap:8px;align-items:center}
 .devis-item-namecell{display:flex;flex-direction:column}
 .devis-item-rm{background:transparent;border:1px solid var(--gb);color:var(--dim);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:14px}
@@ -90,6 +91,10 @@ tr:hover td{background:rgba(255,255,255,.015)}
 .b-refuse{background:rgba(255,122,122,.1);color:var(--danger);border:1px solid rgba(255,122,122,.25)}
 .b-expire{background:rgba(255,179,0,.1);color:var(--warn);border:1px solid rgba(255,179,0,.25)}
 @media(max-width:640px){.devis-item-row{grid-template-columns:1fr;gap:6px;padding-bottom:10px;border-bottom:1px solid var(--gb)}}
+.devis-addr-list{position:absolute;z-index:50;left:0;right:0;top:100%;margin-top:4px;background:var(--bg3);border:1px solid var(--gb);border-radius:10px;overflow:hidden;display:none;max-height:220px;overflow-y:auto}
+.devis-addr-item{padding:9px 14px;font-size:12.5px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05)}
+.devis-addr-item:last-child{border-bottom:none}
+.devis-addr-item:hover{background:rgba(127,217,255,.08);color:var(--c1)}
 
 /* ── STATS ── */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:28px}
@@ -479,7 +484,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
           <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Société (optionnel)</label><input type="text" id="devisClientCompany" class="devis-input"></div>
           <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Email</label><input type="email" id="devisClientEmail" class="devis-input"></div>
           <div><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Téléphone (WhatsApp)</label><input type="text" id="devisClientPhone" class="devis-input" placeholder="+33612345678"></div>
-          <div style="grid-column:1/-1"><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Adresse</label><textarea id="devisClientAddress" class="devis-input" rows="2" placeholder="N° et rue, code postal, ville, pays"></textarea></div>
+          <div style="grid-column:1/-1;position:relative"><label style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px">Adresse</label><textarea id="devisClientAddress" class="devis-input" rows="2" placeholder="Commencez à taper, ex: 20 rue Louis le Guen…" autocomplete="off"></textarea><div id="devisAddrSuggest" class="devis-addr-list"></div></div>
         </div>
 
         <div style="font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Articles</div>
@@ -1531,6 +1536,38 @@ function updateDevisTotals(){
   document.getElementById(id).addEventListener('change',updateDevisTotals);
 });
 document.getElementById('devisAddItemBtn').addEventListener('click',()=>addDevisItemRow());
+
+/* ── Autocomplétion adresse (API Adresse — data.gouv.fr, gratuite, sans clé) ── */
+let _addrAbort=null,_addrTimer=null;
+const _devisAddrInput=document.getElementById('devisClientAddress');
+const _devisAddrList=document.getElementById('devisAddrSuggest');
+_devisAddrInput.addEventListener('input',()=>{
+  clearTimeout(_addrTimer);
+  const q=_devisAddrInput.value.trim();
+  if(q.length<5){_devisAddrList.style.display='none';return;}
+  _addrTimer=setTimeout(()=>searchDevisAddress(q),350);
+});
+async function searchDevisAddress(q){
+  if(_addrAbort) _addrAbort.abort();
+  _addrAbort=new AbortController();
+  try{
+    const r=await fetch('https://api-adresse.data.gouv.fr/search/?q='+encodeURIComponent(q)+'&limit=5',{signal:_addrAbort.signal});
+    const d=await r.json();
+    const feats=d.features||[];
+    if(!feats.length){_devisAddrList.style.display='none';return;}
+    _devisAddrList.innerHTML=feats.map(f=>`<div class="devis-addr-item" data-label="${f.properties.label.replace(/"/g,'&quot;')}">${f.properties.label}</div>`).join('');
+    _devisAddrList.style.display='block';
+  }catch(e){if(e.name!=='AbortError') _devisAddrList.style.display='none';}
+}
+_devisAddrList.addEventListener('click',e=>{
+  const item=e.target.closest('.devis-addr-item');
+  if(!item) return;
+  _devisAddrInput.value=item.dataset.label;
+  _devisAddrList.style.display='none';
+});
+document.addEventListener('click',e=>{
+  if(!_devisAddrInput.contains(e.target)&&!_devisAddrList.contains(e.target)) _devisAddrList.style.display='none';
+});
 
 function openDevisForm(id){
   _devisEditingId=id;
