@@ -81,6 +81,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
 .devis-input{width:100%;padding:10px 14px;background:var(--glass);border:1px solid var(--gb);border-radius:10px;color:var(--text);font-family:inherit;font-size:13.5px;outline:none;resize:vertical}
 .devis-input:focus{border-color:var(--c1)}
 .devis-item-row{display:grid;grid-template-columns:2fr 90px 110px 110px 32px;gap:8px;align-items:center}
+.devis-item-namecell{display:flex;flex-direction:column}
 .devis-item-rm{background:transparent;border:1px solid var(--gb);color:var(--dim);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:14px}
 .devis-item-rm:hover{border-color:var(--danger);color:var(--danger)}
 .b-brouillon{background:rgba(138,138,147,.12);color:var(--dim);border:1px solid rgba(138,138,147,.3)}
@@ -1452,29 +1453,41 @@ document.getElementById('saveRibBtn').addEventListener('click',async()=>{
 
 /* ── Form panel ── */
 function devisItemRowHtml(item={}){
-  const opts=DEVIS_CATALOG.map(p=>`<option value="${p.name}" data-price="${p.price}">${p.name} — ${p.price}€</option>`).join('');
+  const matched=item.name&&DEVIS_CATALOG.some(p=>p.name===item.name);
+  const isCustom=!!(item.name&&!matched);
+  const opts=DEVIS_CATALOG.map(p=>`<option value="${p.name.replace(/"/g,'&quot;')}" ${item.name===p.name?'selected':''}>${p.name} — ${p.price}€</option>`).join('');
   return `<div class="devis-item-row">
-    <input type="text" class="devis-input devis-item-name" list="devisCatalogList" placeholder="Nom de l'article" value="${(item.name||'').replace(/"/g,'&quot;')}">
+    <div class="devis-item-namecell">
+      <select class="devis-input devis-item-select">
+        <option value="">— Choisir un article —</option>
+        ${opts}
+        <option value="__custom__" ${isCustom?'selected':''}>✏️ Article personnalisé…</option>
+      </select>
+      <input type="text" class="devis-input devis-item-custom" placeholder="Nom de l'article" style="margin-top:6px;${isCustom?'':'display:none'}" value="${isCustom?(item.name||'').replace(/"/g,'&quot;'):''}">
+    </div>
     <input type="number" class="devis-input devis-item-qty" min="0" step="1" placeholder="Qté" value="${item.qty??1}">
     <input type="number" class="devis-input devis-item-price" min="0" step="0.01" placeholder="Prix unit. €" value="${item.unitPrice??''}">
     <div style="font-size:12.5px;color:var(--c4);font-weight:700;text-align:right" class="devis-item-sub">—</div>
     <button class="devis-item-rm" onclick="this.closest('.devis-item-row').remove();updateDevisTotals()" title="Retirer">✕</button>
   </div>`;
 }
-if(!document.getElementById('devisCatalogList')){
-  const dl=document.createElement('datalist'); dl.id='devisCatalogList';
-  dl.innerHTML=DEVIS_CATALOG.map(p=>`<option value="${p.name}" data-price="${p.price}">`).join('');
-  document.body.appendChild(dl);
-}
 function bindDevisItemRow(row){
-  const nameInp=row.querySelector('.devis-item-name');
+  const sel=row.querySelector('.devis-item-select');
+  const customInp=row.querySelector('.devis-item-custom');
   const priceInp=row.querySelector('.devis-item-price');
-  nameInp.addEventListener('input',()=>{
-    const match=DEVIS_CATALOG.find(p=>p.name===nameInp.value);
-    if(match&&!priceInp.dataset.touched) priceInp.value=match.price;
+  sel.addEventListener('change',()=>{
+    if(sel.value==='__custom__'){
+      customInp.style.display='block';
+      customInp.focus();
+    }else{
+      customInp.style.display='none';
+      const match=DEVIS_CATALOG.find(p=>p.name===sel.value);
+      if(match) priceInp.value=match.price;
+    }
     updateDevisTotals();
   });
-  priceInp.addEventListener('input',()=>{priceInp.dataset.touched='1';updateDevisTotals();});
+  customInp.addEventListener('input',updateDevisTotals);
+  priceInp.addEventListener('input',updateDevisTotals);
   row.querySelector('.devis-item-qty').addEventListener('input',updateDevisTotals);
 }
 function addDevisItemRow(item){
@@ -1484,11 +1497,15 @@ function addDevisItemRow(item){
   updateDevisTotals();
 }
 function collectDevisItems(){
-  return [...document.querySelectorAll('#devisItemsRows .devis-item-row')].map(row=>({
-    name:row.querySelector('.devis-item-name').value.trim(),
-    qty:parseFloat(row.querySelector('.devis-item-qty').value)||0,
-    unitPrice:parseFloat(row.querySelector('.devis-item-price').value)||0,
-  })).filter(i=>i.name&&i.qty>0);
+  return [...document.querySelectorAll('#devisItemsRows .devis-item-row')].map(row=>{
+    const sel=row.querySelector('.devis-item-select');
+    const name=sel.value==='__custom__'?row.querySelector('.devis-item-custom').value.trim():sel.value;
+    return {
+      name,
+      qty:parseFloat(row.querySelector('.devis-item-qty').value)||0,
+      unitPrice:parseFloat(row.querySelector('.devis-item-price').value)||0,
+    };
+  }).filter(i=>i.name&&i.qty>0);
 }
 function updateDevisTotals(){
   document.querySelectorAll('#devisItemsRows .devis-item-row').forEach(row=>{
