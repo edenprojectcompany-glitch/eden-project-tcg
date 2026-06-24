@@ -446,6 +446,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
       <div class="sec-head">
         <div class="sec-title">📝 Devis clients <span class="sec-meta" id="devisMeta"></span></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn-sm" id="devisGroupBtn">📦 Regrouper la sélection</button>
           <button class="btn-sm" id="devisRibBtn">🏦 Mes coordonnées bancaires</button>
           <button class="btn-sm" id="devisNewBtn" style="background:rgba(127,217,255,.15);border-color:rgba(127,217,255,.4);color:var(--c1);font-weight:600">+ Nouveau devis</button>
         </div>
@@ -455,8 +456,22 @@ tr:hover td{background:rgba(255,255,255,.015)}
       <div id="devisListView">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Référence</th><th>Client</th><th>Total</th><th>Validité</th><th>Statut</th><th>Actions</th></tr></thead>
-            <tbody id="devisBody"><tr class="empty-row"><td colspan="6">Chargement…</td></tr></tbody>
+            <thead><tr><th style="width:30px"><input type="checkbox" id="devisSelectAllCb" title="Tout sélectionner"></th><th>Référence</th><th>Client</th><th>Total</th><th>Validité</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody id="devisBody"><tr class="empty-row"><td colspan="7">Chargement…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Regroupement fournisseur (masqué par défaut) -->
+      <div id="devisGroupPanel" style="display:none;margin-top:20px;background:var(--bg2);border:1px solid var(--gb);border-radius:16px;padding:22px">
+        <div class="sec-head">
+          <div class="sec-title">📦 Récapitulatif fournisseur <span class="sec-meta" id="devisGroupMeta"></span></div>
+          <button class="btn-sm" id="devisGroupBackBtn">← Retour à la liste</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Article</th><th>Quantité totale</th><th>Valeur totale (devis)</th><th>Devis inclus</th></tr></thead>
+            <tbody id="devisGroupBody"></tbody>
           </table>
         </div>
       </div>
@@ -1322,7 +1337,7 @@ document.getElementById('saveGradedBtn').addEventListener('click',async()=>{
 });
 
 /* ══ DEVIS ══ */
-let _devisList=[], _devisSettings={}, _devisEditingId=null;
+let _devisList=[], _devisSettings={}, _devisEditingId=null, _devisSelectedIds=new Set();
 const DEVIS_CATALOG=PRODUCTS.filter(p=>p.price!=null).map(p=>({name:p.name,price:p.price}))
   .concat(CASE_CATALOG.map(c=>({name:'Case — '+c.name,price:+(c.basePrice*c.qty+CASE_SURCHARGE).toFixed(2)})));
 const DEVIS_STATUS_LABEL={brouillon:'📝 Brouillon',envoye:'✉️ Envoyé',accepte:'✅ Accepté',refuse:'❌ Refusé',expire:'⏳ Expiré'};
@@ -1335,7 +1350,7 @@ async function loadDevis(){
     _devisList=d.quotes||[]; _devisSettings=d.settings||{};
     document.getElementById('devisMeta').textContent='· '+_devisList.length+' devis';
     renderDevisList();
-  }catch{body.innerHTML='<tr class="empty-row"><td colspan="6">Erreur de chargement</td></tr>';}
+  }catch{body.innerHTML='<tr class="empty-row"><td colspan="7">Erreur de chargement</td></tr>';}
 }
 function devisTotals(q){
   const subtotal=(q.items||[]).reduce((s,i)=>s+(parseFloat(i.qty)||0)*(parseFloat(i.unitPrice)||0),0);
@@ -1346,12 +1361,13 @@ function devisTotals(q){
 }
 function renderDevisList(){
   const body=document.getElementById('devisBody');
-  if(!_devisList.length){body.innerHTML='<tr class="empty-row"><td colspan="6">Aucun devis pour l\'instant</td></tr>';return;}
+  if(!_devisList.length){body.innerHTML='<tr class="empty-row"><td colspan="7">Aucun devis pour l\'instant</td></tr>';return;}
   body.innerHTML=_devisList.map(q=>{
     const t=devisTotals(q);
     const date=new Date(q.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
     const valid=q.validUntil?new Date(q.validUntil).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
     return `<tr>
+      <td><input type="checkbox" class="devis-select-cb" onchange="toggleDevisSelect('${q.id}',this.checked)" ${_devisSelectedIds.has(q.id)?'checked':''}></td>
       <td><span class="ref">${q.ref}</span><div style="font-size:11px;color:var(--dim);margin-top:2px">${date}</div></td>
       <td>${q.client?.name||'—'}${q.client?.company?` <span style="color:var(--dim);font-size:11.5px">(${q.client.company})</span>`:''}</td>
       <td style="font-weight:700;color:var(--c4)">${t.total.toFixed(2)} €</td>
@@ -1387,10 +1403,52 @@ async function deleteDevis(id){
   try{
     const r=await fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'delete',data:{id}})});
     if(!r.ok) throw new Error();
+    _devisSelectedIds.delete(id);
     toast('Devis supprimé');
     loadDevis();
   }catch{toast('Erreur','err');}
 }
+
+/* ── Sélection multiple + regroupement fournisseur (lecture seule, ne modifie aucun devis) ── */
+function toggleDevisSelect(id,checked){
+  if(checked) _devisSelectedIds.add(id); else _devisSelectedIds.delete(id);
+}
+document.getElementById('devisSelectAllCb').addEventListener('change',e=>{
+  _devisList.forEach(q=>{ if(e.target.checked) _devisSelectedIds.add(q.id); else _devisSelectedIds.delete(q.id); });
+  renderDevisList();
+});
+function groupSelectedDevis(){
+  if(!_devisSelectedIds.size) return toast('Sélectionnez au moins un devis','err');
+  const selected=_devisList.filter(q=>_devisSelectedIds.has(q.id));
+  const agg={};
+  selected.forEach(q=>{
+    (q.items||[]).forEach(i=>{
+      const key=i.name||'—';
+      if(!agg[key]) agg[key]={qty:0,value:0,refs:new Set()};
+      agg[key].qty+=parseFloat(i.qty)||0;
+      agg[key].value+=(parseFloat(i.qty)||0)*(parseFloat(i.unitPrice)||0);
+      agg[key].refs.add(q.ref);
+    });
+  });
+  const rows=Object.entries(agg).sort((a,b)=>b[1].qty-a[1].qty);
+  document.getElementById('devisGroupMeta').textContent=`· ${selected.length} devis sélectionné${selected.length!==1?'s':''} · ${rows.length} article${rows.length!==1?'s':''}`;
+  document.getElementById('devisGroupBody').innerHTML=rows.length?rows.map(([name,v])=>`
+    <tr>
+      <td>${name}</td>
+      <td style="font-weight:700;color:var(--c4)">${v.qty}</td>
+      <td>${v.value.toFixed(2)} €</td>
+      <td><span style="font-size:11px;color:var(--dim)">${[...v.refs].join(', ')}</span></td>
+    </tr>`).join(''):'<tr class="empty-row"><td colspan="4">Aucun article</td></tr>';
+  document.getElementById('devisListView').style.display='none';
+  document.getElementById('devisRibPanel').style.display='none';
+  document.getElementById('devisFormPanel').style.display='none';
+  document.getElementById('devisGroupPanel').style.display='block';
+}
+document.getElementById('devisGroupBtn').addEventListener('click',groupSelectedDevis);
+document.getElementById('devisGroupBackBtn').addEventListener('click',()=>{
+  document.getElementById('devisGroupPanel').style.display='none';
+  document.getElementById('devisListView').style.display='block';
+});
 function duplicateDevis(id){
   const q=_devisList.find(x=>x.id===id);
   if(!q) return;
@@ -1429,6 +1487,7 @@ document.getElementById('devisRibBtn').addEventListener('click',()=>{
   const visible=p.style.display!=='none';
   p.style.display=visible?'none':'block';
   document.getElementById('devisFormPanel').style.display='none';
+  document.getElementById('devisGroupPanel').style.display='none';
   document.getElementById('devisListView').style.display=visible?'block':'none';
   if(!visible){
     document.getElementById('ribTitulaire').value=_devisSettings.titulaire||'';
@@ -1573,6 +1632,7 @@ function openDevisForm(id){
   _devisEditingId=id;
   document.getElementById('devisListView').style.display='none';
   document.getElementById('devisRibPanel').style.display='none';
+  document.getElementById('devisGroupPanel').style.display='none';
   document.getElementById('devisFormPanel').style.display='block';
   document.getElementById('devisFormMsg').textContent='';
   if(id){
