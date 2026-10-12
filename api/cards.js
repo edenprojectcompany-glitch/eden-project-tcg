@@ -293,6 +293,19 @@ module.exports = async (req, res) => {
   try {
     const { kv } = require('@vercel/kv');
 
+    // Relais des images officielles : pokemon-card.com n'autorise pas leur usage en texture 3D (pas de CORS).
+    // Seules les images de cartes du site officiel passent ; le CDN Vercel les garde en cache.
+    if (req.method === 'GET' && req.query.src) {
+      const src = String(req.query.src);
+      if (!/^https:\/\/www\.pokemon-card\.com\/assets\/images\/card_images\/large\/[A-Za-z0-9_-]+\/[A-Za-z0-9_.-]+\.(?:jpg|png)$/.test(src)) return res.status(400).end();
+      const r = await fetch(src, { headers: UA });
+      if (!r.ok) return res.status(404).end();
+      res.setHeader('Content-Type', r.headers.get('content-type') || 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=2592000, immutable');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      return res.status(200).send(Buffer.from(await r.arrayBuffer()));
+    }
+
     // Photo d'une carte ajoutée à la main : publique (affichée aux clients lors des ouvertures)
     if (req.method === 'GET' && req.query.img) {
       const data = await kv.get('cards:img:' + String(req.query.img).slice(0, 60));

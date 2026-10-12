@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eden Vault 3D — La chambre forte</title>
+<meta name="description" content="Entre dans la chambre forte Eden Vault : boosters virtuels Pokémon JP & CN à déchirer en 3D, avec un vrai booster à l'intérieur.">
+<meta name="theme-color" content="#050507">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;0,9..144,800;1,9..144,600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<style>
+:root{
+  --ob:#050507;--txt:#f6f3ec;--mute:rgba(246,243,236,.6);--dim:rgba(246,243,236,.38);
+  --gold:#d9b26a;--gold2:#f3d9a0;--glass:rgba(12,12,16,.55);--gb:rgba(255,255,255,.1);--gb2:rgba(217,178,106,.35);
+  --f1:#7fd9ff;--f2:#c9a8ff;--f3:#ffb3e6;--f4:#a8ffd4;
+  --spring:cubic-bezier(.16,1,.3,1);--serif:'Fraunces',Georgia,serif;--sans:'Manrope',system-ui,sans-serif;
+  --foil:linear-gradient(115deg,var(--f1),var(--f2) 30%,var(--f3) 55%,var(--f4) 80%,var(--f1));
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden;background:var(--ob);color:var(--txt);font-family:var(--sans);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+.input::placeholder{color:var(--mute)}
+a{color:inherit;text-decoration:none}
+.num{font-variant-numeric:tabular-nums}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#c.grabbing{cursor:grabbing}
+.hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+.hud>*{pointer-events:auto}
+.glass{background:var(--glass);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);border:1px solid var(--gb)}
+
+/* Barre du haut */
+.top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:12px;padding:18px 24px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(5,5,7,.7),transparent)}
+.top>*{pointer-events:auto}
+.brand{display:flex;flex-direction:column;line-height:1}
+.brand b{font-family:var(--serif);font-weight:800;font-size:22px;letter-spacing:.01em;background:linear-gradient(180deg,#fff,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand small{font-size:9.5px;font-weight:800;letter-spacing:.34em;color:var(--gold);margin-top:5px}
+.top .sp{flex:1}
+.pill{height:42px;display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:14px;font-weight:700;font-size:14px;transition:border-color .3s}
+.pill:hover{border-color:var(--gb2)}
+.coin{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6c9,#ffd97f 35%,#c9962e 75%,#8a6418);box-shadow:inset 0 -2px 3px rgba(0,0,0,.35),0 0 12px rgba(255,217,127,.4);position:relative;flex:none}
+.coin::after{content:'E';position:absolute;inset:0;display:grid;place-items:center;font:800 11px var(--serif);color:#6b4a0c}
+.bal{padding:0 0 0 12px;overflow:hidden}
+.bal .add{height:100%;width:40px;margin-left:6px;display:grid;place-items:center;font-size:20px;font-weight:900;color:var(--ob);background:linear-gradient(135deg,var(--gold2),var(--gold))}
+.badge{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--gold);color:var(--ob);font-size:11px;font-weight:900;display:grid;place-items:center}
+.btn{height:48px;padding:0 22px;border-radius:14px;font-weight:800;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:transform .35s var(--spring),filter .3s,opacity .3s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.btn-gold{position:relative;overflow:hidden;color:#1a1206;background:linear-gradient(135deg,#fff1c9,var(--gold) 45%,#a8792e);box-shadow:0 12px 40px -12px rgba(217,178,106,.8),inset 0 1px 0 rgba(255,255,255,.6)}
+.btn-gold::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.75) 50%,transparent 65%);transform:translateX(-120%);animation:shine 3.4s var(--spring) infinite}
+@keyframes shine{60%,100%{transform:translateX(120%)}}
+.btn-gold:hover{filter:brightness(1.08)}
+.btn-glass{background:rgba(255,255,255,.06);border:1px solid var(--gb);color:var(--txt)}
+.btn-glass:hover{border-color:var(--gb2)}
+.btn-sm{height:38px;padding:0 14px;font-size:13px;border-radius:12px}
+
+/* Panneau du booster sélectionné */
+.panel{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:min(620px,calc(100% - 32px));padding:22px 24px 20px;border-radius:26px;transition:opacity .5s,transform .7s var(--spring)}
+.panel.off{opacity:0;transform:translate(-50%,40px);pointer-events:none}
+.panel.zoomed{opacity:.0;transform:translate(-50%,60px);pointer-events:none}
+.zoomhint{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);font-size:12px;font-weight:700;color:var(--mute);padding:10px 16px;border-radius:99px;opacity:0;transition:opacity .4s;pointer-events:none}
+.panel.zoomed~.zoomhint{opacity:1}
+.p-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
+.p-head h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,5vw,44px);letter-spacing:-.02em;line-height:1;margin-top:6px}
+.p-head p{color:var(--mute);font-size:13.5px;margin-top:6px}
+.dots{display:flex;gap:6px;padding-bottom:6px}
+.dots i{width:7px;height:7px;border-radius:4px;background:rgba(255,255,255,.2);transition:all .4s var(--spring)}
+.dots i.on{width:22px;background:var(--gold)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}
+.stat{padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06)}
+.stat span{display:block;font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.stat b{display:block;font-size:16px;margin-top:3px}
+.p-actions{display:flex;gap:10px;align-items:center}
+.seg{display:flex;padding:4px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.07)}
+.seg button{width:40px;height:40px;border-radius:10px;font-weight:800;font-size:13px;color:var(--mute);transition:all .35s var(--spring)}
+.seg button.on{background:var(--txt);color:var(--ob)}
+.p-actions .btn-gold{flex:1;height:48px}
+.p-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:12px;color:var(--dim);font-weight:700}
+.p-foot a{color:var(--gold)}
+.nav-arrow{position:absolute;top:44%;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:22px;transition:transform .4s var(--spring),opacity .4s}
+.nav-arrow:hover{transform:scale(1.08)}
+.nav-arrow.l{left:24px}.nav-arrow.r{right:24px}
+.nav-arrow.off{opacity:0;pointer-events:none}
+
+/* Déchirure */
+.tearbar{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:14px;transition:opacity .4s}
+.tearbar.off{opacity:0;pointer-events:none}
+.tearhint{display:flex;align-items:center;gap:12px;padding:12px 20px;border-radius:99px;font-weight:700;font-size:14px}
+.tearhint i{font-style:normal;display:inline-block;animation:nudge 1.3s ease-in-out infinite;color:var(--gold)}
+@keyframes nudge{50%{transform:translateX(10px)}}
+.counter{position:absolute;top:92px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:900;letter-spacing:.3em;color:var(--gold);transition:opacity .4s}
+.counter.off{opacity:0}
+
+/* Révélation d'un lot */
+.reveal{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);text-align:center;width:min(520px,calc(100% - 32px));padding:18px 22px;border-radius:24px;transition:opacity .5s,transform .7s var(--spring)}
+.reveal.off{opacity:0;transform:translate(-50%,30px);pointer-events:none}
+.reveal .tier{font-size:11px;font-weight:900;letter-spacing:.3em}
+.reveal h2{font-family:var(--serif);font-size:clamp(22px,4vw,30px);font-weight:700;margin:6px 0 4px}
+.reveal .val{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:18px}
+.reveal .acts{display:flex;gap:10px;justify-content:center;margin-top:14px}
+
+/* Récap */
+.sheet{position:absolute;inset:0;display:grid;place-items:center;padding:16px;background:rgba(5,5,7,.45);transition:opacity .5s}
+.sheet.off{opacity:0;pointer-events:none}
+.sheet-box{width:min(720px,100%);max-height:calc(100% - 40px);overflow:auto;padding:26px;border-radius:28px}
+.sheet-box h2{font-family:var(--serif);font-size:30px;font-weight:700;letter-spacing:-.02em}
+.sheet-box>p{color:var(--mute);font-size:14px;margin:4px 0 18px}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.it{position:relative;padding:12px;border-radius:18px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.07);text-align:center;overflow:hidden}
+.it::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:var(--c);box-shadow:0 0 18px var(--c)}
+.it img{width:100%;height:120px;object-fit:contain;filter:drop-shadow(0 10px 14px rgba(0,0,0,.7))}
+.it .coinbig{width:70px;height:70px;margin:25px auto;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6c9,#ffd97f 35%,#c9962e 75%,#8a6418);display:grid;place-items:center;font:800 16px var(--serif);color:#5f420b}
+.it b{display:block;font-size:12.5px;margin-top:6px;line-height:1.25}
+.it span{display:block;font-size:10px;font-weight:900;letter-spacing:.14em;color:var(--c);margin-top:4px}
+.it .v{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:800;margin-top:6px}
+.it .v .coin{width:14px;height:14px}.it .v .coin::after{font-size:8px}
+.it button{margin-top:8px;width:100%}
+.it.sold{opacity:.45}
+.sheet-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:18px}
+.sheet-sum{margin-top:14px;color:var(--mute);font-size:13.5px}
+.sheet-sum b{color:var(--txt)}
+
+/* Tiroir Coffre */
+.drawer{position:absolute;top:0;right:0;bottom:0;width:min(420px,100%);padding:84px 20px 20px;border-radius:0;border-width:0 0 0 1px;transition:transform .7s var(--spring);overflow:auto}
+.drawer.off{transform:translateX(105%)}
+.drawer h2{font-family:var(--serif);font-size:28px;font-weight:700}
+.drawer .items{grid-template-columns:repeat(2,1fr);margin-top:14px}
+.drawer-x{position:absolute;top:22px;right:20px}
+
+/* Modales */
+.modal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(5,5,7,.6)}
+.modal.on{display:flex}
+.modal-box{position:relative;width:100%;max-width:420px;padding:30px;border-radius:26px}
+.modal-box h3{font-family:var(--serif);font-size:28px;font-weight:700}
+.modal-box>p{color:var(--mute);font-size:14px;margin:6px 0 18px}
+.modal-box form{display:flex;flex-direction:column;gap:10px}
+.input{height:48px;padding:0 16px;border-radius:14px;background:rgba(0,0,0,.4);border:1px solid var(--gb);outline:none;width:100%}
+.input:focus{border-color:var(--gold)}
+.err{color:#ff8a8a;font-size:13px;font-weight:600;min-height:16px}
+.switch{text-align:center;font-size:13px;color:var(--mute);margin-top:12px}
+.switch button{color:var(--gold);font-weight:700}
+.x{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:12px}
+
+/* Accueil nouveaux joueurs */
+.welcome{position:fixed;inset:0;z-index:25;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 50% 40%,rgba(5,5,7,.35),rgba(5,5,7,.82));transition:opacity .7s}
+.welcome.off{opacity:0;pointer-events:none}
+.wl-box{width:min(560px,100%);padding:34px 32px 26px;border-radius:30px;text-align:center;border-color:rgba(217,178,106,.28);box-shadow:0 40px 120px -30px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.06);animation:wlIn 1s var(--spring)}
+@keyframes wlIn{from{transform:translateY(30px) scale(.97);opacity:0}}
+.wl-mark{width:62px;height:62px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font:800 30px var(--serif);color:#1a1206;background:linear-gradient(135deg,#fff1c9,var(--gold) 50%,#8a6418);box-shadow:0 0 0 4px rgba(217,178,106,.18),0 10px 40px -8px rgba(217,178,106,.7)}
+.wl-box h1{font-family:var(--serif);font-weight:700;font-size:clamp(28px,5vw,40px);letter-spacing:-.02em;line-height:1.05}
+.wl-box h1 em{font-style:italic;background:linear-gradient(180deg,#fff,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.wl-box>p{color:var(--mute);font-size:14.5px;margin:10px auto 22px;max-width:420px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;text-align:left}
+.step{padding:14px;border-radius:16px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06)}
+.step b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:rgba(217,178,106,.15);color:var(--gold2);font-size:12px;margin-bottom:8px}
+.step span{display:block;font-weight:800;font-size:13px}
+.step small{display:block;color:var(--dim);font-size:11.5px;margin-top:3px;line-height:1.35}
+.wl-actions{display:flex;flex-direction:column;gap:10px}
+.wl-actions .btn{width:100%}
+.wl-skip{margin-top:14px;font-size:12.5px;color:var(--dim);font-weight:700}
+.wl-skip:hover{color:var(--mute)}
+.wl-note{margin-top:16px;font-size:11px;color:var(--dim);letter-spacing:.02em}
+/* Formulaires */
+.tabs{display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.07);margin-bottom:18px}
+.tabs button{height:40px;border-radius:10px;font-weight:800;font-size:13.5px;color:var(--mute);transition:all .35s var(--spring)}
+.tabs button.on{background:linear-gradient(135deg,#fff1c9,var(--gold));color:#1a1206}
+.fld{display:flex;flex-direction:column;gap:6px;text-align:left}
+.fld label{font-size:11.5px;font-weight:800;letter-spacing:.06em;color:var(--dim);text-transform:uppercase}
+.pw{position:relative}
+.pw .input{padding-right:52px}
+.pw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);height:32px;padding:0 10px;border-radius:9px;font-size:12px;font-weight:800;color:var(--mute)}
+.pw button:hover{color:var(--txt)}
+.hint{font-size:12px;color:var(--dim);text-align:left}
+textarea.input{height:auto;min-height:96px;padding:12px 16px;resize:vertical;font-family:inherit}
+/* Menu profil */
+.me{position:relative}
+.me-btn{padding:0 6px 0 6px}
+.me-av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:900;color:#1a1206;background:linear-gradient(135deg,#fff1c9,var(--gold))}
+.me-menu{position:absolute;right:0;top:calc(100% + 10px);width:260px;padding:16px;border-radius:20px;display:none;flex-direction:column;gap:8px;z-index:12}
+.me-menu.on{display:flex}
+#userSlot{display:flex;gap:8px;align-items:center}
+.me-menu .who b{display:block;font-family:var(--serif);font-size:19px}
+.me-menu .who span{display:block;font-size:12px;color:var(--dim);overflow:hidden;text-overflow:ellipsis}
+.me-menu .btn{width:100%;justify-content:flex-start}
+.show-m{display:none!important}
+.me-menu hr{border:0;border-top:1px solid var(--gb);margin:4px 0}
+
+/* Chargement */
+.loader{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:radial-gradient(ellipse at 50% 45%,#141018,#050507 70%);transition:opacity 1.2s ease,visibility 1.2s}
+.loader.done{opacity:0;visibility:hidden}
+.vault-ring{width:120px;height:120px;border-radius:50%;border:2px solid rgba(217,178,106,.25);border-top-color:var(--gold);animation:spin 1.4s linear infinite;box-shadow:0 0 60px rgba(201,168,255,.18)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader b{font-family:var(--serif);font-size:24px;font-weight:700;letter-spacing:.02em}
+.loader small{font-size:11px;letter-spacing:.3em;color:var(--gold);font-weight:800}
+.bar{width:200px;height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .3s}
+.fallback{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;background:var(--ob)}
+.fallback.on{display:flex}
+.toasts{position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:35;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{padding:12px 18px;border-radius:14px;font-weight:700;font-size:14px;animation:tin .5s var(--spring)}
+.toast.ok{color:#8fffb8}.toast.bad{color:#ff8a8a}
+@keyframes tin{from{transform:translateY(-12px);opacity:0}}
+.flash{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0;background:var(--c,#fff)}
+.flash.go{animation:fl .9s ease-out}
+@keyframes fl{0%{opacity:.7}100%{opacity:0}}
+
+@media (max-width:720px){
+  .top{padding:12px 14px;gap:8px}
+  .brand b{font-size:18px}.brand small{display:none}
+  .pill{height:38px;padding:0 10px;font-size:13px}
+  .hide-m{display:none!important}
+  .show-m{display:inline-flex!important}
+  .top .sp{flex:1;min-width:0}
+  #chestBtn{padding:0 10px}
+  .bal{padding-left:8px}
+  .bal .add{width:34px}
+  .me-menu{position:fixed;right:12px;top:62px;width:calc(100vw - 24px);max-width:320px}
+  .panel{bottom:12px;padding:16px 16px 14px;border-radius:22px}
+  .stats{grid-template-columns:repeat(2,1fr);margin:12px 0}
+  .seg button{width:34px}
+  .nav-arrow{top:36%;width:46px;height:46px}
+  .nav-arrow.l{left:10px}.nav-arrow.r{right:10px}
+  .counter{top:70px}
+  .items{grid-template-columns:repeat(2,1fr)}
+  .steps{grid-template-columns:1fr}
+  .wl-box{padding:26px 20px 20px}
+  .step{display:grid;grid-template-columns:24px 1fr;column-gap:10px;align-items:center}
+  .step b{margin:0;grid-row:span 2}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="flash" id="flash"></div>
+
+<div class="loader" id="loader">
+  <div class="vault-ring"></div>
+  <b>Ouverture de la chambre forte</b>
+  <div class="bar"><i id="barI"></i></div>
+  <small>EDEN VAULT</small>
+</div>
+<div class="fallback" id="fallback">
+  <div><h2 style="font-family:var(--serif);font-size:28px;margin-bottom:10px">La 3D n'a pas pu démarrer</h2>
+  <p style="color:var(--mute);margin-bottom:18px">Ton navigateur ou ta connexion bloque le rendu 3D.</p>
+  <a class="btn btn-gold" href="/vault?lite=1">Réessayer en mode léger</a></div>
+</div>
+<div class="fallback" id="gate">
+  <div style="max-width:380px"><div class="wl-mark" style="margin:0 auto 14px">E</div>
+  <h2 style="font-family:var(--serif);font-size:28px;margin-bottom:10px">Le Vault ouvre bientôt</h2>
+  <p style="color:var(--mute);margin-bottom:18px">La chambre forte est en préparation. Reviens très vite sur <a href="/" style="color:var(--gold2)">edenprojecttcg.com</a>.</p>
+  <form id="gateForm" style="display:flex;gap:8px"><input class="input" name="code" type="password" placeholder="Code admin" autocomplete="off" style="flex:1"><button class="btn btn-glass">Entrer</button></form>
+  <div class="err" id="gateErr" style="margin-top:8px"></div></div>
+</div>
+
+<div class="hud" id="hud">
+  <div class="top">
+    <a class="brand" href="/"><b>Eden Vault</b><small>EDEN PROJECT TCG</small></a>
+    <div class="sp"></div>
+    <button class="pill glass hide-m" id="liteBtn" title="Change la qualité du rendu 3D"></button>
+    <button class="pill glass hide-m" id="musicBtn" aria-label="Musique">♪ Musique</button>
+    <button class="pill glass hide-m" id="soundBtn" aria-label="Son">🔊</button>
+    <button class="pill glass" id="chestBtn">Coffre <span class="badge" id="chestN">0</span></button>
+    <div id="userSlot"></div>
+    <div class="me" id="meWrap" hidden><button class="pill glass me-btn" id="meBtn" aria-label="Mon compte"><span class="me-av" id="meAv">?</span></button>
+      <div class="me-menu glass" id="meMenu"><div class="who"><b id="meName"></b><span id="meMail"></span></div><hr><a class="btn btn-glass btn-sm" href="/" id="meCode">Boutique Eden</a><button class="btn btn-glass btn-sm" id="meChest">Mon coffre</button><button class="btn btn-glass btn-sm show-m" id="meSound">Son : activé</button><button class="btn btn-glass btn-sm show-m" id="meMusic">Musique : activée</button><button class="btn btn-glass btn-sm show-m" id="meLite">Mode léger</button><hr><button class="btn btn-glass btn-sm" id="meOut">Se déconnecter</button></div></div>
+  </div>
+
+  <button class="nav-arrow l glass" id="prevBtn" aria-label="Précédent">‹</button>
+  <button class="nav-arrow r glass" id="nextBtn" aria-label="Suivant">›</button>
+
+  <div class="panel glass" id="panel">
+    <div class="p-head">
+      <div><div class="eyebrow" id="pEyebrow">Booster virtuel</div><h1 id="pName">—</h1><p id="pTag"></p></div>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>Prix</span><b class="num" id="sPrice">—</b></div>
+      <div class="stat"><span>Valeur moy.</span><b class="num" id="sEv">—</b></div>
+      <div class="stat"><span>Meilleur lot</span><b class="num" id="sBest" style="color:var(--gold2)">—</b></div>
+      <div class="stat"><span>Lots</span><b id="sLots">—</b></div>
+    </div>
+    <div class="p-actions">
+      <div class="seg" id="seg"></div>
+      <button class="btn btn-gold" id="openBtn">Ouvrir</button>
+    </div>
+    <div class="p-foot"><span>Attrape le booster pour le tourner · molette pour zoomer · glisse à côté pour changer</span></div>
+  </div>
+
+  <div class="zoomhint glass">Molette pour dézoomer · attrape le booster pour le tourner</div>
+  <div class="counter off" id="counter"></div>
+  <div class="tearbar off" id="tearbar">
+    <div class="tearhint glass">Glisse sur le booster de gauche à droite pour le déchirer <i>→</i></div>
+    <div style="display:flex;gap:10px"><button class="btn btn-glass btn-sm" id="tearBtn">Déchirer</button><button class="btn btn-glass btn-sm" id="allBtn">Tout ouvrir</button></div>
+  </div>
+
+  <div class="reveal glass off" id="reveal">
+    <div class="tier" id="rTier"></div>
+    <h2 id="rName"></h2>
+    <div class="val num"><i class="coin"></i><span id="rVal"></span></div>
+    <div class="acts"><button class="btn btn-gold btn-sm" id="rNext">Suivant</button></div>
+  </div>
+
+  <div class="sheet off" id="sheet">
+    <div class="sheet-box glass">
+      <div class="eyebrow">Récapitulatif</div>
+      <h2 id="shTitle">Tes gains</h2>
+      <p id="shSub"></p>
+      <div class="items" id="shItems"></div>
+      <div class="sheet-sum" id="shSum"></div>
+      <div class="sheet-actions" id="shActions"></div>
+    </div>
+  </div>
+
+  <div class="drawer glass off" id="drawer">
+    <button class="pill glass drawer-x" id="drawerX">Fermer ✕</button>
+    <div class="eyebrow">Ton coffre</div>
+    <h2>Collection</h2>
+    <p style="color:var(--mute);font-size:13px;margin-top:4px" id="drSub"></p>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-glass btn-sm" id="shipBtn">Me faire livrer</button></div>
+    <div class="items" id="drItems"></div>
+  </div>
+</div>
+
+<div class="welcome off" id="welcome">
+  <div class="wl-box glass">
+    <div class="wl-mark">E</div>
+    <div class="eyebrow">Eden Vault · la chambre forte</div>
+    <h1>Bienvenue dans <em>la chambre forte</em></h1>
+    <p>Ouvre des boosters mystère en 3D et découvre la vraie carte Pokémon japonaise qu'ils contiennent. Elle est à toi, on te l'envoie quand tu veux.</p>
+    <div class="steps">
+      <div class="step"><b>1</b><span>Connecte-toi</span><small>Le même compte que la boutique</small></div>
+      <div class="step"><b>2</b><span>Choisis ton booster</span><small>Payé en euros, en toute sécurité</small></div>
+      <div class="step"><b>3</b><span>Ouvre-le</span><small>La carte rejoint ton coffre</small></div>
+    </div>
+    <div class="wl-actions">
+      <button class="btn btn-gold" id="wlRegister">Créer mon compte</button>
+      <button class="btn btn-glass" id="wlLogin">J'ai déjà un compte</button>
+    </div>
+    <button class="wl-skip" id="wlSkip">Visiter la chambre forte d'abord →</button>
+    <div class="wl-note">Chances affichées pour chaque booster · cartes réelles en stock</div>
+  </div>
+</div>
+
+<div class="modal" id="mAuth"><div class="modal-box glass">
+  <button class="x glass" data-close>✕</button>
+  <div class="tabs"><button type="button" data-tab="register">Inscription</button><button type="button" data-tab="login">Connexion</button></div>
+  <h3 id="aTitle">Connexion</h3><p id="aSub">Content de te revoir.</p>
+  <form id="aForm" novalidate>
+    <div class="fld" id="fName"><label for="aName">Prénom</label><input class="input" name="name" id="aName" autocomplete="given-name" placeholder="Ton prénom"></div>
+    <div class="fld"><label for="aEmail">E-mail</label><input class="input" name="email" id="aEmail" type="email" autocomplete="email" placeholder="toi@exemple.fr"></div>
+    <div class="fld"><label for="aPw">Mot de passe</label><div class="pw"><input class="input" name="password" id="aPw" type="password" autocomplete="current-password" placeholder="8 caractères minimum"><button type="button" data-eye="aPw">Voir</button></div></div>
+    <div class="fld" id="fPw2"><label for="aPw2">Confirme le mot de passe</label><div class="pw"><input class="input" name="password2" id="aPw2" type="password" autocomplete="new-password" placeholder="Le même"><button type="button" data-eye="aPw2">Voir</button></div></div>
+    <div class="hint" id="aForgot">Mot de passe oublié ? <a href="/" style="color:var(--gold2)">Réinitialise-le sur la boutique</a>.</div>
+    <div class="err" id="aErr"></div>
+    <button class="btn btn-gold" id="aSubmit">Se connecter</button>
+  </form>
+</div></div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+  // Filet de sécurité : si le module 3D ne démarre pas (CDN bloqué, WebGL absent), on propose le mode léger
+  setTimeout(() => { if (!window.__v3d) document.getElementById('fallback').classList.add('on'); }, 15000);
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { Reflector } from 'three/addons/objects/Reflector.js';
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => (Number(n) || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const MOBILE = matchMedia('(max-width:720px)').matches || /Mobi|Android/i.test(navigator.userAgent);
+// Firefox gère mal les render targets multi-échantillonnés (MSAA) du post-traitement et du miroir
+const FIREFOX = /firefox/i.test(navigator.userAgent);
+const MSAA = MOBILE || FIREFOX ? 0 : 4;
+const TIERS = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+// Niveau du tirage par rapport au prix du booster (couleur et intensité de l'animation), pas la rareté de la carte
+const TIER_FR = { common: 'TIRAGE', uncommon: 'BEAU TIRAGE', rare: 'TRÈS BEAU TIRAGE', epic: 'GROS TIRAGE', legendary: 'TIRAGE LÉGENDAIRE' };
+const TIER_COLOR = { common: '#b8bcc8', uncommon: '#7fd9ff', rare: '#c9a8ff', epic: '#ffb3e6', legendary: '#ffd97f' };
+
+// ════════════════════════════════════════════════════════════
+// ÉTAT + API (même serveur que /vault)
+// ════════════════════════════════════════════════════════════
+const S = { cfg: null, st: null, token: null, sel: 0, count: 1, mode: 'boot', muted: false };
+// Même connexion que la boutique (edn_token)
+try { S.token = localStorage.getItem('edn_token') || sessionStorage.getItem('edn_token_ss'); S.muted = localStorage.getItem('vault_muted') === 'true'; } catch {}
+// Avant l'ouverture au public, l'accès se fait avec le code admin (gardé le temps de l'onglet, comme /admin)
+const adminCode = () => { try { return sessionStorage.getItem('eden_admin_code') || ''; } catch { return ''; } };
+async function api(action, body = {}) {
+  const h = { 'Content-Type': 'application/json' };
+  if (S.token) h.Authorization = 'Bearer ' + S.token;
+  if (adminCode()) h['X-Admin-Code'] = adminCode();
+  const r = await fetch('/api/vault', { method: 'POST', headers: h, body: JSON.stringify({ action, ...body }) });
+  const j = await r.json().catch(() => ({ error: 'Réponse invalide' }));
+  if (!r.ok) { if (r.status === 401) { logout(); openAuth('login'); } const e = new Error(j.error || 'Erreur'); e.data = j; throw e; }
+  return j;
+}
+const item = id => S.cfg.items[id] || invItem(id);
+// Carte du coffre qui n'est plus au catalogue (épuisée) : on reprend ce qui a été enregistré au tirage
+function invItem(id) { const o = (S.st?.inventory || []).find(x => x.itemId === id) || {}; return { id, kind: 'card', name: o.name || 'Carte', img: o.img, value: o.value || 0, rarity: o.rarity }; }
+const imgOf = it => it.img ? (/^(https?:)?\//.test(it.img) ? it.img : S.cfg.imgBase + it.img) : null;
+const credits = id => (S.st?.credits || {})[id] || 0;
+const totalCredits = () => Object.values(S.st?.credits || {}).reduce((a, n) => a + n, 0);
+const eur = n => fmt(n) + ' €';
+
+// ════════════════════════════════════════════════════════════
+// SON (synthèse WebAudio)
+// ════════════════════════════════════════════════════════════
+const sfx = (() => {
+  let ctx, master, verb;
+  const ensure = () => {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = .6;
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3;
+      master.connect(comp).connect(ctx.destination);
+      // Réverbération « chambre forte » : réponse impulsionnelle générée (décroissance exponentielle)
+      const len = ctx.sampleRate * 2.6, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+      const conv = ctx.createConvolver(); conv.buffer = ir;
+      verb = ctx.createGain(); verb.gain.value = .32;
+      verb.connect(conv).connect(comp);
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  };
+  const ok = () => S.muted ? null : ensure();
+  const out = (node, wet = .35) => { node.connect(master); if (wet) { const g = ctx.createGain(); g.gain.value = wet; node.connect(g).connect(verb); } };
+  const env = (g, t, a, d, v) => { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + a + d); };
+  // Bruit filtré (souffle, froissement)
+  const noise = (t, d, { vol = .2, freq = 2000, q = 1, type = 'bandpass', sweep = 0, attack = .003, wet = .3 } = {}) => {
+    const n = Math.max(1, ctx.sampleRate * (d + attack) | 0), buf = ctx.createBuffer(1, n, ctx.sampleRate), a = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) a[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
+    if (sweep) f.frequency.exponentialRampToValueAtTime(sweep, t + d);
+    const g = ctx.createGain(); env(g, t, attack, d, vol);
+    src.connect(f).connect(g); out(g, wet); src.start(t); src.stop(t + d + attack + .05);
+  };
+  // Grains de froissement d'alu : impulsions très courtes, aléatoires
+  const crinkle = (t, d, density, vol, lo = 2500, hi = 9000) => {
+    const n = ctx.sampleRate * d | 0, buf = ctx.createBuffer(1, n, ctx.sampleRate), a = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) if (Math.random() < density / ctx.sampleRate) { const amp = Math.random(), L = 40 + Math.random() * 260 | 0; for (let k = 0; k < L && i + k < n; k++) a[i + k] += (Math.random() * 2 - 1) * amp * Math.exp(-k / (L * .25)); }
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = lo;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = hi;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(hp).connect(lp).connect(g); out(g, .2); src.start(t);
+  };
+  // Cloche / cristal en synthèse FM (partiels inharmoniques)
+  const bell = (f, t, d, vol, ratio = 3.51, index = 4) => {
+    const car = ctx.createOscillator(), mod = ctx.createOscillator(), mg = ctx.createGain(), g = ctx.createGain();
+    car.frequency.value = f; mod.frequency.value = f * ratio;
+    mg.gain.setValueAtTime(f * index, t); mg.gain.exponentialRampToValueAtTime(f * .05, t + d);
+    mod.connect(mg).connect(car.frequency);
+    env(g, t, .004, d, vol); car.connect(g); out(g, .55);
+    car.start(t); mod.start(t); car.stop(t + d + .1); mod.stop(t + d + .1);
+  };
+  const sub = (f, t, d, vol, slide = .6) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * slide, t + d); env(g, t, .01, d, vol); o.connect(g); out(g, .15); o.start(t); o.stop(t + d + .1); };
+  // Nappe douce (accord de saws filtrées, légèrement désaccordées)
+  const pad = (freqs, t, d, vol) => {
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(400, t); lp.frequency.linearRampToValueAtTime(2200, t + d * .4); lp.frequency.linearRampToValueAtTime(600, t + d);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + d * .3); g.gain.linearRampToValueAtTime(0, t + d);
+    lp.connect(g); out(g, .6);
+    for (const f of freqs) for (const det of [-6, 6]) { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = det; o.connect(lp); o.start(t); o.stop(t + d + .1); }
+  };
+  const A = [220, 277.18, 329.63, 440, 554.37, 659.25, 880, 1108.73, 1318.51];
+  return {
+    click() { if (!ok()) return; bell(1760, ctx.currentTime, .12, .03, 2, 1.5); },
+    swish() { if (!ok()) return; noise(ctx.currentTime, .45, { vol: .07, freq: 500, sweep: 2600, q: .6, attack: .12 }); },
+    // Pendant la déchirure : froissement d'alu + petits craquements
+    crackle() { if (!ok()) return; const t = ctx.currentTime; crinkle(t, .09, 260, .5); if (Math.random() < .5) noise(t, .03, { vol: .05, freq: 5200, q: 3, wet: .1 }); },
+    // La bande cède : « zip » métallique granuleux + claquement sourd
+    tear() {
+      if (!ok()) return; const t = ctx.currentTime;
+      crinkle(t, .32, 2600, .9, 1800, 11000);
+      noise(t, .28, { vol: .16, freq: 1100, sweep: 5200, q: 1.4, attack: .01 });
+      noise(t + .02, .5, { vol: .06, freq: 7000, type: 'highpass', attack: .01 });
+      sub(120, t, .25, .22, .45);
+    },
+    // Ouverture : souffle qui monte dans la salle
+    hum() { if (!ok()) return; const t = ctx.currentTime; noise(t, 1.2, { vol: .05, freq: 160, sweep: 700, q: .8, type: 'lowpass', attack: .4, wet: .5 }); sub(48, t, 1.4, .12, .9); },
+    burst() { if (!ok()) return; const t = ctx.currentTime; sub(70, t, 1.1, .38, .5); noise(t, 1.4, { vol: .08, freq: 9000, sweep: 1200, type: 'lowpass', attack: .01, wet: .6 }); },
+    coin() { if (!ok()) return; const t = ctx.currentTime; bell(2637, t, .5, .05, 1.41, 2); bell(3520, t + .07, .7, .04, 1.41, 2); },
+    // ── Musique : « La Chambre forte », thème orchestral original en ré mineur, 66 BPM ──
+    music: (() => {
+      let bus = null, timer = null, nextBar = 0, barIdx = 0, on = false;
+      const BEAT = 60 / 66, BAR = BEAT * 4;
+      const hz = m => 440 * Math.pow(2, (m - 69) / 12);          // note MIDI → fréquence
+      // Grille : Dm | Bb | F | C | Dm | Gm | Bb | A (accords en notes MIDI)
+      const CH = [[50, 57, 62, 65], [46, 53, 58, 62], [41, 53, 57, 60], [48, 55, 60, 64], [50, 57, 62, 65], [43, 55, 58, 62], [46, 53, 58, 62], [45, 52, 57, 61]];
+      // Thème de cor : [note, temps de départ, durée] par mesure
+      const MEL = [
+        [[74, 0, 2], [69, 2, 1], [74, 3, 1]], [[77, 0, 2], [76, 2, 1], [74, 3, 1]], [[72, 0, 2], [69, 2, 1], [65, 3, 1]], [[67, 0, 4]],
+        [[69, 0, 1], [74, 1, 1], [76, 2, 1], [77, 3, 1]], [[79, 0, 2], [77, 2, 1], [76, 3, 1]], [[77, 0, 2], [74, 2, 1], [70, 3, 1]], [[69, 0, 4]],
+      ];
+      const voice = (type, f, t, d, vol, { a = .3, cut = 1400, det = 7, vib = 0, wet = .55, q = .7 } = {}) => {
+        const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(cut * .55, t); lp.frequency.linearRampToValueAtTime(cut, t + a); lp.Q.value = q;
+        const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + a); g.gain.setValueAtTime(vol, t + Math.max(a, d - .35)); g.gain.linearRampToValueAtTime(0, t + d + .25);
+        lp.connect(g); g.connect(bus); const w = ctx.createGain(); w.gain.value = wet; g.connect(w).connect(verb);
+        let lfo = null;
+        if (vib) { lfo = ctx.createOscillator(); lfo.frequency.value = 5.2; const lg = ctx.createGain(); lg.gain.value = vib; lfo.connect(lg); lfo.start(t); lfo.stop(t + d + .4); lfo.__g = lg; }
+        for (const dt of det ? [-det, det] : [0]) { const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; o.detune.value = dt; if (lfo) lfo.__g.connect(o.detune); o.connect(lp); o.start(t); o.stop(t + d + .4); }
+      };
+      const timpani = (f, t, vol) => {
+        const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(f * 1.5, t); o.frequency.exponentialRampToValueAtTime(f, t + .08);
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + 1.8);
+        o.connect(g); g.connect(bus); const w = ctx.createGain(); w.gain.value = .5; g.connect(w).connect(verb); o.start(t); o.stop(t + 2);
+        const n = ctx.sampleRate * .25 | 0, b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n * .15));
+        const src = ctx.createBufferSource(); src.buffer = b; const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 380; const ng = ctx.createGain(); ng.gain.value = vol * .8;
+        src.connect(lp).connect(ng).connect(bus); src.start(t);
+      };
+      const harp = (f, t, vol) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + 1.6); o.connect(g); g.connect(bus); const w = ctx.createGain(); w.gain.value = .6; g.connect(w).connect(verb); o.start(t); o.stop(t + 1.7); };
+      const scheduleBar = (i, t) => {
+        const section = Math.floor(i / 8) % 3, k = i % 8, ch = CH[k];   // 0 = intro, 1 = thème, 2 = thème + chœur
+        // Cordes : nappe de l'accord
+        ch.slice(1).forEach(m => voice('sawtooth', hz(m), t, BAR, .022, { a: 1.1, cut: 1500 }));
+        // Basses (violoncelles / cuivres graves)
+        voice('sawtooth', hz(ch[0] - 12), t, BAR, .05, { a: .25, cut: 420, det: 4, wet: .3 });
+        // Timbales : temps 1, roulement en fin de phrase
+        timpani(hz(ch[0] - 24), t, .32);
+        if (k === 3 || k === 7) { for (let r = 0; r < 6; r++) timpani(hz(ch[0] - 24), t + BEAT * 3 + r * BEAT / 6, .08 + r * .03); }
+        if (section === 0) { [0, 1, 2, 3, 2, 1].forEach((n, j) => harp(hz(ch[n % 4] + 12), t + j * BEAT * .66, .045)); return; }
+        // Cor : thème héroïque
+        for (const [m, st, du] of MEL[k]) voice('sawtooth', hz(m - (section === 1 ? 12 : 0)), t + st * BEAT, du * BEAT - .05, section === 1 ? .055 : .045, { a: .09, cut: 1900, det: 5, vib: 9, wet: .6, q: 1.2 });
+        // Chœur « aah » au dernier passage
+        if (section === 2) ch.slice(1).forEach(m => voice('sine', hz(m + 12), t, BAR, .03, { a: .9, cut: 3000, det: 9, vib: 12, wet: .8 }));
+      };
+      const tick = () => { while (nextBar < ctx.currentTime + 2.5) { scheduleBar(barIdx++, nextBar); nextBar += BAR; } };
+      return {
+        get on() { return on; },
+        start() {
+          if (on || !ensure()) return; on = true;
+          bus = ctx.createGain(); bus.gain.setValueAtTime(0, ctx.currentTime); bus.gain.linearRampToValueAtTime(.42, ctx.currentTime + 3); bus.connect(master);
+          nextBar = ctx.currentTime + .2; barIdx = 0; tick(); timer = setInterval(tick, 400);
+        },
+        stop() {
+          if (!on) return; on = false; clearInterval(timer);
+          const b = bus; b.gain.cancelScheduledValues(ctx.currentTime); b.gain.setValueAtTime(b.gain.value, ctx.currentTime); b.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.2);
+          setTimeout(() => b.disconnect(), 1500);
+        },
+        duck(v) { if (on && bus) { bus.gain.cancelScheduledValues(ctx.currentTime); bus.gain.linearRampToValueAtTime(v ? .14 : .42, ctx.currentTime + .6); } },
+      };
+    })(),
+    // Révélation : cloches cristallines + impact grave, plus riche selon la rareté
+    reveal(tier) {
+      if (!ok()) return; const t = ctx.currentTime, l = TIERS.indexOf(tier);
+      noise(t, .9, { vol: .06, freq: 300, sweep: 4000, q: .5, attack: .25, wet: .5 });
+      sub(60, t + .18, .9 + l * .3, .18 + l * .05, .7);
+      const chord = [[3, 5], [3, 5, 6], [2, 3, 5, 6], [1, 3, 5, 6, 8], [0, 2, 3, 5, 6, 7, 8]][l];
+      chord.forEach((k, i) => bell(A[k] * 2, t + .2 + i * .09, 2.2 + l * .5, .06 + l * .01));
+      if (l >= 2) crinkle(t + .3, 1.2, 90, .35, 6000, 14000);
+      if (l >= 3) pad([A[0], A[2], A[3], A[5]], t + .15, 3 + l * .5, .035);
+      if (l >= 4) { for (let i = 0; i < 10; i++) bell(A[6 + i % 3] * 2, t + .9 + i * .11, 1.6, .025, 2.76, 2); }
+    },
+  };
+})();
+const vibrate = p => { try { navigator.vibrate && navigator.vibrate(p); } catch {} };
+
+// ════════════════════════════════════════════════════════════
+// MOTEUR 3D
+// ════════════════════════════════════════════════════════════
+const canvas = $('#c');
+// Mode léger : rendu direct sans post-traitement ni miroir (forcé via ?lite=1, le bouton, ou si le GPU ne gère pas les buffers flottants)
+const LITE = (() => {
+  try {
+    const q = new URLSearchParams(location.search).get('lite');
+    if (q === '1') { localStorage.setItem('vault3d_lite', '1'); return true; }
+    if (q === '0') { localStorage.removeItem('vault3d_lite'); return false; }
+    if (localStorage.getItem('vault3d_lite') === '1') return true;
+  } catch {}
+  const gl = document.createElement('canvas').getContext('webgl2');
+  return !gl || !gl.getExtension('EXT_color_buffer_float');
+})();
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: LITE, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, MOBILE ? 1.5 : 1.75));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050507);
+scene.fog = new THREE.FogExp2(0x050507, .028);
+const camera = new THREE.PerspectiveCamera(MOBILE ? 52 : 40, innerWidth / innerHeight, .1, 200);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), .04).texture;
+
+const manager = new THREE.LoadingManager();
+manager.onProgress = (u, l, t) => { $('#barI').style.width = (l / t * 100) + '%'; };
+const allLoaded = new Promise(r => { manager.onLoad = r; });
+const loader = new THREE.TextureLoader(manager); loader.setCrossOrigin('anonymous');
+const lazyLoader = new THREE.TextureLoader(); lazyLoader.setCrossOrigin('anonymous');
+
+// Post-traitement : bloom sur les lumières et reflets
+let composer = null, bloom = { strength: 0, setSize() {} };
+if (!LITE) {
+  const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: MSAA });
+  composer = new EffectComposer(renderer, rt);
+  composer.addPass(new RenderPass(scene, camera));
+  // Garde-fou : un pixel NaN/infini (calcul d'éclairage dégénéré) serait étalé en carré noir par le bloom
+  composer.addPass(new ShaderPass({
+    uniforms: { tDiffuse: { value: null } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+    fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv;
+      bool bad(vec4 c){ return any(isnan(c)) || any(isinf(c)) || c.r!=c.r; }
+      void main(){
+        vec4 c = texture2D(tDiffuse, vUv);
+        if (bad(c)) { vec2 px = vec2(dFdx(vUv.x), dFdy(vUv.y));
+          vec4 n = texture2D(tDiffuse, vUv + vec2(px.x * 2., 0.)); c = bad(n) ? vec4(0., 0., 0., 1.) : n; }
+        gl_FragColor = clamp(c, 0., 40.);
+      }`,
+  }));
+  bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .38, .45, .94);
+  composer.addPass(bloom);
+  composer.addPass(new OutputPass());
+}
+const BLOOM_BASE = .38;
+
+// ── Décor : Mew dans les flammes, animé, sur un cylindre ─────────
+const pano = loader.load(MOBILE ? '/image/vault3d/mew-sm.jpg' : '/image/vault3d/mew.jpg', t => {
+  // Le décor devient la carte de reflets : le métal des sachets reflète les flammes
+  const eq = t.clone(); eq.mapping = THREE.EquirectangularReflectionMapping; eq.needsUpdate = true;
+  scene.environment = pmrem.fromEquirectangular(eq).texture;
+});
+pano.colorSpace = THREE.SRGBColorSpace;
+const panoU = { map: { value: pano }, t: { value: 0 }, k: { value: 1 }, ky: { value: 1 }, ox: { value: 0 }, oy: { value: 0 }, dim: { value: .78 } };
+{
+  const L = Math.PI * 1.22, R = 30, H = 32;
+  // Image 16:9 sur l'arc, Mew décalé à droite du socle central pour rester visible ; au-delà, flammes en miroir qui s'éteignent
+  const IMG_W = R * L / 1.5;
+  panoU.k.value = R * L / IMG_W; panoU.ky.value = H / (IMG_W / (2000 / 1125)); panoU.oy.value = -.055;
+  const geo = new THREE.CylinderGeometry(R, R, H, 96, 1, true, Math.PI - L / 2, L);
+  const mat = new THREE.ShaderMaterial({
+    uniforms: panoU, side: THREE.BackSide, fog: false, depthWrite: false,
+    vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+    fragmentShader: `uniform sampler2D map; uniform float t, k, ky, ox, oy, dim; varying vec2 vUv;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
+        return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+      float fbm(vec2 p){ float s = 0., a = .5; for (int i = 0; i < 4; i++) { s += a * n(p); p = p * 2.03 + 17.1; a *= .5; } return s; }
+      vec2 mirror(vec2 p){ vec2 m = mod(p, 2.); return mix(m, 2. - m, step(1., m)); }
+      void main(){
+        vec2 p = vec2((1. - vUv.x - .5) * k + .5 + ox, (vUv.y - .5) * ky + .5 + oy);
+        // Mew : zone ovale douce qui flotte et respire, sans déformation
+        vec2 mc = vec2(.487, .575), md = (p - mc) / vec2(.085, .2);
+        float mew = 1. - smoothstep(.55, 1., length(md));
+        vec2 bob = vec2(sin(t * .55) * .0035, sin(t * .9) * .009 + sin(t * 2.1) * .0015);
+        vec2 q = p - bob * mew;
+        // Flammes : chaleur qui monte, ondulations plus fortes loin du centre
+        vec4 c0 = texture2D(map, mirror(p));
+        float warm = clamp((c0.r - c0.b) * 1.6, 0., 1.) * (1. - mew);
+        float edge = .45 + .55 * smoothstep(.12, .5, abs(p.x - .5) + abs(p.y - .55) * .6);
+        vec2 w = vec2(fbm(p * vec2(5., 3.) + vec2(0., -t * .32)) - .5, fbm(p * vec2(4., 6.) + vec2(3.7, -t * .45)) - .5);
+        q += w * .016 * warm * edge;
+        vec3 c = texture2D(map, mirror(q)).rgb;
+        // Scintillement des braises (orange/rouge uniquement)
+        float fl = fbm(p * vec2(7., 9.) + vec2(t * .08, -t * .7));
+        c *= 1. + (fl - .45) * .55 * warm * edge;
+        // Lueur qui pulse doucement autour de Mew
+        float aura = (1. - smoothstep(.0, 1.25, length((p - mc) / vec2(.16, .3)))) * (.5 + .5 * sin(t * 1.3));
+        c += vec3(1., .8, .62) * aura * .09;
+        vec2 o = max(max(-p, p - 1.), 0.);
+        c *= exp(-o.x * 5.) * exp(-o.y * 4.);
+        gl_FragColor = vec4(c * dim, 1.);
+      }`,
+  });
+  const m = new THREE.Mesh(geo, mat); window.__panoMat = mat;
+  m.position.set(0, 3.2 - H * .05, -4);
+  scene.add(m);
+}
+
+// ── Sol : miroir + vernis sombre + incrustations dorées ──────────
+const RING_R = 4.6;
+if (!MOBILE && !LITE) {
+  const mirror = new Reflector(new THREE.CircleGeometry(40, 64), { clipBias: .003, textureWidth: innerWidth * .6, textureHeight: innerHeight * .6, color: 0x55555f, multisample: MSAA });
+  mirror.rotation.x = -Math.PI / 2; mirror.position.y = -.001;
+  scene.add(mirror);
+}
+{
+  // Vernis : dégradé radial qui assombrit le miroir sur les bords
+  const cv = document.createElement('canvas'); cv.width = cv.height = 512;
+  const g = cv.getContext('2d'), gr = g.createRadialGradient(256, 256, 40, 256, 256, 256);
+  gr.addColorStop(0, 'rgba(8,8,11,.55)'); gr.addColorStop(.6, 'rgba(6,6,8,.82)'); gr.addColorStop(1, 'rgba(5,5,7,1)');
+  g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
+  const tx = new THREE.CanvasTexture(cv);
+  const top = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ map: tx, transparent: true, roughness: .3, metalness: .5, color: MOBILE ? 0x222228 : 0xffffff }));
+  top.rotation.x = -Math.PI / 2; top.position.y = .002;
+  scene.add(top);
+  const goldM = new THREE.MeshBasicMaterial({ color: 0xd9b26a, transparent: true, opacity: .75 });
+  const ring1 = new THREE.Mesh(new THREE.RingGeometry(RING_R + 1.25, RING_R + 1.29, 128), goldM); ring1.rotation.x = -Math.PI / 2; ring1.position.y = .01; scene.add(ring1);
+  const ring2 = new THREE.Mesh(new THREE.RingGeometry(RING_R - 1.3, RING_R - 1.27, 128), goldM); ring2.rotation.x = -Math.PI / 2; ring2.position.y = .01; scene.add(ring2);
+  for (const x of [-1.6, 1.6]) { const l = new THREE.Mesh(new THREE.PlaneGeometry(.035, 30), goldM); l.rotation.x = -Math.PI / 2; l.position.set(x, .01, RING_R + 16); scene.add(l); }
+}
+
+// ── Lumières ─────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x9a8fa6, .5));
+const key = new THREE.DirectionalLight(0xfff1dc, 1.35); key.position.set(3, 8, 9); scene.add(key);
+// Lumière d'appoint attachée à la caméra : le booster reste lisible sous tous les angles quand on le tourne
+const headLight = new THREE.DirectionalLight(0xfff4e6, 1.15); headLight.position.set(.6, .8, 1); headLight.target.position.set(0, 0, -6); camera.add(headLight, headLight.target); scene.add(camera);
+const rimL = new THREE.PointLight(0xffe2b8, 5, 14, 2); rimL.position.set(-4, 3.5, RING_R + 1); scene.add(rimL);
+const rimR = new THREE.PointLight(0xffe2b8, 5, 14, 2); rimR.position.set(4, 3.5, RING_R + 1); scene.add(rimR);
+const spot = new THREE.SpotLight(0xfff4de, 26, 14, .42, .6, 1.6); spot.position.set(0, 8, RING_R + 1.5); scene.add(spot); scene.add(spot.target);
+const burstLight = new THREE.PointLight(0xffffff, 0, 10, 2); scene.add(burstLight);
+// Lumière « lampe torche » qui suit le curseur pour faire jouer reflets et ombres sur le métal
+const cursorLight = new THREE.PointLight(0xfff0dc, 3.2, 9, 1.4); scene.add(cursorLight);
+const insp = { yaw: 0, pitch: 0, vy: 0, active: false, hold: 0 };
+
+// ── Poussière en suspension ─────────────────────────────────────
+const dust = (() => {
+  const n = MOBILE ? 400 : 1100, p = new Float32Array(n * 3), s = new Float32Array(n);
+  for (let i = 0; i < n; i++) { p.set([(Math.random() - .5) * 26, Math.random() * 9, (Math.random() - .5) * 22], i * 3); s[i] = Math.random(); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('seed', new THREE.BufferAttribute(s, 1));
+  const m = new THREE.ShaderMaterial({
+    uniforms: { t: { value: 0 }, pr: { value: renderer.getPixelRatio() } },
+    vertexShader: `attribute float seed; uniform float t; uniform float pr; varying float a;
+      void main(){ vec3 q=position; q.y=mod(q.y+t*(.12+seed*.22),9.0); q.x+=sin(t*.35+seed*40.)*.45;
+      vec4 mv=modelViewMatrix*vec4(q,1.); gl_Position=projectionMatrix*mv; gl_PointSize=(1.+seed*2.2)*pr*(8./-mv.z);
+      a=(.3+.7*sin(t*(1.+seed)+seed*30.))*.55; }`,
+    fragmentShader: `varying float a; void main(){ float d=length(gl_PointCoord-.5); gl_FragColor=vec4(mix(vec3(1.,.45,.12),vec3(1.,.85,.55),a*1.6),smoothstep(.5,0.,d)*a*1.3); }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  const pts = new THREE.Points(g, m); scene.add(pts); return m;
+})();
+
+// ════════════════════════════════════════════════════════════
+// BOOSTERS VIRTUELS 3D
+// ════════════════════════════════════════════════════════════
+const foilImg = new Image(); foilImg.crossOrigin = 'anonymous';
+const foilReady = new Promise(r => { foilImg.onload = r; foilImg.onerror = r; });
+foilImg.src = '/image/vault3d/foil.jpg';
+manager.itemStart('foil'); foilReady.then(() => manager.itemEnd('foil'));
+
+const PW = 1.16, PH = 1.86, PD = .05, CRIMP = .12, SEAM = PH / 2 - CRIMP - .2; // y de la ligne de découpe
+// Géométrie « coussin » : le sachet est bombé au centre et plat sur les bords
+function pillow(y0, y1, bulge = .075) {
+  const g = new THREE.BoxGeometry(PW, y1 - y0, PD, 24, 30, 1);
+  g.translate(0, (y0 + y1) / 2, 0);
+  const p = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const nx = x / (PW / 2), ny = y / (PH / 2);
+    const b = Math.max(0, 1 - nx * nx) ** .8 * Math.max(0, 1 - Math.abs(ny) ** 5);
+    p.setZ(i, Math.sign(z || 1) * (PD / 2 + bulge * b));
+    const u = x / PW + .5;
+    uv.setXY(i, z < 0 ? 1 - u : u, (y + PH / 2) / PH);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+const G_BODY = pillow(-PH / 2 + CRIMP, SEAM);
+const G_STRIP = pillow(SEAM, PH / 2 - CRIMP); G_STRIP.translate(PW / 2, -SEAM, 0);
+const G_CRIMP = new THREE.BoxGeometry(PW, CRIMP, PD * 1.4, 1, 1, 1);
+const G_CRIMP_T = G_CRIMP.clone().translate(PW / 2, PH / 2 - CRIMP / 2 - SEAM, 0);
+const crimpTex = (() => {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 32; const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 32); gr.addColorStop(0, '#f4f5f9'); gr.addColorStop(1, '#8a8d98'); g.fillStyle = gr; g.fillRect(0, 0, 256, 32);
+  for (let x = 0; x < 256; x += 6) { g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(x + 3, 0, 3, 32); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const crimpMat = new THREE.MeshStandardMaterial({ map: crimpTex, metalness: .75, roughness: .55, color: 0xb8b8b8 });
+
+// ════════════════════════════════════════════════════════════
+// DESIGNS DES SACHETS — chaque box a son métal, ses gravures et ses reliefs.
+// On dessine 3 calques avec les mêmes formes :
+//   albedo (couleurs), orm (G = rugosité, B = métal) et bump (relief : gravé = sombre, embossé = clair)
+// ════════════════════════════════════════════════════════════
+const DESIGNS = {
+  ar:     { base: ['#5e3e0e', '#c4923d', '#f7e0a2'], accent: 'platinum', pattern: 'guilloche', ink: '#2a1904', tag: 'MYSTÈRE AR' },
+  ex:     { base: ['#170830', '#4f2396', '#b98aff'], accent: 'rose',     pattern: 'hex',       ink: '#0b031c', tag: 'MYSTÈRE EX' },
+  china:  { base: ['#4a0909', '#a8201a', '#e2553c'], accent: 'gold',     pattern: 'scales',    ink: '#210303', tag: 'SÉRIE CHINE' },
+  japan:  { base: ['#07123a', '#1b3f9c', '#6b98ff'], accent: 'silver',   pattern: 'sunrise',   ink: '#030819', tag: 'SÉRIE JAPON' },
+  mega:   { base: ['#170830', '#4f2396', '#b98aff'], accent: 'rose',     pattern: 'hex',       ink: '#0b031c', tag: 'SÉRIE MÉGA' },
+  rocket: { base: ['#050507', '#1d1d24', '#4d4d59'], accent: 'crimson',  pattern: 'chevron',   ink: '#000000', tag: 'SÉRIE NOIRE' },
+  grail:  { base: ['#5e3e0e', '#c4923d', '#f7e0a2'], accent: 'platinum', pattern: 'guilloche', ink: '#2a1904', tag: 'ÉDITION GRAAL' },
+  daily:  { base: ['#042924', '#0f7d69', '#5fe3c3'], accent: 'silver',   pattern: 'stars',     ink: '#01130f', tag: 'CADEAU DU JOUR' },
+};
+const ACCENTS = {
+  gold: ['#fff5d2', '#e3b75e', '#7e5412'], silver: ['#ffffff', '#cfd6e2', '#5f6776'], rose: ['#ffeaf3', '#eaa5bd', '#7c3f55'],
+  crimson: ['#ffc2c6', '#e3263a', '#5c0710'], platinum: ['#ffffff', '#e6e8ee', '#858b99'],
+};
+// Aléatoire déterministe (même design à chaque chargement)
+function rng(seedStr) { let h = 1779033703 ^ seedStr.length; for (const ch of seedStr) h = Math.imul(h ^ ch.charCodeAt(0), 3432918353), h = h << 13 | h >>> 19; return () => { h = Math.imul(h ^ h >>> 16, 2246822507); h = Math.imul(h ^ h >>> 13, 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }; }
+
+function drawPack(g, W, H, box, d, pass) {
+  const S = W / 800, acc = ACCENTS[d.accent];
+  const cx = W / 2, cy = H * .40;
+  const seamY = H * (1 - (SEAM + PH / 2) / PH), topY = H * (CRIMP / PH), botY = H - topY;
+  const rnd = rng(box.id + pass.length * 0);
+  // Style d'un « matériau » selon le calque
+  const M = kind => {
+    if (pass === 'albedo') {
+      if (kind === 'base') { const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, d.base[2]); gr.addColorStop(.45, d.base[1]); gr.addColorStop(1, d.base[0]); return gr; }
+      if (kind === 'engrave') return 'rgba(0,0,0,.42)';
+      if (kind === 'fine') return 'rgba(255,255,255,.16)';
+      if (kind === 'emboss') { const gr = g.createLinearGradient(0, 0, W * .7, H); gr.addColorStop(0, acc[0]); gr.addColorStop(.5, acc[1]); gr.addColorStop(1, acc[2]); return gr; }
+      if (kind === 'print') return d.ink;
+      if (kind === 'hi') return acc[0];
+      if (kind === 'foil') { if (!foilImg.naturalWidth) return acc[1]; const pt = g.createPattern(foilImg, 'repeat'); pt.setTransform(new DOMMatrix().scale(S * .55)); return pt; }
+    }
+    if (pass === 'orm') return { base: 'rgb(0,110,120)', engrave: 'rgb(0,150,135)', fine: 'rgb(0,115,150)', emboss: 'rgb(0,28,255)', print: 'rgb(0,175,25)', hi: 'rgb(0,30,255)', foil: 'rgb(0,38,255)' }[kind];
+    return { base: '#808080', engrave: '#383838', fine: '#6e6e6e', emboss: '#ececec', print: '#868686', hi: '#e2e2e2', foil: '#9a9a9a' }[kind];
+  };
+  const fill = (k, fn) => { g.fillStyle = M(k); g.beginPath(); fn(); g.fill(); };
+  const stroke = (k, w, fn) => { g.strokeStyle = M(k); g.lineWidth = w * S; g.beginPath(); fn(); g.stroke(); };
+  const text = (k, str, x, y, font, align = 'center', maxW) => { g.fillStyle = M(k); g.font = font; g.textAlign = align; g.textBaseline = 'middle'; g.fillText(str, x, y, maxW); };
+
+  // 1. Métal de base + brossage vertical
+  g.fillStyle = M('base'); g.fillRect(0, 0, W, H);
+  for (let i = 0; i < W * 1.2; i++) {
+    const x = rnd() * W, a = .03 + rnd() * .06;
+    g.fillStyle = pass === 'albedo' ? `rgba(255,255,255,${a})` : pass === 'orm' ? `rgba(0,${120 + rnd() * 60 | 0},255,${a * 3})` : `rgba(160,160,160,${a})`;
+    g.fillRect(x, 0, 1, H);
+  }
+
+  // 2. Motif gravé propre à la série (zone du corps)
+  g.save(); g.beginPath(); g.rect(0, seamY, W, botY - seamY); g.clip();
+  if (d.pattern === 'scales') {
+    // Écailles de dragon
+    const r = 34 * S;
+    for (let row = 0, y = seamY - r; y < botY + r; row++, y += r * .9)
+      for (let x = (row % 2) * r - r; x < W + r; x += r * 2) {
+        stroke('engrave', 2.2, () => g.arc(x, y, r, 0, Math.PI));
+        stroke('fine', 1, () => g.arc(x, y, r * .62, .2, Math.PI - .2));
+      }
+  } else if (d.pattern === 'sunrise') {
+    // Soleil levant : rayons + cercles concentriques + fleurs de cerisier
+    for (let i = 0; i < 96; i++) { const a = i / 96 * Math.PI * 2; stroke(i % 2 ? 'fine' : 'engrave', i % 2 ? 1 : 1.6, () => { g.moveTo(cx + Math.cos(a) * 120 * S, cy + Math.sin(a) * 120 * S); g.lineTo(cx + Math.cos(a) * 1400 * S, cy + Math.sin(a) * 1400 * S); }); }
+    for (let r = 150; r < 900; r += 38) stroke('engrave', 1, () => g.arc(cx, cy, r * S, 0, Math.PI * 2));
+    for (let k = 0; k < 16; k++) {
+      const x = rnd() * W, y = seamY + rnd() * (botY - seamY), rr = (10 + rnd() * 16) * S;
+      if (Math.hypot(x - cx, y - cy) < 260 * S) continue;
+      for (let pI = 0; pI < 5; pI++) { const a = pI / 5 * Math.PI * 2 + rnd(); fill('emboss', () => g.ellipse(x + Math.cos(a) * rr * .6, y + Math.sin(a) * rr * .6, rr * .55, rr * .32, a, 0, Math.PI * 2)); }
+      fill('print', () => g.arc(x, y, rr * .18, 0, Math.PI * 2));
+    }
+  } else if (d.pattern === 'hex') {
+    // Alvéoles de cristal : grille hexagonale, certaines cellules en foil
+    const r = 30 * S, h = Math.sqrt(3) * r;
+    for (let col = 0, x = 0; x < W + r * 2; col++, x += r * 1.5)
+      for (let y = (col % 2) * h / 2; y < H + h; y += h) {
+        const hex = () => { for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; k ? g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r) : g.moveTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } g.closePath(); };
+        if (rnd() < .13) fill('foil', hex);
+        stroke('engrave', 2, hex);
+        stroke('fine', 1, () => { for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; k ? g.lineTo(x + Math.cos(a) * r * .7, y + Math.sin(a) * r * .7) : g.moveTo(x + Math.cos(a) * r * .7, y + Math.sin(a) * r * .7); } g.closePath(); });
+      }
+  } else if (d.pattern === 'chevron') {
+    // Chevrons carbone + fines bandes rouges
+    const st = 26 * S;
+    for (let y = seamY - W; y < botY + W; y += st) stroke('engrave', 2.4, () => { g.moveTo(0, y); g.lineTo(W / 2, y + W * .28); g.lineTo(W, y); });
+    for (let y = seamY; y < botY; y += 7 * S) for (let x = (y / (7 * S) % 2) * 7 * S; x < W; x += 14 * S) fill('fine', () => g.rect(x, y, 7 * S, 3.5 * S));
+    for (const off of [-.16, .16]) stroke('emboss', 5, () => { g.moveTo(0, cy + off * H + W * .05); g.lineTo(W / 2, cy + off * H + W * .33); g.lineTo(W, cy + off * H + W * .05); });
+  } else if (d.pattern === 'guilloche') {
+    // Guillochage façon billet de banque : rosaces + ondes
+    for (let ring = 0; ring < 14; ring++) {
+      const R = (150 + ring * 22) * S, amp = (8 + ring % 3 * 4) * S, n = 18 + ring % 4 * 6, ph = ring * .4;
+      stroke(ring % 2 ? 'fine' : 'engrave', 1.2, () => { for (let k = 0; k <= 720; k++) { const a = k / 720 * Math.PI * 2, rr = R + amp * Math.sin(n * a + ph); k ? g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr) : g.moveTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } });
+    }
+    for (let y = cy + 380 * S; y < botY; y += 10 * S) stroke('engrave', 1, () => { for (let x = 0; x <= W; x += 6) { const yy = y + Math.sin(x / (40 * S) + y) * 5 * S; x ? g.lineTo(x, yy) : g.moveTo(x, yy); } });
+  } else {
+    // Constellations
+    const pts = [];
+    for (let k = 0; k < 70; k++) pts.push([rnd() * W, seamY + rnd() * (botY - seamY), rnd()]);
+    for (let k = 0; k < pts.length - 1; k += 1) if (rnd() < .45) { const [a, b] = [pts[k], pts[k + 1]]; stroke('engrave', 1.2, () => { g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); }); }
+    for (const [x, y, z] of pts) { const r = (3 + z * 9) * S; fill(z > .7 ? 'emboss' : 'hi', () => { g.moveTo(x, y - r * 2); g.lineTo(x + r * .45, y - r * .45); g.lineTo(x + r * 2, y); g.lineTo(x + r * .45, y + r * .45); g.lineTo(x, y + r * 2); g.lineTo(x - r * .45, y + r * .45); g.lineTo(x - r * 2, y); g.lineTo(x - r * .45, y - r * .45); g.closePath(); }); }
+  }
+  g.restore();
+
+  // 3. Assombrissement des bords (volume du sachet)
+  if (pass === 'albedo') { const vg = g.createRadialGradient(cx, H * .45, W * .2, cx, H * .5, W * .95); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.45)'); g.fillStyle = vg; g.fillRect(0, 0, W, H); }
+
+  // 4. Cadre double + ornements d'angle
+  const inset = 30 * S, fy0 = seamY + 26 * S, fy1 = botY - 26 * S;
+  stroke('emboss', 5, () => g.roundRect(inset, fy0, W - inset * 2, fy1 - fy0, 18 * S));
+  stroke('emboss', 1.5, () => g.roundRect(inset + 12 * S, fy0 + 12 * S, W - inset * 2 - 24 * S, fy1 - fy0 - 24 * S, 12 * S));
+  for (const [x, y] of [[inset, fy0], [W - inset, fy0], [inset, fy1], [W - inset, fy1]]) fill('emboss', () => { const r = 16 * S; g.moveTo(x, y - r); g.lineTo(x + r, y); g.lineTo(x, y + r); g.lineTo(x - r, y); g.closePath(); });
+
+  // 5. Bande à déchirer
+  stroke('engrave', 2, () => { g.setLineDash([12 * S, 9 * S]); g.moveTo(0, seamY); g.lineTo(W, seamY); });
+  g.setLineDash([]);
+  text('emboss', '✂  DÉCHIRER ICI  ✂', cx, (topY + seamY) / 2 + 6 * S, `800 ${22 * S}px Manrope, sans-serif`);
+  text('fine', 'EDEN VAULT · BOOSTER VIRTUEL · SCELLÉ', cx, (topY + seamY) / 2 + 34 * S, `700 ${12 * S}px Manrope, sans-serif`);
+
+  // 6. Médaillon : couronne, perles, texte circulaire, disque holo, monogramme
+  const R = 118 * S;
+  fill('print', () => g.arc(cx, cy, R + 34 * S, 0, Math.PI * 2));
+  stroke('emboss', 10, () => g.arc(cx, cy, R + 26 * S, 0, Math.PI * 2));
+  stroke('emboss', 2, () => g.arc(cx, cy, R + 40 * S, 0, Math.PI * 2));
+  for (let k = 0; k < 36; k++) { const a = k / 36 * Math.PI * 2; fill('emboss', () => g.arc(cx + Math.cos(a) * (R + 26 * S), cy + Math.sin(a) * (R + 26 * S), 3.2 * S, 0, Math.PI * 2)); }
+  fill('foil', () => g.arc(cx, cy, R, 0, Math.PI * 2));
+  stroke('emboss', 4, () => g.arc(cx, cy, R, 0, Math.PI * 2));
+  g.save(); g.fillStyle = M('hi'); g.font = `800 ${15 * S}px Manrope, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const ring = `EDEN VAULT ✦ ${d.tag} ✦ CHAMBRE FORTE ✦ `;
+  for (let k = 0; k < ring.length; k++) { const a = -Math.PI / 2 + (k / ring.length) * Math.PI * 2; g.save(); g.translate(cx + Math.cos(a) * (R + 13 * S), cy + Math.sin(a) * (R + 13 * S)); g.rotate(a + Math.PI / 2); g.fillText(ring[k], 0, 0); g.restore(); }
+  g.restore();
+  text('print', 'E', cx + 4 * S, cy + 10 * S, `800 ${190 * S}px Fraunces, Georgia, serif`);
+  text('emboss', 'E', cx, cy + 4 * S, `800 ${190 * S}px Fraunces, Georgia, serif`);
+
+  // 7. Plaque de titre
+  const py = cy + R + 70 * S, ph = 150 * S, pw = W - 150 * S;
+  fill('print', () => g.roundRect(cx - pw / 2, py, pw, ph, 14 * S));
+  stroke('emboss', 3, () => g.roundRect(cx - pw / 2, py, pw, ph, 14 * S));
+  stroke('emboss', 1, () => g.roundRect(cx - pw / 2 + 8 * S, py + 8 * S, pw - 16 * S, ph - 16 * S, 9 * S));
+  let fs = 74 * S; g.font = `700 ${fs}px Fraunces, Georgia, serif`;
+  while (g.measureText(box.name).width > pw - 50 * S && fs > 30 * S) { fs -= 3 * S; g.font = `700 ${fs}px Fraunces, Georgia, serif`; }
+  text('emboss', box.name, cx, py + ph * .44, g.font);
+  text('fine', d.tag + ' · ' + (box.free ? 'OFFERT' : `${fmt(box.price)} €`), cx, py + ph * .8, `800 ${15 * S}px Manrope, sans-serif`);
+
+  // 8. Pastille « booster réel »
+  const lab = box.free ? 'UN CADEAU À L’INTÉRIEUR' : '1 BOOSTER RÉEL À L’INTÉRIEUR';
+  g.font = `800 ${17 * S}px Manrope, sans-serif`; const lw = g.measureText(lab).width + 46 * S, ly = py + ph + 30 * S;
+  fill('print', () => g.roundRect(cx - lw / 2, ly, lw, 40 * S, 20 * S));
+  stroke('emboss', 2, () => g.roundRect(cx - lw / 2, ly, lw, 40 * S, 20 * S));
+  text('hi', lab, cx, ly + 21 * S, g.font);
+
+  // 9. Pied : code-barres, numéro de série, prix, micro-texte
+  const fy = botY - 92 * S;
+  let bx = inset + 30 * S; for (let k = 0; k < 34; k++) { const w = (1 + (rnd() * 3 | 0)) * S; fill('print', () => g.rect(bx, fy, w, 38 * S)); bx += w + (1 + rnd() * 2) * S; }
+  text('fine', 'EV-' + box.id.toUpperCase() + '-' + String(1000 + (rnd() * 8999 | 0)), inset + 30 * S, fy + 52 * S, `700 ${11 * S}px ui-monospace, monospace`, 'left');
+  text('emboss', box.free ? 'OFFERT' : `${fmt(box.price)} €`, W - inset - 30 * S, fy + 20 * S, `800 ${30 * S}px Manrope, sans-serif`, 'right');
+  text('fine', 'AUTHENTIQUE · PROVABLY FAIR · EDEN PROJECT TCG', cx, botY - 16 * S, `700 ${10 * S}px Manrope, sans-serif`);
+}
+
+function packMaps(box) {
+  const d = DESIGNS[box.id] || DESIGNS.japan;
+  const W = MOBILE ? 512 : 800, H = Math.round(W * PH / PW), out = {};
+  for (const pass of ['albedo', 'orm', 'bump']) {
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    drawPack(c.getContext('2d'), W, H, box, d, pass);
+    const t = new THREE.CanvasTexture(c); t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    if (pass === 'albedo') t.colorSpace = THREE.SRGBColorSpace;
+    out[pass] = t;
+  }
+  return out;
+}
+function packMaterial(m) {
+  return new THREE.MeshPhysicalMaterial({
+    map: m.albedo, roughnessMap: m.orm, metalnessMap: m.orm, bumpMap: m.bump, bumpScale: 1.4,
+    metalness: 1, roughness: 1, clearcoat: .2, clearcoatRoughness: .35,
+    iridescence: .18, iridescenceIOR: 1.3, iridescenceThicknessRange: [100, 480], envMapIntensity: 2.0,
+  });
+}
+// Un sachet complet : corps + bande (pivot à gauche) + soudures
+function buildPack(box, maps) {
+  const mat = packMaterial(maps);
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(G_BODY, mat); g.add(body);
+  const crB = new THREE.Mesh(G_CRIMP, crimpMat); crB.position.y = -PH / 2 + CRIMP / 2; g.add(crB);
+  const strip = new THREE.Group(); strip.position.set(-PW / 2, SEAM, 0); g.add(strip);
+  strip.add(new THREE.Mesh(G_STRIP, mat));
+  strip.add(new THREE.Mesh(G_CRIMP_T, crimpMat));
+  // Ligne de découpe lumineuse (grandit pendant la déchirure)
+  const seamMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const seam = new THREE.Mesh(new THREE.PlaneGeometry(1, .03), seamMat);
+  seam.position.set(-PW / 2, SEAM, PD / 2 + .08); seam.geometry.translate(.5, 0, 0); seam.scale.x = .0001;
+  g.add(seam);
+  g.userData = { body, crB, strip, seam, seamMat, mat };
+  return g;
+}
+
+// ── Carrousel de socles ──────────────────────────────────────────
+const ring = new THREE.Group(); scene.add(ring);
+const stands = [];
+function buildStand(box, i, n) {
+  const a = i / n * Math.PI * 2;
+  const grp = new THREE.Group(); grp.position.set(Math.sin(a) * RING_R, 0, Math.cos(a) * RING_R); grp.rotation.y = a;
+  const col = new THREE.Color(box.theme[0]);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(.78, .9, 1.05, 72), new THREE.MeshPhysicalMaterial({ color: 0x0b0b0f, metalness: .7, roughness: .22, clearcoat: 1, clearcoatRoughness: .1 }));
+  base.position.y = .525; grp.add(base);
+  const gold = new THREE.MeshStandardMaterial({ color: 0xd9b26a, metalness: 1, roughness: .22, emissive: 0x2a1c04 });
+  const lip = new THREE.Mesh(new THREE.TorusGeometry(.79, .03, 16, 96), gold); lip.rotation.x = Math.PI / 2; lip.position.y = 1.05; grp.add(lip);
+  const lip2 = new THREE.Mesh(new THREE.TorusGeometry(.9, .02, 16, 96), gold); lip2.rotation.x = Math.PI / 2; lip2.position.y = .02; grp.add(lip2);
+  const glow = new THREE.Mesh(new THREE.CircleGeometry(.76, 64), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .12, blending: THREE.AdditiveBlending, depthWrite: false }));
+  glow.rotation.x = -Math.PI / 2; glow.position.y = 1.056; grp.add(glow);
+  const maps = packMaps(box);
+  const pack = buildPack(box, maps); pack.position.y = 2.2; grp.add(pack);
+  ring.add(grp);
+  return { box, grp, pack, maps, glow, angle: a, base };
+}
+
+// ════════════════════════════════════════════════════════════
+// ANIMATIONS (tweens maison)
+// ════════════════════════════════════════════════════════════
+const tweens = new Set();
+const E = { out: t => 1 - Math.pow(1 - t, 3), inOut: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2, back: t => 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2), expo: t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t) };
+function tween(dur, fn, ease = E.out) { return new Promise(res => tweens.add({ t0: performance.now(), dur, fn, ease, res })); }
+function runTweens(now) { for (const tw of tweens) { const k = clamp((now - tw.t0) / tw.dur, 0, 1); tw.fn(tw.ease(k), k); if (k >= 1) { tweens.delete(tw); tw.res(); } } }
+
+// Caméra : position/regard courants et cibles
+const cam = { pos: new THREE.Vector3(), look: new THREE.Vector3(), tPos: new THREE.Vector3(), tLook: new THREE.Vector3(), shake: 0 };
+const VIEW_BROWSE = { pos: new THREE.Vector3(0, 2.35, RING_R + (MOBILE ? 6.6 : 5.6)), look: new THREE.Vector3(0, 1.75, RING_R - .6) };
+const STAGE = new THREE.Vector3(0, 2.3, RING_R + 2.35);
+const VIEW_STAGE = { pos: new THREE.Vector3(0, 2.45, RING_R + (MOBILE ? 8.6 : 7.4)), look: new THREE.Vector3(0, 2.3, RING_R + 2.3) };
+cam.pos.set(0, 5.5, RING_R + 14); cam.look.copy(VIEW_BROWSE.look); cam.tPos.copy(VIEW_BROWSE.pos); cam.tLook.copy(VIEW_BROWSE.look);
+function setView(v) { cam.tPos.copy(v.pos); cam.tLook.copy(v.look); }
+// Zoom d'inspection (0 = vue normale, 1 = gros plan sur le booster sélectionné)
+const zoom = { v: 0, t: 0 };
+const VIEW_CLOSE = { pos: new THREE.Vector3(0, 2.25, RING_R + (MOBILE ? 2.25 : 1.45)), look: new THREE.Vector3(0, 2.2, RING_R) };
+canvas.addEventListener('wheel', e => {
+  if (S.mode !== 'browse') return;
+  e.preventDefault();
+  zoom.t = clamp(zoom.t - e.deltaY * (e.deltaMode === 1 ? .05 : .0016), 0, 1);
+}, { passive: false });
+// Pincement à deux doigts sur mobile
+const touches = new Map(); let pinch0 = null;
+canvas.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') touches.set(e.pointerId, e); if (touches.size === 2) { const [a, b] = [...touches.values()]; pinch0 = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), z: zoom.t }; } });
+canvas.addEventListener('pointermove', e => { if (!touches.has(e.pointerId)) return; touches.set(e.pointerId, e); if (pinch0 && touches.size === 2 && S.mode === 'browse') { const [a, b] = [...touches.values()]; zoom.t = clamp(pinch0.z + (Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) - pinch0.d) / 260, 0, 1); } });
+const endTouch = e => { touches.delete(e.pointerId); if (touches.size < 2) pinch0 = null; };
+canvas.addEventListener('pointerup', endTouch); canvas.addEventListener('pointercancel', endTouch);
+
+// ── Rotation du carrousel ─────────────────────────────────────────
+let ringAngle = 0, ringTarget = 0, dragRing = null;
+function selectIndex(i, silent) {
+  const n = stands.length; if (!n) return;
+  i = (i % n + n) % n;
+  // Chemin le plus court vers le socle choisi
+  let target = -stands[i].angle;
+  while (target - ringTarget > Math.PI) target -= Math.PI * 2;
+  while (target - ringTarget < -Math.PI) target += Math.PI * 2;
+  ringTarget = target; S.sel = i; insp.yaw = 0; insp.pitch = 0; insp.vy = 0; zoom.t = 0;
+  if (!silent) sfx.swish();
+  renderPanel();
+}
+
+// ════════════════════════════════════════════════════════════
+// EFFETS : particules, onde de choc, rayons
+// ════════════════════════════════════════════════════════════
+const fxGroup = new THREE.Group(); scene.add(fxGroup);
+const bursts = [];
+const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.25, 'rgba(255,255,255,.85)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+// Particules génériques : couleurs chaudes par particule, gravité, traînée de refroidissement
+const SPARK_COLS = [new THREE.Color('#fff6dc'), new THREE.Color('#ffd98a'), new THREE.Color('#ffb04a'), new THREE.Color('#ff7a26')];
+function particleBurst(pos, { n = 120, speed = 3, up = 1.2, grav = 5, life = 1, size = .05, spread = 1, dir = null, cols = SPARK_COLS } = {}) {
+  const p = new Float32Array(n * 3), c = new Float32Array(n * 3), v = [];
+  for (let i = 0; i < n; i++) {
+    p.set([pos.x, pos.y, pos.z], i * 3);
+    const d = dir ? dir.clone().add(new THREE.Vector3().randomDirection().multiplyScalar(spread)).normalize() : new THREE.Vector3().randomDirection();
+    d.multiplyScalar(speed * (.25 + Math.random())); d.y += up * Math.random(); v.push(d);
+    const col = cols[Math.random() * cols.length | 0]; c.set([col.r, col.g, col.b], i * 3);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  const m = new THREE.PointsMaterial({ map: dotTex, vertexColors: true, size, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+  const pts = new THREE.Points(g, m); fxGroup.add(pts);
+  bursts.push({ pts, v, life: 1, rate: 1 / life, grav, g });
+}
+function updateBursts(dt) {
+  for (let i = bursts.length - 1; i >= 0; i--) {
+    const b = bursts[i]; b.life -= dt * b.rate;
+    const a = b.g.attributes.position;
+    for (let k = 0; k < b.v.length; k++) { const v = b.v[k]; v.y -= b.grav * dt; v.multiplyScalar(.975); a.setXYZ(k, a.getX(k) + v.x * dt, a.getY(k) + v.y * dt, a.getZ(k) + v.z * dt); }
+    a.needsUpdate = true; b.pts.material.opacity = Math.max(0, b.life);
+    b.pts.material.size = Math.max(.005, b.pts.material.size * (1 - dt * .6));
+    if (b.life <= 0) { fxGroup.remove(b.pts); b.g.dispose(); b.pts.material.dispose(); bursts.splice(i, 1); }
+  }
+}
+// Onde fine dorée (pour les grosses raretés)
+function shockwave(pos, color) {
+  const m = new THREE.Mesh(new THREE.RingGeometry(.3, .33, 128), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  m.position.copy(pos); m.lookAt(camera.position); fxGroup.add(m);
+  tween(1400, e => { m.scale.setScalar(1 + e * 9); m.material.opacity = .55 * (1 - e); }).then(() => { fxGroup.remove(m); m.geometry.dispose(); m.material.dispose(); });
+}
+
+// ── Écrin de présentation : cône de lumière chaude + anneau de laiton + poussière d'or ──
+const showcase = (() => {
+  const g = new THREE.Group(); g.position.copy(STAGE); g.visible = false; scene.add(g);
+  // Cône volumétrique chaud venant du plafond
+  const coneGeo = new THREE.CylinderGeometry(.35, 1.7, 6, 64, 1, true); coneGeo.translate(0, 3, 0);
+  const coneMat = new THREE.ShaderMaterial({
+    uniforms: { o: { value: 0 }, c: { value: new THREE.Color('#ffe2ad') }, t: { value: 0 } },
+    vertexShader: 'varying vec2 vUv; varying vec3 vN; varying vec3 vV; void main(){ vUv=uv; vec4 mv=modelViewMatrix*vec4(position,1.); vN=normalize(normalMatrix*normal); vV=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }',
+    fragmentShader: `uniform float o; uniform vec3 c; uniform float t; varying vec2 vUv; varying vec3 vN; varying vec3 vV;
+      void main(){ float edge=pow(1.-abs(dot(vN,vV)),1.6); float fall=pow(vUv.y,1.3); float dust=.85+.15*sin(vUv.x*80.+t*1.5+vUv.y*20.);
+      gl_FragColor=vec4(c, (1.-edge)*.55*fall*o*dust); }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+  });
+  const cone = new THREE.Mesh(coneGeo, coneMat); cone.position.y = -1.35; g.add(cone);
+  // Anneau de laiton gravé derrière le lot
+  const brass = new THREE.MeshStandardMaterial({ color: 0xd9b26a, metalness: 1, roughness: .28, envMapIntensity: 1.4 });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.25, .022, 24, 180), brass); ring.position.set(0, .38, -.35); g.add(ring);
+  const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.34, .008, 12, 180), brass); ring2.position.copy(ring.position); g.add(ring2);
+  const ticks = new THREE.Group(); ticks.position.copy(ring.position); g.add(ticks);
+  for (let k = 0; k < 48; k++) { const a = k / 48 * Math.PI * 2, m = new THREE.Mesh(new THREE.BoxGeometry(.012, k % 4 ? .05 : .1, .012), brass); m.position.set(Math.cos(a) * 1.3, Math.sin(a) * 1.3, 0); m.rotation.z = a - Math.PI / 2; ticks.add(m); }
+  // Accent de rareté : fin filet émissif sur l'anneau
+  const accentMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const accent = new THREE.Mesh(new THREE.TorusGeometry(1.25, .006, 8, 180), accentMat); accent.position.copy(ring.position); accent.position.z += .025; g.add(accent);
+  // Plateau : disque de marbre noir cerclé de laiton
+  const plate = new THREE.Mesh(new THREE.CylinderGeometry(.95, 1, .06, 96), new THREE.MeshPhysicalMaterial({ color: 0x0c0b0d, metalness: .4, roughness: .18, clearcoat: 1 }));
+  plate.position.set(0, -.44, .55); g.add(plate);
+  const plateRim = new THREE.Mesh(new THREE.TorusGeometry(.98, .018, 16, 128), brass); plateRim.rotation.x = Math.PI / 2; plateRim.position.set(0, -.41, .55); g.add(plateRim);
+  // Poussière d'or qui retombe lentement dans le faisceau
+  const N = 220, pp = new Float32Array(N * 3), sd = new Float32Array(N);
+  for (let i = 0; i < N; i++) { const r = Math.sqrt(Math.random()) * 1.1, a = Math.random() * Math.PI * 2; pp.set([Math.cos(a) * r, Math.random() * 4 - 1, Math.sin(a) * r + .3], i * 3); sd[i] = Math.random(); }
+  const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.BufferAttribute(pp, 3)); dg.setAttribute('seed', new THREE.BufferAttribute(sd, 1));
+  const dm = new THREE.ShaderMaterial({
+    uniforms: { t: { value: 0 }, o: { value: 0 }, pr: { value: renderer.getPixelRatio() } },
+    vertexShader: `attribute float seed; uniform float t; uniform float pr; varying float a;
+      void main(){ vec3 q=position; q.y=3.-mod(3.-q.y+t*(.12+seed*.18),4.); q.x+=sin(t*.6+seed*30.)*.08;
+      vec4 mv=modelViewMatrix*vec4(q,1.); gl_Position=projectionMatrix*mv; gl_PointSize=(1.2+seed*2.4)*pr*(7./-mv.z);
+      a=.35+.65*abs(sin(t*(1.5+seed*2.)+seed*40.)); }`,
+    fragmentShader: `uniform float o; varying float a; void main(){ float d=length(gl_PointCoord-.5); gl_FragColor=vec4(1.,.86,.55,smoothstep(.5,0.,d)*a*o); }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  g.add(new THREE.Points(dg, dm));
+  // Reflet du lot sur le plateau
+  let refl = null;
+  return {
+    show(prize, color, lvl) {
+      g.visible = true; accentMat.color.copy(color);
+      if (refl) { g.remove(refl); refl = null; }
+      return tween(900, e => { coneMat.uniforms.o.value = e; dm.uniforms.o.value = e; accentMat.opacity = e * [.15, .3, .5, .7, .9][lvl]; g.scale.setScalar(lerp(.85, 1, e)); }, E.out);
+    },
+    hide() { return tween(450, e => { coneMat.uniforms.o.value = 1 - e; dm.uniforms.o.value = 1 - e; accentMat.opacity *= (1 - e); if (refl) refl.material.opacity = .16 * (1 - e); }).then(() => { g.visible = false; }); },
+    update(t, prize) { coneMat.uniforms.t.value = t; dm.uniforms.t.value = t; ticks.rotation.z = t * .08; ring2.rotation.z = -t * .05; if (refl && prize) refl.rotation.y = prize.rotation.y; },
+  };
+})();
+// Assombrissement doux de la salle pendant la révélation (focus sur l'écrin)
+let roomDim = 0, roomDimT = 0;
+function flash(color) { const f = $('#flash'); f.style.setProperty('--c', color); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+
+// ════════════════════════════════════════════════════════════
+// OUVERTURE EN 3D
+// ════════════════════════════════════════════════════════════
+let tearCtl = null;          // contrôle de la déchirure en cours
+let autoAll = false;
+function prizeMesh(it) {
+  return new Promise(resolve => {
+    const make = (tex, ar) => {
+      tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+      const h = it.kind === 'display' ? 1.25 : 1.55, w = h * ar;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: .03, side: THREE.DoubleSide, toneMapped: false, color: 0xe6e6e6 }));
+      resolve(m);
+    };
+    const src = imgOf(it);
+    if (it.kind === 'coin' || !src) {
+      // Pièce EC dessinée
+      const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d');
+      const gr = g.createRadialGradient(200, 170, 20, 256, 256, 250); gr.addColorStop(0, '#fff8d6'); gr.addColorStop(.35, '#ffd97f'); gr.addColorStop(.75, '#c9962e'); gr.addColorStop(1, '#7a5610');
+      g.fillStyle = gr; g.beginPath(); g.arc(256, 256, 240, 0, Math.PI * 2); g.fill();
+      g.lineWidth = 14; g.strokeStyle = '#8a6418'; g.stroke();
+      g.fillStyle = '#5f420b'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 150px Fraunces, Georgia, serif'; g.fillText(String(it.value).replace('.', ','), 256, 236);
+      g.font = '900 54px Manrope, sans-serif'; g.fillText('EC', 256, 356);
+      return make(new THREE.CanvasTexture(c), 1);
+    }
+    lazyLoader.load(src, t => make(t, t.image.width / t.image.height), undefined, () => make(new THREE.CanvasTexture(document.createElement('canvas')), .65));
+  });
+}
+
+async function openFlow() {
+  if (S.mode !== 'browse') return;
+  const st = stands[S.sel], b = st.box;
+  if (!S.token) return openAuth('login');
+  const n = S.count;
+  // Pas assez de boosters payés : on passe au paiement Stripe
+  if (credits(b.id) < n) return buyFlow(b, n);
+  S.mode = 'busy'; $('#openBtn').disabled = true;
+  let resp;
+  try { resp = await api('open', { boxId: b.id, count: n }); }
+  catch (e) { S.mode = 'browse'; renderPanel(); toast(e.message, 'bad'); return; }
+  $('#panel').classList.add('off'); arrows(false);
+  setView(VIEW_STAGE); sfx.hum(); sfx.music.duck(true);
+  autoAll = false;
+  const prizes = await Promise.all(resp.results.map(r => prizeMesh(item(r.item))));
+  for (let i = 0; i < resp.results.length; i++) await openOne(st, resp.results[i], prizes[i], i, resp.results.length);
+  S.st = resp.state; renderUser();
+  showSummary(b, resp.results);
+}
+
+// Achat : Stripe Checkout, puis retour sur /vault où les boosters payés attendent d'être ouverts
+async function buyFlow(b, n) {
+  S.mode = 'busy'; $('#openBtn').disabled = true; $('#openBtn').textContent = 'Redirection vers le paiement…';
+  try { const r = await api('buy', { boxId: b.id, count: n }); location.href = r.url; }
+  catch (e) { S.mode = 'browse'; renderPanel(); toast(e.message, 'bad'); }
+}
+
+async function openOne(st, r, prize, i, n) {
+  const it = item(r.item), color = new THREE.Color(TIER_COLOR[r.tier]), lvl = TIERS.indexOf(r.tier);
+  // Nouveau sachet qui part du socle vers la scène
+  const pack = buildPack(st.box, st.maps);
+  const from = new THREE.Vector3(); st.pack.getWorldPosition(from);
+  pack.position.copy(from); scene.add(pack);
+  st.pack.visible = false;
+  const { strip, seam, seamMat, body, crB, mat } = pack.userData;
+  seamMat.color.set('#ffe7b5');
+  prize.position.set(0, SEAM - .95, 0); prize.scale.setScalar(.72); pack.add(prize);
+  $('#counter').textContent = n > 1 ? `BOOSTER ${i + 1} / ${n}` : st.box.free ? 'COFFRE DU JOUR' : 'BOOSTER VIRTUEL';
+  $('#counter').classList.remove('off');
+  const fromRotY = pack.rotation.y;
+  await tween(900, e => { pack.position.lerpVectors(from, STAGE, e); pack.rotation.y = lerp(fromRotY + Math.PI * 2, 0, e); }, E.inOut);
+  st.pack.visible = true; st.pack.scale.setScalar(.01);
+  tween(700, e => st.pack.scale.setScalar(Math.max(.01, e)), E.back);
+
+  // ── Déchirure ──
+  S.mode = 'tear'; $('#tearbar').classList.remove('off'); $('#allBtn').style.display = n > 1 && !autoAll ? '' : 'none';
+  await new Promise(resolve => {
+    let p = 0, lastCrack = 0, done = false;
+    const setP = v => {
+      p = clamp(v, 0, 1);
+      strip.rotation.z = p * .32; strip.position.y = SEAM + p * .05;
+      seam.scale.x = Math.max(.0001, PW * p); seamMat.opacity = p;
+      burstLight.color.set('#ffcf8a'); burstLight.position.copy(STAGE).add(new THREE.Vector3(-PW / 2 + PW * p, SEAM + .1, .6)); burstLight.intensity = p > 0 && p < 1 ? 2.2 : 0;
+      if (p - lastCrack > .045) {
+        sfx.crackle(); vibrate(4); lastCrack = p;
+        // Gerbe d'étincelles au point de déchirure, projetée vers l'avant et vers le haut
+        const tip = new THREE.Vector3(-PW / 2 + PW * p, SEAM, PD / 2 + .06); pack.localToWorld(tip);
+        particleBurst(tip, { n: 26, speed: 2.4, up: 1.6, grav: 7, life: .55, size: .035, spread: .8, dir: new THREE.Vector3(.6, .7, .9) });
+      }
+      if (p >= 1) finish();
+    };
+    const finish = () => { if (done) return; done = true; tearCtl = null; resolve(); };
+    const auto = () => { if (done) return; const p0 = p; tween(autoAll ? 280 : 520, e => setP(lerp(p0, 1, e)), E.inOut); };
+    tearCtl = { get p() { return p; }, setP, release() { if (p > .55) auto(); else { const p0 = p; tween(260, e => setP(lerp(p0, 0, e))); lastCrack = 0; } }, auto };
+    if (autoAll) setTimeout(auto, 300);
+  });
+  $('#tearbar').classList.add('off');
+  S.mode = 'anim';
+
+  // ── Explosion de lumière + la bande s'envole ──
+  sfx.tear(); vibrate(30);
+  { const c0 = new THREE.Vector3(0, SEAM, PD / 2 + .05); pack.localToWorld(c0);
+    for (let k = 0; k < 5; k++) { const pt = new THREE.Vector3(-PW / 2 + PW * k / 4, SEAM, PD / 2 + .05); pack.localToWorld(pt); particleBurst(pt, { n: 40, speed: 3.2, up: 2.2, grav: 7, life: .8, size: .04, spread: 1.1, dir: new THREE.Vector3(0, 1, .6) }); } }
+  const sv = new THREE.Vector3(2.4, 3.2, 1.2), sp = strip.position.clone();
+  tween(900, (e, k) => { strip.position.set(sp.x + sv.x * k * .9, sp.y + sv.y * k - 2.2 * k * k, sp.z + sv.z * k); strip.rotation.z = .32 + k * 5; strip.rotation.x = k * 3; }, t => t);
+  seamMat.opacity = 1;
+  burstLight.color.set('#ffd9a0'); burstLight.position.copy(STAGE).add(new THREE.Vector3(0, SEAM + .6, .7));
+  const lightUp = tween(500, e => { burstLight.intensity = 2 + e * (2 + lvl * 1.5); bloom.strength = BLOOM_BASE + e * (.04 + lvl * .06); roomDimT = 1; });
+  const fx = autoAll ? .55 : 1;
+  await sleep(260 * fx);
+
+  // ── Le vrai booster sort du sachet ──
+  sfx.swish();
+  const p0 = prize.position.clone();
+  await tween(1000 * fx, e => { prize.position.y = lerp(p0.y, SEAM + .95, e); prize.scale.setScalar(lerp(.72, .9, e)); }, E.out);
+  await lightUp;
+
+  // ── Présentation : le sachet tombe, le lot tourne et grandit ──
+  const wp = new THREE.Vector3(); prize.getWorldPosition(wp);
+  scene.attach(prize);
+  const bodyStart = pack.position.clone();
+  const packMat = mat; packMat.transparent = true;
+  tween(900, e => { pack.position.y = bodyStart.y - e * 3.2; pack.rotation.x = e * .9; packMat.opacity = 1 - e; }, E.inOut).then(() => { scene.remove(pack); packMat.dispose(); });
+  const target = STAGE.clone().add(new THREE.Vector3(0, .38, .55));
+  tween(1200 * fx, e => { prize.position.lerpVectors(wp, target, e); prize.rotation.y = (1 - e) * Math.PI * 2; prize.scale.setScalar(lerp(.9, 1, e)); }, E.out);
+  await sleep(250 * fx);
+
+  // Présentation dans l'écrin, intensité selon la rareté
+  sfx.reveal(r.tier);
+  showcase.show(prize, color, lvl); $('#counter').classList.add('off');
+  const gold = [new THREE.Color('#fff4d6'), new THREE.Color('#f3d9a0'), new THREE.Color('#d9b26a')];
+  const tint = [color.clone().lerp(new THREE.Color('#ffffff'), .5), ...gold];
+  particleBurst(target, { n: 40 + lvl * 60, speed: 1.4 + lvl * .5, up: 1, grav: 1.2, life: 1.6, size: .03, cols: lvl >= 2 ? tint : gold });
+  if (lvl >= 2) shockwave(target.clone().add(new THREE.Vector3(0, 0, -.3)), new THREE.Color('#f3d9a0'));
+  if (lvl >= 3) { cam.shake = lvl === 4 ? .12 : .06; sfx.burst(); vibrate(lvl === 4 ? [80, 40, 80, 40, 200] : [60, 30, 120]); particleBurst(target, { n: 220, speed: 4.5, up: 2, grav: 4, life: 1.4, size: .045, cols: tint }); }
+  if (lvl === 4) flash('#f3d9a0');
+  if (it.kind === 'coin') sfx.coin();
+
+  // Carte d'info
+  $('#rTier').textContent = TIER_FR[r.tier]; $('#rTier').style.color = TIER_COLOR[r.tier];
+  $('#rName').textContent = it.name; $('#rVal').textContent = 'Valeur ' + eur(it.value) + (it.intlPreview ? ' · illustration version internationale' : '');
+  $('#rNext').textContent = i < n - 1 ? 'Booster suivant' : 'Voir le récap';
+  $('#reveal').classList.remove('off');
+  S.mode = 'reveal';
+  prize.userData.spin = true;
+  await new Promise(res => {
+    const go = () => { $('#rNext').onclick = null; res(); };
+    $('#rNext').onclick = go;
+    if (autoAll) setTimeout(go, lvl >= 3 ? 2200 : 1300);
+  });
+  $('#reveal').classList.add('off');
+  prize.userData.spin = false;
+  // Le lot file vers le coffre (en haut à droite)
+  const pp = prize.position.clone();
+  tween(700, e => { prize.position.lerpVectors(pp, pp.clone().add(new THREE.Vector3(3.5, 2.5, -1)), e); prize.scale.setScalar(lerp(1, .1, e)); prize.material.opacity = 1 - e; }, E.inOut).then(() => { scene.remove(prize); prize.geometry.dispose(); prize.material.map?.dispose(); prize.material.dispose(); });
+  showcase.hide(); roomDimT = 0;
+  tween(500, e => { burstLight.intensity *= (1 - e); bloom.strength = lerp(bloom.strength, BLOOM_BASE, e); });
+  bumpChest();
+  await sleep(350);
+}
+
+function showSummary(b, results) {
+  $('#counter').classList.add('off');
+  const total = results.reduce((s, r) => s + item(r.item).value, 0);
+  $('#shTitle').textContent = results.length > 1 ? `${results.length} boosters ouverts` : 'Ta carte';
+  $('#shSub').textContent = b.name + ' · ajouté à ton coffre';
+  $('#shItems').innerHTML = results.map(r => {
+    const it = item(r.item), src = imgOf(it);
+    return `<div class="it" style="--c:${TIER_COLOR[r.tier]}">${src ? `<img src="${src}" alt="">` : ''}<b>${esc(it.name)}</b><span>${TIER_FR[r.tier]}</span><div class="v num">${eur(it.value)}</div></div>`;
+  }).join('');
+  $('#shSum').innerHTML = `Valeur des cartes <b class="num">${eur(total)}</b>`;
+  const left = credits(b.id), n = results.length;
+  $('#shActions').innerHTML = `<button class="btn btn-glass" id="shKeep">Fermer</button>
+    <button class="btn btn-gold" id="shAgain">${left >= n ? `Ouvrir ×${n} · ${left} restant${left > 1 ? 's' : ''}` : `Racheter ×${n} · ${eur(b.price * n)}`}</button>`;
+  $('#shKeep').onclick = closeSummary;
+  $('#shAgain').onclick = async () => { closeSummary(); S.count = n; renderPanel(); await sleep(500); openFlow(); };
+  $('#sheet').classList.remove('off');
+  S.mode = 'summary';
+}
+function closeSummary() {
+  sfx.music.duck(false);
+  $('#sheet').classList.add('off');
+  setView(VIEW_BROWSE);
+  S.mode = 'browse'; $('#panel').classList.remove('off'); arrows(true); renderPanel();
+}
+
+// ════════════════════════════════════════════════════════════
+// INTERACTIONS
+// ════════════════════════════════════════════════════════════
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let down = null;
+canvas.addEventListener('pointerdown', e => {
+  down = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), ang: ringTarget, moved: false };
+  canvas.setPointerCapture(e.pointerId); canvas.classList.add('grabbing');
+  // Clic sur le booster sélectionné → on l'attrape pour le faire tourner
+  if (S.mode === 'browse' && stands[S.sel]) {
+    ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    if (ray.intersectObject(stands[S.sel].pack, true).length) { down.inspect = true; insp.active = true; insp.vy = 0; }
+  }
+  if (S.mode === 'tear' && tearCtl) down.p0 = tearCtl.p;
+});
+canvas.addEventListener('pointermove', e => {
+  mouse.x = e.clientX / innerWidth * 2 - 1; mouse.y = e.clientY / innerHeight * 2 - 1;
+  if (!down) return;
+  const dx = e.clientX - down.x;
+  if (Math.abs(dx) > 6) down.moved = true;
+  if (down.inspect) {
+    insp.vy = (e.clientX - down.lx) * .012; insp.yaw += insp.vy;
+    insp.pitch = clamp(insp.pitch + (e.clientY - down.ly) * .008, -.75, .75);
+    down.lx = e.clientX; down.ly = e.clientY;
+    return;
+  }
+  if (S.mode === 'browse') { ringTarget = down.ang + dx * .006; }
+  else if (S.mode === 'tear' && tearCtl && dx > 0) { tearCtl.setP(Math.max(tearCtl.p, (down.p0 ?? 0) + dx / (innerWidth * (MOBILE ? .6 : .32)))); }
+});
+const up = e => {
+  if (!down) return;
+  canvas.classList.remove('grabbing');
+  if (down.inspect) { insp.active = false; down = null; return; }
+  if (S.mode === 'browse') {
+    if (down.moved) {
+      // Aimantation sur le socle le plus proche
+      const n = stands.length, step = Math.PI * 2 / n;
+      const idx = Math.round(-ringTarget / step);
+      selectIndex(idx);
+    } else {
+      ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+      ray.setFromCamera(ndc, camera);
+      const hit = ray.intersectObjects(stands.map(s => s.grp), true)[0];
+      if (hit) { const k = stands.findIndex(s => hit.object.parent === s.grp || s.grp.getObjectById(hit.object.id)); if (k >= 0 && k !== S.sel) selectIndex(k); }
+    }
+  } else if (S.mode === 'tear' && tearCtl) tearCtl.release();
+  down = null;
+};
+canvas.addEventListener('pointerup', up);
+canvas.addEventListener('pointercancel', up);
+addEventListener('keydown', e => {
+  if (document.querySelector('.modal.on')) return;
+  if (S.mode === 'browse') { if (e.key === 'ArrowLeft') selectIndex(S.sel - 1); if (e.key === 'ArrowRight') selectIndex(S.sel + 1); if (e.key === 'Enter') openFlow(); }
+  else if (S.mode === 'tear' && (e.key === 'Enter' || e.key === ' ')) tearCtl?.auto();
+  else if (S.mode === 'reveal' && (e.key === 'Enter' || e.key === ' ')) $('#rNext').click();
+});
+$('#prevBtn').onclick = () => selectIndex(S.sel - 1);
+$('#nextBtn').onclick = () => selectIndex(S.sel + 1);
+$('#openBtn').onclick = openFlow;
+$('#tearBtn').onclick = () => tearCtl?.auto();
+$('#allBtn').onclick = () => { autoAll = true; tearCtl?.auto(); };
+function arrows(on) { $('#prevBtn').classList.toggle('off', !on); $('#nextBtn').classList.toggle('off', !on); }
+const mouse = { x: 0, y: 0 };
+
+// ════════════════════════════════════════════════════════════
+// HUD
+// ════════════════════════════════════════════════════════════
+function renderPanel() {
+  if (!S.cfg || !stands.length) return;
+  const b = stands[S.sel].box;
+  const best = Math.max(...b.table.map(r => item(r.itemId).value));
+  const have = credits(b.id);
+  $('#pEyebrow').textContent = have ? `${have} booster${have > 1 ? 's' : ''} payé${have > 1 ? 's' : ''} à ouvrir` : 'Booster mystère';
+  $('#pName').textContent = b.name; $('#pTag').textContent = b.tagline;
+  $('#sPrice').textContent = eur(b.price);
+  $('#sEv').textContent = eur(b.ev); $('#sBest').textContent = eur(best); $('#sLots').textContent = b.table.length;
+  $('#dots').innerHTML = stands.map((s, i) => `<i class="${i === S.sel ? 'on' : ''}"></i>`).join('');
+  $('#seg').innerHTML = [1, 2, 3, 5].map(n => `<button data-n="${n}" class="${n === S.count ? 'on' : ''}">×${n}</button>`).join('');
+  document.querySelectorAll('#seg button').forEach(bt => bt.onclick = () => { S.count = +bt.dataset.n; sfx.click(); renderPanel(); });
+  const btn = $('#openBtn');
+  btn.disabled = S.mode !== 'browse';
+  if (!S.token) btn.innerHTML = 'Se connecter pour ouvrir';
+  else if (have >= S.count) btn.innerHTML = `Ouvrir${S.count > 1 ? ' ×' + S.count : ''}`;
+  else btn.innerHTML = `Acheter${S.count > 1 ? ' ×' + S.count : ''} · <span class="num">${eur(b.price * S.count)}</span>`;
+}
+function renderUser() {
+  const slot = $('#userSlot');
+  if (!S.token || !S.st) {
+    slot.innerHTML = '<button class="pill glass" id="loginBtn">Connexion</button> <button class="pill glass hide-m" id="regBtn" style="border-color:rgba(217,178,106,.4);color:var(--gold2)">Créer un compte</button>';
+    $('#loginBtn').onclick = () => openAuth('login'); $('#regBtn').onclick = () => openAuth('register');
+    $('#chestN').textContent = '0'; $('#meWrap').hidden = true; return;
+  }
+  const t = totalCredits();
+  slot.innerHTML = t ? `<div class="pill glass" title="Boosters payés, prêts à être ouverts">🎴 <b class="num">${t}</b>&nbsp;à ouvrir</div>` : '';
+  $('#chestN').textContent = S.st.inventory.length;
+  const u = S.user || {}, name = S.st.user?.name || u.name || 'Joueur';
+  $('#meWrap').hidden = false;
+  $('#meAv').textContent = name.split(/\s+/).map(x => x[0]).join('').slice(0, 2).toUpperCase();
+  $('#meName').textContent = name; $('#meMail').textContent = u.email || '';
+}
+function bumpChest() { const b = $('#chestBtn'); b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], { duration: 500, easing: 'cubic-bezier(.34,1.56,.64,1)' }); }
+function toast(msg, cls = '') { const t = document.createElement('div'); t.className = 'toast glass ' + cls; t.textContent = msg; $('#toasts').appendChild(t); setTimeout(() => t.remove(), 3200); }
+$('#soundBtn').onclick = () => { S.muted = !S.muted; try { localStorage.setItem('vault_muted', S.muted); } catch {} $('#soundBtn').textContent = S.muted ? '🔇' : '🔊'; sfx.click(); };
+$('#soundBtn').textContent = S.muted ? '🔇' : '🔊';
+
+// Tiroir Coffre
+function renderDrawer() {
+  const inv = S.st?.inventory || [];
+  const total = inv.reduce((s, o) => s + (o.value || 0), 0);
+  $('#drSub').textContent = S.st ? `${inv.length} carte${inv.length > 1 ? 's' : ''} · ${eur(total)}` : 'Connecte-toi pour voir ton coffre';
+  $('#drItems').innerHTML = inv.map(o => `<div class="it" style="--c:${TIER_COLOR[o.tier]}">${o.img ? `<img src="${esc(imgOf(o))}" alt="" loading="lazy">` : ''}<b>${esc(o.name)}</b><span>${esc([o.set, o.number, o.rarity].filter(Boolean).join(' · '))}</span><div class="v num">${eur(o.value || 0)}</div></div>`).join('') || '<p style="color:var(--mute);grid-column:1/-1;padding:20px 0">Ton coffre est vide. Ouvre un booster !</p>';
+}
+$('#chestBtn').onclick = () => { if (!S.token) return openAuth('login'); renderDrawer(); $('#drawer').classList.remove('off'); };
+$('#drawerX').onclick = () => $('#drawer').classList.add('off');
+
+// ── Comptes ──────────────────────────────────────────────────
+try { S.user = JSON.parse(localStorage.getItem('edn_user') || 'null'); } catch {}
+let authMode = 'login';
+function openAuth(mode = 'login') { setAuth(mode); $('#welcome').classList.add('off'); $('#mAuth').classList.add('on'); setTimeout(() => (mode === 'register' ? $('#aName') : $('#aEmail')).focus(), 60); }
+function setAuth(m) {
+  authMode = m; const reg = m === 'register';
+  document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === m));
+  $('#aTitle').textContent = reg ? 'Crée ton compte' : 'Connexion';
+  $('#aSub').textContent = reg ? 'Un compte = ton solde, ton coffre et ton historique.' : 'Content de te revoir.';
+  $('#fName').hidden = !reg; $('#fPw2').hidden = !reg; $('#aForgot').hidden = reg;
+  $('#aPw').autocomplete = reg ? 'new-password' : 'current-password';
+  $('#aSubmit').textContent = reg ? 'Créer mon compte' : 'Se connecter';
+  $('#aErr').textContent = '';
+}
+document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { setAuth(b.dataset.tab); sfx.click(); });
+document.querySelectorAll('[data-eye]').forEach(b => b.onclick = () => { const i = document.getElementById(b.dataset.eye); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; b.textContent = show ? 'Cacher' : 'Voir'; });
+$('#aForm').onsubmit = async e => {
+  e.preventDefault();
+  const fd = Object.fromEntries(new FormData(e.target)), reg = authMode === 'register';
+  const err = m => { $('#aErr').textContent = m; };
+  if (reg && !fd.name?.trim()) return err('Indique ton prénom');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fd.email || '')) return err('Adresse e-mail invalide');
+  if (reg && (fd.password || '').length < 8) return err('Mot de passe : 8 caractères minimum');
+  if (reg && fd.password !== fd.password2) return err('Les deux mots de passe ne correspondent pas');
+  const btn = $('#aSubmit'); btn.disabled = true; err('');
+  try {
+    const r = await fetch(reg ? '/api/register' : '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: fd.name, email: fd.email, password: fd.password }) });
+    const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Erreur');
+    S.token = j.token; S.user = j.user;
+    try { localStorage.setItem('edn_token', j.token); localStorage.setItem('edn_user', JSON.stringify(j.user)); } catch {}
+    $('#mAuth').classList.remove('on'); e.target.reset();
+    await loadState(); sfx.coin();
+    toast(`Bienvenue ${String(j.user.name || '').split(' ')[0]} ✦`, 'ok');
+  } catch (ex) { err(ex.message); }
+  finally { btn.disabled = false; }
+};
+
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-close]')) m.classList.remove('on'); }));
+function logout() {
+  S.token = null; S.st = null; S.user = null;
+  try { localStorage.removeItem('edn_token'); localStorage.removeItem('edn_user'); } catch {}
+  $('#userSlot').innerHTML = ''; $('#meMenu').classList.remove('on'); $('#drawer').classList.add('off');
+  renderUser(); renderPanel(); $('#welcome').classList.remove('off');
+}
+// Accueil
+$('#wlRegister').onclick = () => openAuth('register');
+$('#wlLogin').onclick = () => openAuth('login');
+$('#wlSkip').onclick = () => { $('#welcome').classList.add('off'); sfx.click(); };
+// Menu profil
+$('#meBtn').onclick = e => { e.stopPropagation(); $('#meMenu').classList.toggle('on'); };
+document.addEventListener('click', e => { if (!e.target.closest('#meWrap')) $('#meMenu').classList.remove('on'); });
+
+$('#meChest').onclick = () => { $('#meMenu').classList.remove('on'); $('#chestBtn').click(); };
+$('#meOut').onclick = () => { logout(); toast('Déconnecté'); };
+const syncMe = () => { $('#meMusic').textContent = sfx.music.on ? 'Musique : activée' : 'Musique : coupée'; $('#musicBtn').textContent = sfx.music.on ? '♪ Musique' : '♪ Coupée'; $('#musicBtn').style.opacity = sfx.music.on ? 1 : .55; $('#meSound').textContent = S.muted ? 'Son : coupé' : 'Son : activé'; $('#meLite').textContent = LITE ? 'Passer en mode HD' : 'Passer en mode léger'; };
+$('#meSound').onclick = () => { $('#soundBtn').click(); syncMe(); };
+// Musique : activée par défaut, démarre au premier geste (règle des navigateurs), choix mémorisé
+let musicWanted = true; try { musicWanted = localStorage.getItem('vault_music') !== 'off'; } catch {}
+const toggleMusic = () => { musicWanted = !sfx.music.on; try { localStorage.setItem('vault_music', musicWanted ? 'on' : 'off'); } catch {} musicWanted ? sfx.music.start() : sfx.music.stop(); syncMe(); };
+$('#musicBtn').onclick = toggleMusic; $('#meMusic').onclick = toggleMusic;
+const firstGesture = () => { if (musicWanted && !sfx.music.on) { sfx.music.start(); syncMe(); } removeEventListener('pointerdown', firstGesture, true); removeEventListener('keydown', firstGesture, true); };
+addEventListener('pointerdown', firstGesture, true); addEventListener('keydown', firstGesture, true);
+document.addEventListener('visibilitychange', () => { if (document.hidden) sfx.music.duck(true); else sfx.music.duck(false); });
+$('#meLite').onclick = () => $('#liteBtn').click();
+syncMe();
+// Livraison depuis le coffre : branchée à l'étape suivante (relais Chronopost + Boxtal, comme la boutique)
+$('#shipBtn').onclick = () => toast('L’envoi depuis le coffre arrive très bientôt : tes cartes sont bien gardées ✦');
+async function loadState() { if (!S.token) { renderUser(); return; } try { S.st = await api('state'); } catch {} renderUser(); renderPanel(); }
+
+// ════════════════════════════════════════════════════════════
+// BOUCLE DE RENDU
+// ════════════════════════════════════════════════════════════
+const clock = new THREE.Clock();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(.05, clock.getDelta()), t = clock.elapsedTime;
+  runTweens(now);
+  // Carrousel
+  ringAngle = lerp(ringAngle, ringTarget, 1 - Math.pow(.0015, dt));
+  ring.rotation.y = ringAngle;
+  stands.forEach((s, i) => {
+    const sel = i === S.sel;
+    s.pack.position.y = 2.2 + Math.sin(t * 1.3 + i) * .06;
+    const idle = Math.sin(t * .6 + i) * .35;
+    if (sel) { s.pack.rotation.y = idle * (1 - insp.hold) + insp.yaw; s.pack.rotation.x = insp.pitch; }
+    else { s.pack.rotation.y = idle; s.pack.rotation.x = 0; }
+    s.glow.material.opacity = lerp(s.glow.material.opacity, sel ? .2 : .05, .08);
+  });
+  // Caméra : suit sa cible + léger parallaxe souris + tremblement
+  if (S.mode !== 'browse') zoom.t = 0;
+  zoom.v = lerp(zoom.v, zoom.t, 1 - Math.pow(.004, dt));
+  if (S.mode === 'browse') { cam.tPos.lerpVectors(VIEW_BROWSE.pos, VIEW_CLOSE.pos, zoom.v); cam.tLook.lerpVectors(VIEW_BROWSE.look, VIEW_CLOSE.look, zoom.v); }
+  cam.pos.lerp(cam.tPos, 1 - Math.pow(.02, dt)); cam.look.lerp(cam.tLook, 1 - Math.pow(.02, dt));
+  camera.position.copy(cam.pos).add(new THREE.Vector3(mouse.x * .35 * (1 - zoom.v * .8), -mouse.y * .18 * (1 - zoom.v * .8), 0));
+  if (S.mode === 'browse') { const pnl = $('#panel'); const off = zoom.v > .35; if (pnl.classList.contains('zoomed') !== off) pnl.classList.toggle('zoomed', off); }
+  if (cam.shake > .001) { camera.position.x += (Math.random() - .5) * cam.shake; camera.position.y += (Math.random() - .5) * cam.shake; cam.shake *= .9; }
+  camera.lookAt(cam.look);
+  spot.target.position.set(0, 2, RING_R);
+  // Manipulation du booster : inertie puis retour doux
+  if (!insp.active) { insp.yaw += insp.vy; insp.vy *= .93; if (Math.abs(insp.vy) < .002) insp.yaw *= .97; insp.pitch *= .94; }
+  insp.hold = lerp(insp.hold, insp.active || Math.abs(insp.yaw) > .05 ? 1 : 0, .1);
+  const lp = S.mode === 'browse' ? new THREE.Vector3(0, 2.2, RING_R) : STAGE;
+  cursorLight.position.set(lp.x + mouse.x * 2.4, lp.y - mouse.y * 1.8 + .25, lp.z + 2.6);
+  cursorLight.intensity = lerp(cursorLight.intensity, S.mode === 'browse' ? 3.2 : .6, .1);
+  const spinning = scene.children.find(o => o.userData?.spin);
+  showcase.update(t, spinning);
+  roomDim = lerp(roomDim, roomDimT, 1 - Math.pow(.03, dt));
+  panoU.dim.value = .78 * (1 - roomDim * .55); panoU.t.value = t;
+  // Mew décalé à droite sur écran large (libère le booster central), recentré en portrait
+  panoU.ox.value = -.2 * clamp((camera.aspect - 1.15) / .63, 0, 1);
+  rimL.intensity = rimR.intensity = 5 * (1 - roomDim * .7); spot.intensity = 26 * (1 - roomDim * .6);
+  scene.children.forEach(o => { if (o.userData?.spin) { o.rotation.y = Math.sin(t * .9) * .4; o.position.y = STAGE.y + .38 + Math.sin(t * 1.3) * .04; } });
+  dust.uniforms.t.value = t;
+  updateBursts(dt);
+  // Taille réelle du canvas vérifiée à chaque image (zoom navigateur, écran externe, barre d'outils…)
+  if (canvas.clientWidth !== lastSize.w || canvas.clientHeight !== lastSize.h || devicePixelRatio !== lastSize.dpr) resize();
+  if (composer) composer.render(); else renderer.render(scene, camera);
+}
+const lastSize = { w: 0, h: 0, dpr: 0 };
+function resize() {
+  const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
+  lastSize.w = w; lastSize.h = h; lastSize.dpr = devicePixelRatio;
+  const pr = Math.min(devicePixelRatio, MOBILE ? 1.5 : 1.75);
+  renderer.setPixelRatio(pr);
+  renderer.setSize(w, h, false);
+  if (composer) { composer.setPixelRatio(pr); composer.setSize(w, h); }
+  camera.aspect = w / h; camera.fov = w < h ? 58 : (MOBILE ? 52 : 40); camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+
+// ════════════════════════════════════════════════════════════
+// DÉMARRAGE
+// ════════════════════════════════════════════════════════════
+(async function boot() {
+  window.__v3d = true; window.__stands = stands;
+  $('#liteBtn').textContent = LITE ? 'Mode HD' : 'Mode léger';
+  $('#liteBtn').onclick = () => { location.search = LITE ? '?lite=0' : '?lite=1'; };
+  resize();
+  requestAnimationFrame(frame);
+  const loadCfg = () => fetch('/api/vault?q=config', { headers: adminCode() ? { 'X-Admin-Code': adminCode() } : {} }).then(r => { if (!r.ok) throw 0; return r.json(); });
+  try { S.cfg = await loadCfg(); }
+  catch { $('#fallback').classList.add('on'); return; }
+  // Vault pas encore ouvert au public : écran d'attente (le code admin donne l'accès)
+  if (S.cfg.closed) {
+    $('#loader').classList.add('done'); $('#gate').classList.add('on');
+    $('#gateForm').onsubmit = async e => {
+      e.preventDefault();
+      try { sessionStorage.setItem('eden_admin_code', e.target.code.value.trim()); } catch {}
+      const c = await loadCfg().catch(() => ({ closed: true }));
+      if (c.closed) { $('#gateErr').textContent = 'Code incorrect'; return; }
+      location.reload();
+    };
+    return;
+  }
+  if (S.cfg.preview) toast('Aperçu réservé à l’admin : le Vault n’est pas encore ouvert au public', '');
+  if (!S.cfg.boxes.length) { $('#loader').classList.add('done'); $('#pName').textContent = 'Aucun booster pour l’instant'; $('#pTag').textContent = 'Règle les packs et le stock dans Admin → Cartes Vault.'; $('#openBtn').disabled = true; return; }
+  // Les polices doivent être chargées avant de dessiner les textures des sachets
+  try { await Promise.all([foilReady, document.fonts.load('700 74px Fraunces'), document.fonts.load('800 104px Fraunces'), document.fonts.load('800 20px Manrope')]); } catch {}
+  // Ordre : boosters payants d'abord, coffre gratuit à la fin
+  const boxes = [...S.cfg.boxes.filter(b => !b.free), ...S.cfg.boxes.filter(b => b.free)];
+  boxes.forEach((b, i) => stands.push(buildStand(b, i, boxes.length)));
+  const start = Math.max(0, boxes.findIndex(b => b.id === (new URLSearchParams(location.search).get('box') || 'ar')));
+  selectIndex(start, true); ringAngle = ringTarget;
+  await loadState();
+  S.mode = 'browse'; renderPanel();
+  // Retour de Stripe : les boosters sont crédités par le webhook, on attend qu'ils apparaissent
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('paid') || qs.get('cancel')) history.replaceState(null, '', '/vault');
+  if (qs.get('cancel')) toast('Paiement annulé', 'bad');
+  if (qs.get('paid') && S.token) {
+    toast('Paiement reçu ✦ préparation de tes boosters…', 'ok');
+    const before = totalCredits();
+    for (let i = 0; i < 15; i++) { await sleep(1500); await loadState(); if (totalCredits() > before || (i === 0 && before > 0)) break; }
+    toast(totalCredits() ? 'Tes boosters sont prêts : ouvre-les !' : 'Paiement en cours de validation, recharge la page dans un instant', totalCredits() ? 'ok' : '');
+  }
+  // Laisse le temps au panorama de charger avant de lever le rideau
+  await Promise.race([allLoaded, sleep(8000)]);
+  $('#loader').classList.add('done');
+  if (!S.token || !S.st) $('#welcome').classList.remove('off');
+})();
+</script>
+</body>
+</html>

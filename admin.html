@@ -75,6 +75,11 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;min
 .btn-sm.crd-add{background:var(--success);color:#0a0a0c;border-color:var(--success);font-weight:700}
 .btn-sm.crd-del{color:var(--danger)}
 .calc{background:var(--bg2);border:1px solid var(--gb);border-radius:16px;padding:18px}
+.vlt-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.vlt-row>div:first-child{flex:1;min-width:220px}
+.vlt-row .crd-inp{padding:9px 12px;font-size:14px}
+.vlt-row select.crd-inp option{background:var(--bg2);color:var(--text)}
+#vltState.on{color:var(--success)}#vltState.off{color:var(--warn)}
 .calc-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:18px}
 .calc-f{display:flex;flex-direction:column;gap:6px}
 .calc-f label{font-size:11.5px;color:var(--dim);font-weight:600}
@@ -496,6 +501,21 @@ tr:hover td{background:rgba(255,255,255,.015)}
 
     <!-- CARTES VAULT -->
     <div class="tab" id="tab-cartes">
+      <div class="sec-head"><div class="sec-title">🎮 Eden Vault <span class="sec-meta">— le jeu d'ouverture sur edenprojecttcg.com/vault</span></div></div>
+      <div class="calc" style="margin-bottom:30px">
+        <div class="vlt-row">
+          <div><b id="vltState">…</b><div class="crd-sub" id="vltStateSub">Tant qu'il est fermé, seuls ceux qui ont le code admin peuvent entrer.</div></div>
+          <button class="btn-sm" id="vltToggle">…</button>
+          <a class="btn-sm crd-go" href="/vault" target="_blank" rel="opener">Ouvrir le Vault ↗</a>
+        </div>
+        <div class="vlt-row" style="margin-top:14px">
+          <div style="flex:1;min-width:220px"><b>Boosters de test</b><div class="crd-sub">Crédite des boosters sur un compte client (le tien) pour essayer sans payer. Les cartes tirées sortent bien du stock.</div></div>
+          <input id="vltEmail" class="crd-inp" placeholder="E-mail du compte" style="max-width:240px">
+          <select id="vltPack" class="crd-inp" style="max-width:150px"><option value="ar">Mystère AR</option><option value="ex">Mystère EX</option></select>
+          <input id="vltCount" class="crd-inp" type="number" min="1" max="50" value="3" style="max-width:80px">
+          <button class="btn-sm crd-go" id="vltGrant">Créditer</button>
+        </div>
+      </div>
       <div class="sec-head"><div class="sec-title">🃏 Cartes Vault <span class="sec-meta">— cartes japonaises à l'unité pour les boosters mystère (invisible pour les clients)</span></div></div>
       <div class="crd-search">
         <input id="crdQ" class="crd-inp" placeholder="Ex. Dracaufeu M2a · Pikachu AR · M2a 201 · リザードン" autocomplete="off">
@@ -818,6 +838,28 @@ function renderCardStock(){
     <div class="crd-row"><label>Valeur €</label><input type="number" min="0" step="0.5" value="${c.value||''}" onchange="updateCard('${c.id}',{value:this.value})"></div>
     <button class="btn-sm crd-del" onclick="deleteCard('${c.id}')">Retirer</button></div>`).join(''):'<p class="crd-msg">Aucune carte pour le moment. Cherche une carte ci-dessus pour l’ajouter.</p>';
 }
+// ── Eden Vault : ouverture au public + boosters de test ──────
+async function vaultAdmin(body){
+  const r=await fetch('/api/vault',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.error||('Erreur '+r.status)); return d;
+}
+function renderVaultState(open){
+  const st=document.getElementById('vltState'), bt=document.getElementById('vltToggle');
+  st.textContent=open?'🟢 Ouvert au public':'🟠 Fermé au public (aperçu admin uniquement)'; st.className=open?'on':'off';
+  bt.textContent=open?'Fermer au public':'Ouvrir au public'; bt.dataset.open=open?'1':'';
+}
+async function loadVaultAdmin(){ try{renderVaultState((await vaultAdmin({action:'admin_info'})).open);}catch(e){document.getElementById('vltState').textContent='⚠️ '+e.message;} }
+document.getElementById('vltToggle').onclick=async()=>{
+  const open=!document.getElementById('vltToggle').dataset.open;
+  if(open&&!confirm('Ouvrir le Vault à tous les clients ? Ils pourront acheter et ouvrir des boosters avec de vrais paiements.')) return;
+  try{renderVaultState((await vaultAdmin({action:'admin_open',open})).open);toast(open?'Vault ouvert au public':'Vault fermé au public');}catch(e){toast(e.message,'err');}
+};
+document.getElementById('vltGrant').onclick=async()=>{
+  const email=document.getElementById('vltEmail').value.trim(), boxId=document.getElementById('vltPack').value, count=+document.getElementById('vltCount').value;
+  if(!email) return toast('Indique l’e-mail du compte','err');
+  try{const d=await vaultAdmin({action:'admin_grant',email,boxId,count});toast(`${count} booster${count>1?'s':''} crédité${count>1?'s':''} · ${d.credits} à ouvrir sur ${d.email}`);}catch(e){toast(e.message,'err');}
+};
+
 async function updateCard(id,patch){try{const d=await cardsApi('',{action:'update',id,...patch});_crdStock=d.cards;renderCardStock();toast('Enregistré');}catch(e){toast(e.message,'err');}}
 async function deleteCard(id){const c=_crdStock.find(x=>x.id===id); if(!confirm('Retirer '+(c.nameFr||c.name)+' du stock ?'))return; try{const d=await cardsApi('',{action:'delete',id});_crdStock=d.cards;renderCardStock();}catch(e){toast(e.message,'err');}}
 document.getElementById('crdGo').onclick=searchCards;
@@ -886,7 +928,7 @@ document.querySelectorAll('.nav-tab').forEach(t=>t.addEventListener('click',()=>
   if(t.dataset.tab==='livraison'&&_adminData) buildLivraison(_adminData.shipping||{});
   if(t.dataset.tab==='gradees'&&_adminData) buildGradees(_adminData.graded||[]);
   if(t.dataset.tab==='devis') loadDevis();
-  if(t.dataset.tab==='cartes') loadCardStock();
+  if(t.dataset.tab==='cartes'){ loadCardStock(); loadVaultAdmin(); }
 }));
 
 /* ══ COMMANDES ══ */

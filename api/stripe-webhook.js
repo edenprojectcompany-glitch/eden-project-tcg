@@ -29,6 +29,26 @@ async function handler(req, res) {
     return res.status(400).json({ error: `Webhook Error: ${err.message}` });
   }
 
+  // Eden Vault : achat de packs mystère → packs crédités au joueur (rien à expédier à ce stade)
+  if (event.type === 'checkout.session.completed' && event.data.object.metadata?.type === 'vault') {
+    const session = event.data.object, m = session.metadata;
+    const { kv } = require('@vercel/kv');
+    const key = `vault:paid:${session.id}`;
+    try {
+      // Une seule fois par paiement, même si Stripe renvoie l'événement
+      if (session.payment_status === 'paid' && await kv.set(key, Date.now(), { nx: true, ex: 60 * 60 * 24 * 90 })) {
+        await kv.hincrby(`vault:credits:${m.uid}`, m.boxId, parseInt(m.count, 10) || 0);
+        await kv.lpush('vault:sales', JSON.stringify({ session: session.id, email: m.email, boxId: m.boxId, count: +m.count, amount: (session.amount_total || 0) / 100, at: Date.now() }));
+        await kv.ltrim('vault:sales', 0, 999);
+      }
+    } catch (err) {
+      console.error('Vault webhook error:', err.message);
+      try { await kv.del(key); } catch {}
+      return res.status(500).json({ error: 'Vault credit failed' }); // Stripe réessaiera
+    }
+    return res.status(200).json({ received: true });
+  }
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     try {
