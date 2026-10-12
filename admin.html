@@ -46,6 +46,28 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;min
 .app-nav::-webkit-scrollbar{display:none}
 .nav-tab{padding:13px 18px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--dim);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;font-family:inherit}
 .nav-tab.active{color:var(--c1);border-bottom-color:var(--c1)}
+.crd-search{display:flex;gap:10px;margin-bottom:8px}
+.crd-inp{flex:1;min-width:0;padding:12px 16px;background:var(--bg3);border:1px solid var(--gb);border-radius:12px;color:var(--text);font-family:inherit;font-size:15px;outline:none}
+.crd-inp:focus{border-color:var(--c1)}
+.crd-inp::placeholder{color:var(--dim)}
+.btn-sm.crd-go{background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700}
+.crd-help{font-size:12px;color:var(--dim);margin-bottom:14px}
+.crd-msg{font-size:13px;color:var(--dim);margin-bottom:12px;min-height:18px;grid-column:1/-1}
+.crd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.crd{background:var(--bg2);border:1px solid var(--gb);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.crd img{width:100%;aspect-ratio:63/88;object-fit:cover;border-radius:8px;background:var(--bg3)}
+.crd-name{font-size:13px;font-weight:700;line-height:1.3}
+.crd-sub{font-size:11.5px;color:var(--dim)}
+.crd-rar{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:800;background:rgba(127,217,255,.12);color:var(--c1);margin-left:4px}
+.crd-rar.hot{background:rgba(255,179,0,.15);color:var(--warn)}
+.crd-row{display:flex;gap:6px;align-items:center}
+.crd-row label{font-size:11px;color:var(--dim);width:48px;flex:none}
+.crd-row input{width:100%;min-width:0;padding:7px 9px;background:var(--bg3);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none}
+.crd-row input:focus{border-color:var(--c1)}
+.crd .btn-sm{padding:7px 10px;text-align:center}
+.btn-sm.crd-add{background:var(--success);color:#0a0a0c;border-color:var(--success);font-weight:700}
+.btn-sm.crd-del{color:var(--danger)}
+@media(max-width:600px){.crd-grid{grid-template-columns:repeat(2,1fr)}.crd-search{flex-direction:column}}
 .nav-tab:hover:not(.active){color:var(--text)}
 
 .app-body{flex:1;padding:24px;max-width:1200px;margin:0 auto;width:100%}
@@ -254,6 +276,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
     <button class="nav-tab" data-tab="livraison">🚚 Livraison</button>
     <button class="nav-tab" data-tab="gradees">🏅 Gradées</button>
     <button class="nav-tab" data-tab="devis">📝 Devis</button>
+    <button class="nav-tab" data-tab="cartes">🃏 Cartes Vault</button>
   </div>
 
   <div class="app-body">
@@ -441,6 +464,20 @@ tr:hover td{background:rgba(255,255,255,.015)}
       <div id="gradedMsg" style="margin-top:10px;font-size:12.5px"></div>
     </div>
 
+    <!-- CARTES VAULT -->
+    <div class="tab" id="tab-cartes">
+      <div class="sec-head"><div class="sec-title">🃏 Cartes Vault <span class="sec-meta">— cartes japonaises à l'unité pour les boosters mystère (invisible pour les clients)</span></div></div>
+      <div class="crd-search">
+        <input id="crdQ" class="crd-inp" placeholder="Ex. Dracaufeu M2a · Pikachu AR · M2a 201 · リザードン" autocomplete="off">
+        <button class="btn-sm crd-go" id="crdGo">Rechercher</button>
+      </div>
+      <p class="crd-help">Nom en français, anglais ou japonais, + code du set (M2a, SV2a, M6a…), numéro et/ou rareté (AR, SAR, SR…). Recherche sur la base officielle pokemon-card.com.</p>
+      <div id="crdMsg" class="crd-msg"></div>
+      <div id="crdResults" class="crd-grid"></div>
+      <div class="sec-head" style="margin-top:34px"><div class="sec-title">📦 Stock de cartes <span class="sec-meta" id="crdStockMeta"></span></div></div>
+      <div id="crdStock" class="crd-grid"></div>
+    </div>
+
     <!-- DEVIS -->
     <div class="tab" id="tab-devis">
       <div class="sec-head">
@@ -588,6 +625,63 @@ const CASE_CATALOG=[
 const CASE_SURCHARGE=150;
 
 /* ── Toast ── */
+// ── Cartes Vault ─────────────────────────────────────────────
+const HOT_RARITIES=['AR','SAR','SR','UR','HR','MUR','MA','BWR','CHR','CSR','SSR','ACE'];
+const escH=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let _crdResults=[], _crdStock=[], _crdTimer=null;
+function crdLabel(c){return `${escH(c.set||'?')} ${c.number?String(c.number).padStart(3,'0')+'/'+c.total:''}${c.rarity?`<span class="crd-rar ${HOT_RARITIES.includes(c.rarity)?'hot':''}">${escH(c.rarity)}</span>`:''}`}
+async function cardsApi(qs,body){
+  const r=await fetch('/api/cards'+(qs||''),body?{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify(body)}:{headers:{'X-Admin-Code':_code}});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error||('Erreur '+r.status));
+  return d;
+}
+async function searchCards(){
+  const q=document.getElementById('crdQ').value.trim(); const msg=document.getElementById('crdMsg');
+  clearTimeout(_crdTimer);
+  if(!q){msg.textContent='';document.getElementById('crdResults').innerHTML='';return;}
+  msg.textContent='Recherche sur la base officielle…';
+  try{
+    const d=await cardsApi('?q='+encodeURIComponent(q));
+    if(d.indexing){ // un set est lu par morceaux la première fois, ensuite c'est instantané
+      msg.textContent=`Première lecture du set : ${d.progress.done}/${d.progress.total} fiches…`;
+      _crdTimer=setTimeout(searchCards,300); return;
+    }
+    _crdResults=d.results||[];
+    msg.textContent=d.message||(_crdResults.length?`${_crdResults.length} proposition${_crdResults.length>1?'s':''}${d.query&&d.query.ja?' · recherché : '+d.query.ja:''}`:'Aucune carte trouvée.');
+    document.getElementById('crdResults').innerHTML=_crdResults.map((c,i)=>`<div class="crd">
+      <img src="${escH(c.img)}" alt="" loading="lazy">
+      <div><div class="crd-name">${escH(c.name)}</div><div class="crd-sub">${escH(c.nameFr)}</div><div class="crd-sub">${crdLabel(c)}</div></div>
+      <div class="crd-row"><label>Qté</label><input type="number" min="1" value="1" id="crdQty${i}"></div>
+      <div class="crd-row"><label>Valeur €</label><input type="number" min="0" step="0.5" placeholder="0" id="crdVal${i}"></div>
+      <button class="btn-sm crd-add" onclick="addCard(${i})">+ Ajouter au stock</button></div>`).join('');
+  }catch(e){msg.textContent='⚠️ '+e.message;}
+}
+async function addCard(i){
+  const c=_crdResults[i]; const qty=+document.getElementById('crdQty'+i).value; const value=+document.getElementById('crdVal'+i).value;
+  if(!qty||qty<1) return toast('Indique une quantité','err');
+  try{const d=await cardsApi('',{action:'add',card:c,qty,value}); _crdStock=d.cards; renderCardStock(); toast(`${c.nameFr||c.name} ajoutée (×${qty})`);}
+  catch(e){toast(e.message,'err');}
+}
+async function loadCardStock(){
+  try{_crdStock=(await cardsApi('?stock=1')).cards||[]; renderCardStock();}
+  catch(e){document.getElementById('crdStock').innerHTML='<p class="crd-msg">⚠️ '+escH(e.message)+'</p>';}
+}
+function renderCardStock(){
+  const n=_crdStock.reduce((a,c)=>a+c.qty,0), v=_crdStock.reduce((a,c)=>a+c.qty*(c.value||0),0);
+  document.getElementById('crdStockMeta').textContent=`— ${_crdStock.length} carte${_crdStock.length>1?'s':''} différente${_crdStock.length>1?'s':''} · ${n} exemplaire${n>1?'s':''} · ${v.toFixed(2).replace('.',',')} €`;
+  document.getElementById('crdStock').innerHTML=_crdStock.length?_crdStock.map(c=>`<div class="crd">
+    <img src="${escH(c.img)}" alt="" loading="lazy">
+    <div><div class="crd-name">${escH(c.name)}</div><div class="crd-sub">${escH(c.nameFr)}</div><div class="crd-sub">${crdLabel(c)}</div></div>
+    <div class="crd-row"><label>Qté</label><input type="number" min="0" value="${c.qty}" onchange="updateCard('${c.id}',{qty:this.value})"></div>
+    <div class="crd-row"><label>Valeur €</label><input type="number" min="0" step="0.5" value="${c.value||''}" onchange="updateCard('${c.id}',{value:this.value})"></div>
+    <button class="btn-sm crd-del" onclick="deleteCard('${c.id}')">Retirer</button></div>`).join(''):'<p class="crd-msg">Aucune carte pour le moment. Cherche une carte ci-dessus pour l’ajouter.</p>';
+}
+async function updateCard(id,patch){try{const d=await cardsApi('',{action:'update',id,...patch});_crdStock=d.cards;renderCardStock();toast('Enregistré');}catch(e){toast(e.message,'err');}}
+async function deleteCard(id){const c=_crdStock.find(x=>x.id===id); if(!confirm('Retirer '+(c.nameFr||c.name)+' du stock ?'))return; try{const d=await cardsApi('',{action:'delete',id});_crdStock=d.cards;renderCardStock();}catch(e){toast(e.message,'err');}}
+document.getElementById('crdGo').onclick=searchCards;
+document.getElementById('crdQ').addEventListener('keydown',e=>{if(e.key==='Enter')searchCards();});
+
 function toast(msg,type='ok'){
   const el=document.getElementById('toast');
   el.textContent=msg; el.className='show '+(type==='err'?'err':'ok');
@@ -651,6 +745,7 @@ document.querySelectorAll('.nav-tab').forEach(t=>t.addEventListener('click',()=>
   if(t.dataset.tab==='livraison'&&_adminData) buildLivraison(_adminData.shipping||{});
   if(t.dataset.tab==='gradees'&&_adminData) buildGradees(_adminData.graded||[]);
   if(t.dataset.tab==='devis') loadDevis();
+  if(t.dataset.tab==='cartes') loadCardStock();
 }));
 
 /* ══ COMMANDES ══ */
