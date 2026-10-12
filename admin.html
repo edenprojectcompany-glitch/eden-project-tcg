@@ -67,6 +67,29 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;min
 .crd .btn-sm{padding:7px 10px;text-align:center}
 .btn-sm.crd-add{background:var(--success);color:#0a0a0c;border-color:var(--success);font-weight:700}
 .btn-sm.crd-del{color:var(--danger)}
+.calc{background:var(--bg2);border:1px solid var(--gb);border-radius:16px;padding:18px}
+.calc-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+.calc-f{display:flex;flex-direction:column;gap:6px}
+.calc-f label{font-size:11.5px;color:var(--dim);font-weight:600}
+.calc-f .crd-inp{padding:9px 12px;font-size:14px}
+.calc-f select.crd-inp option{background:var(--bg2);color:var(--text)}
+.calc-wide{grid-column:span 2}
+.calc-two{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim)}
+.calc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.calc-chips label{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--gb);border-radius:99px;font-size:12px;color:var(--text);cursor:pointer;background:var(--bg3)}
+.calc-chips input{accent-color:var(--c1)}
+.calc-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.calc-kpi{background:var(--bg3);border:1px solid var(--gb);border-radius:12px;padding:10px 12px}
+.calc-kpi small{display:block;font-size:11px;color:var(--dim);margin-bottom:4px}
+.calc-kpi b{font-size:17px}
+.calc-kpi.good b{color:var(--success)}.calc-kpi.bad b{color:var(--danger)}.calc-kpi.warn b{color:var(--warn)}
+.calc-note{font-size:12.5px;line-height:1.5;padding:10px 12px;border-radius:10px;margin-bottom:12px;background:rgba(255,179,0,.08);border:1px solid rgba(255,179,0,.25);color:var(--text)}
+.calc-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.calc-tbl th{text-align:left;font-size:11px;color:var(--dim);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--gb)}
+.calc-tbl td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
+.calc-tbl img{width:30px;border-radius:3px;vertical-align:middle}
+.calc-bar{height:6px;border-radius:3px;background:var(--c1);min-width:2px}
+@media(max-width:600px){.calc-wide{grid-column:span 1}}
 @media(max-width:600px){.crd-grid{grid-template-columns:repeat(2,1fr)}.crd-search{flex-direction:column}}
 .nav-tab:hover:not(.active){color:var(--text)}
 
@@ -476,6 +499,21 @@ tr:hover td{background:rgba(255,255,255,.015)}
       <div id="crdResults" class="crd-grid"></div>
       <div class="sec-head" style="margin-top:34px"><div class="sec-title">📦 Stock de cartes <span class="sec-meta" id="crdStockMeta"></span></div></div>
       <div id="crdStock" class="crd-grid"></div>
+
+      <div class="sec-head" style="margin-top:34px"><div class="sec-title">🧮 Calculateur de pack mystère <span class="sec-meta">— chances calculées à partir de ton stock</span></div></div>
+      <div class="calc">
+        <div class="calc-form">
+          <div class="calc-f"><label>Pack</label><select id="pkId" class="crd-inp"><option value="ar">Mystère AR</option><option value="ex">Mystère EX</option></select></div>
+          <div class="calc-f"><label>Prix de vente (€)</label><input id="pkPrice" type="number" min="0" step="0.1" class="crd-inp"></div>
+          <div class="calc-f"><label>Marge visée (% du prix)</label><input id="pkMargin" type="number" min="0" max="90" step="1" class="crd-inp"></div>
+          <div class="calc-f"><label>Frais de paiement</label><div class="calc-two"><input id="pkFeePct" type="number" min="0" step="0.1" class="crd-inp"><span>% +</span><input id="pkFeeFix" type="number" min="0" step="0.05" class="crd-inp"><span>€</span></div></div>
+          <div class="calc-f calc-wide"><label>Rareté garantie (le client a toujours une de ces cartes)</label><div id="pkBase" class="calc-chips"></div></div>
+          <div class="calc-f calc-wide"><label>Rareté bonus (« chance de mieux »)</label><div id="pkBonus" class="calc-chips"></div></div>
+          <div class="calc-f"><label>Chance de bonus (%)</label><input id="pkBonusPct" type="number" min="0" max="50" step="0.5" class="crd-inp"></div>
+          <div class="calc-f" style="align-self:end"><button class="btn-sm crd-go" id="pkSave">💾 Enregistrer ce réglage</button></div>
+        </div>
+        <div id="pkOut"></div>
+      </div>
     </div>
 
     <!-- DEVIS -->
@@ -664,10 +702,89 @@ async function addCard(i){
   catch(e){toast(e.message,'err');}
 }
 async function loadCardStock(){
-  try{_crdStock=(await cardsApi('?stock=1')).cards||[]; renderCardStock();}
+  try{const d=await cardsApi('?stock=1');_crdStock=d.cards||[];_packs=d.packs||{};document.getElementById('pkPrice').value='';renderCardStock();}
   catch(e){document.getElementById('crdStock').innerHTML='<p class="crd-msg">⚠️ '+escH(e.message)+'</p>';}
 }
+// ── Calculateur de pack mystère ──────────────────────────────
+// Chaque carte a un poids = quantité × valeur^(-k) : plus elle est chère, plus elle est rare.
+// k est ajusté automatiquement pour que la valeur moyenne d'une ouverture respecte la marge visée.
+const PACK_PRESETS={ar:{name:'Mystère AR',base:['AR'],bonus:['SAR'],bonusPct:3,price:9.9,margin:25},ex:{name:'Mystère EX',base:['RR'],bonus:['AR','SAR'],bonusPct:5,price:4.9,margin:25}};
+let _packs={};
+const eur=v=>(Math.round(v*100)/100).toFixed(2).replace('.',',')+' €';
+function packForm(){
+  const id=document.getElementById('pkId').value;
+  const chk=b=>[...document.querySelectorAll('#'+b+' input:checked')].map(i=>i.value);
+  return {id,name:PACK_PRESETS[id].name,price:+document.getElementById('pkPrice').value||0,margin:+document.getElementById('pkMargin').value||0,
+    feePct:+document.getElementById('pkFeePct').value||0,feeFix:+document.getElementById('pkFeeFix').value||0,
+    base:chk('pkBase'),bonus:chk('pkBonus'),bonusPct:+document.getElementById('pkBonusPct').value||0};
+}
+function fillPackForm(keep){
+  // keep : on garde ce qui est en cours de saisie (mise à jour du stock), sinon réglage enregistré ou par défaut
+  const id=document.getElementById('pkId').value, cur=keep&&document.getElementById('pkPrice').value!==''?packForm():null;
+  const p=cur||{...PACK_PRESETS[id],feePct:1.5,feeFix:0.25,..._packs[id]};
+  for(const k of ['Price','Margin','FeePct','FeeFix','BonusPct']) document.getElementById('pk'+k).value=p[k[0].toLowerCase()+k.slice(1)];
+  const rars=[...new Set([..._crdStock.map(c=>c.rarity).filter(Boolean),...p.base,...p.bonus])].sort();
+  const chips=(sel)=>rars.map(r=>`<label><input type="checkbox" value="${escH(r)}" ${sel.includes(r)?'checked':''}> ${escH(r)}</label>`).join('')||'<span class="crd-sub">Ajoute des cartes au stock d\'abord</span>';
+  document.getElementById('pkBase').innerHTML=chips(p.base);
+  document.getElementById('pkBonus').innerHTML=chips(p.bonus);
+  calcPack();
+}
+function packOdds(cards,b,k){
+  const B=cards.filter(c=>c.tier==='base'), S=cards.filter(c=>c.tier==='bonus');
+  const w=c=>c.qty*Math.pow(c.value,-k), sB=B.reduce((a,c)=>a+w(c),0), sS=S.reduce((a,c)=>a+w(c),0);
+  const bb=S.length?b:0;
+  return cards.map(c=>({...c,p:c.tier==='base'?(1-bb)*w(c)/sB:bb*w(c)/sS}));
+}
+const packEV=rows=>rows.reduce((a,c)=>a+c.p*c.value,0);
+function calcPack(){
+  const out=document.getElementById('pkOut'); if(!out) return;
+  const f=packForm();
+  const pick=(r,tier)=>_crdStock.filter(c=>c.qty>0&&r.includes(c.rarity)).map(c=>({...c,tier}));
+  const noValue=_crdStock.filter(c=>c.qty>0&&(f.base.includes(c.rarity)||f.bonus.includes(c.rarity))&&!(c.value>0));
+  const cards=[...pick(f.base,'base'),...pick(f.bonus.filter(r=>!f.base.includes(r)),'bonus')].filter(c=>c.value>0);
+  if(!cards.some(c=>c.tier==='base')){out.innerHTML='<p class="crd-msg">Coche une rareté garantie présente dans ton stock (avec une valeur en €) pour voir le calcul.</p>';return;}
+  const b=f.bonusPct/100, fees=f.price*f.feePct/100+f.feeFix, target=f.price-fees-f.price*f.margin/100;
+  // k entre 0 (tirage proportionnel au stock) et 3 (cartes chères très rares)
+  let k=0, rows=packOdds(cards,b,0), ev=packEV(rows), note='';
+  if(ev>target){
+    let lo=0,hi=3;
+    if(packEV(packOdds(cards,b,hi))>target){k=hi;}
+    else{for(let i=0;i<40;i++){const m=(lo+hi)/2;packEV(packOdds(cards,b,m))>target?lo=m:hi=m;}k=hi;}
+    rows=packOdds(cards,b,k); ev=packEV(rows);
+  }
+  const profit=f.price-fees-ev, marginPct=f.price?profit/f.price*100:0;
+  if(ev>target+0.005){
+    const minPrice=(ev+f.feeFix)/(1-f.feePct/100-f.margin/100);
+    note=`⚠️ Avec ce stock, impossible d'atteindre ${f.margin} % de marge à ${eur(f.price)} : même en rendant les cartes chères très rares, une ouverture te coûte ${eur(ev)} en moyenne. Prix minimum conseillé : <b>${eur(minPrice)}</b> (ou baisse la chance de bonus).`;
+  }
+  const S=rows.filter(c=>c.tier==='bonus'), B=rows.filter(c=>c.tier==='base');
+  const avg=a=>{const t=a.reduce((x,c)=>x+c.p,0);return t?a.reduce((x,c)=>x+c.p*c.value,0)/t:0;};
+  const bonusCost=S.length?(avg(S)-avg(B))/100:0;
+  const life=rows.map(c=>({c,n:c.qty/c.p})).sort((a,b)=>a.n-b.n)[0];
+  rows.sort((a,b)=>b.value-a.value);
+  out.innerHTML=(note?`<div class="calc-note">${note}</div>`:'')+(noValue.length?`<div class="calc-note">ℹ️ ${noValue.length} carte${noValue.length>1?'s':''} sans valeur en € ignorée${noValue.length>1?'s':''} : ${noValue.map(c=>escH(c.nameFr||c.name)).join(', ')}.</div>`:'')+
+  `<div class="calc-kpis">
+    <div class="calc-kpi"><small>Valeur moyenne d'une ouverture</small><b>${eur(ev)}</b></div>
+    <div class="calc-kpi"><small>Frais de paiement</small><b>${eur(fees)}</b></div>
+    <div class="calc-kpi ${profit<0?'bad':marginPct+0.5<f.margin?'warn':'good'}"><small>Ta marge par pack</small><b>${eur(profit)} · ${marginPct.toFixed(1).replace('.',',')} %</b></div>
+    ${S.length?`<div class="calc-kpi warn"><small>Coût de chaque +1 % de bonus</small><b>+${eur(bonusCost)} / pack</b></div>`:''}
+    <div class="calc-kpi ${life.n<50?'bad':life.n<200?'warn':''}"><small>Le stock tient environ</small><b>${Math.floor(life.n)} ouvertures</b><small style="margin:4px 0 0">avant rupture : ${escH(life.c.nameFr||life.c.name)} (${life.c.qty} ex.)</small></div>
+  </div>
+  <div class="table-wrap"><table class="calc-tbl"><tr><th></th><th>Carte</th><th>Rareté</th><th>Valeur</th><th>Stock</th><th>Chance</th><th>Soit</th><th style="width:20%"></th></tr>${rows.map(c=>`<tr>
+    <td><img src="${escH(c.img)}" alt="" loading="lazy"></td><td>${escH(c.nameFr||c.name)}<div class="crd-sub">${escH(c.set)} ${c.number||''}</div></td>
+    <td><span class="crd-rar ${HOT_RARITIES.includes(c.rarity)?'hot':''}">${escH(c.rarity)}</span>${c.tier==='bonus'?' <span class="crd-sub">bonus</span>':''}</td>
+    <td>${eur(c.value)}</td><td>${c.qty}</td><td><b>${(c.p*100).toFixed(c.p<0.01?2:1).replace('.',',')} %</b></td><td class="crd-sub">1 sur ${Math.round(1/c.p)}</td>
+    <td><div class="calc-bar" style="width:${Math.max(1,c.p/rows.reduce((m,x)=>Math.max(m,x.p),0)*100)}%"></div></td></tr>`).join('')}</table></div>`;
+}
+async function savePack(){
+  try{const d=await cardsApi('',{action:'save_pack',pack:packForm()});_packs=d.packs;toast('Réglage enregistré');}catch(e){toast(e.message,'err');}
+}
+document.getElementById('pkId').onchange=fillPackForm;
+document.getElementById('pkSave').onclick=savePack;
+document.querySelector('.calc-form').addEventListener('input',calcPack);
+
 function renderCardStock(){
+  setTimeout(()=>{if(document.getElementById('pkBase'))fillPackForm(true);});
   const n=_crdStock.reduce((a,c)=>a+c.qty,0), v=_crdStock.reduce((a,c)=>a+c.qty*(c.value||0),0);
   document.getElementById('crdStockMeta').textContent=`— ${_crdStock.length} carte${_crdStock.length>1?'s':''} différente${_crdStock.length>1?'s':''} · ${n} exemplaire${n>1?'s':''} · ${v.toFixed(2).replace('.',',')} €`;
   document.getElementById('crdStock').innerHTML=_crdStock.length?_crdStock.map(c=>`<div class="crd">

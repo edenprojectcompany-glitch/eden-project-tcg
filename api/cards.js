@@ -14,6 +14,7 @@ const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 const OFFICIAL = 'https://www.pokemon-card.com';
 const UA = { 'User-Agent': 'Mozilla/5.0 (EdenProjectTCG admin)' };
 const STOCK_KEY = 'vault:cards';
+const PACKS_KEY = 'vault:packs';  // réglages des packs mystère (prix, marge, raretés, % bonus)
 const MAX_DETAILS = 24;      // fiches lues par recherche (nom)
 const INDEX_BATCH = 40;      // fiches lues par appel quand il faut tout parcourir (numéro, rareté)
 const MAX_PAGES = 15;        // 15 × 39 = 585 résultats officiels au maximum
@@ -166,12 +167,29 @@ module.exports = async (req, res) => {
     const { kv } = require('@vercel/kv');
 
     if (req.method === 'GET') {
-      if (req.query.stock) return res.status(200).json({ cards: (await kv.get(STOCK_KEY)) || [] });
+      if (req.query.stock) return res.status(200).json({ cards: (await kv.get(STOCK_KEY)) || [], packs: (await kv.get(PACKS_KEY)) || {} });
       return res.status(200).json(await search(kv, req.query.q));
     }
 
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+
+      // Réglage d'un pack mystère (calculateur de l'admin)
+      if (body.action === 'save_pack') {
+        const p = body.pack || {};
+        if (!/^[a-z0-9_-]{2,30}$/.test(String(p.id || ''))) return res.status(400).json({ error: 'Pack invalide' });
+        const rar = a => (Array.isArray(a) ? a : []).map(String).filter(r => RARITIES.includes(r));
+        const packs = (await kv.get(PACKS_KEY)) || {};
+        packs[p.id] = {
+          id: p.id, name: String(p.name || p.id).slice(0, 40),
+          price: Math.max(0, +p.price || 0), margin: Math.min(90, Math.max(0, +p.margin || 0)),
+          base: rar(p.base), bonus: rar(p.bonus), bonusPct: Math.min(50, Math.max(0, +p.bonusPct || 0)),
+          feePct: Math.max(0, +p.feePct || 0), feeFix: Math.max(0, +p.feeFix || 0), updatedAt: Date.now(),
+        };
+        await kv.set(PACKS_KEY, packs);
+        return res.status(200).json({ packs });
+      }
+
       const cards = (await kv.get(STOCK_KEY)) || [];
       const qty = Math.max(0, Math.floor(+body.qty || 0));
       const value = Math.max(0, Math.round((+body.value || 0) * 100) / 100);
