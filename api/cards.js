@@ -16,6 +16,11 @@ const NAMES = require('../lib/pokemon-names.json'); // [id, ja, fr, en]
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 const OFFICIAL = 'https://www.pokemon-card.com';
 const TCGDEX = 'https://api.tcgdex.net/v2/ja';
+const TCGDEX_ROOT = 'https://api.tcgdex.net/v2';
+// Set japonais → set international équivalent (même illustrations) : sert d'aperçu tant que
+// Pokémon n'a pas publié l'image japonaise. Correspondance par n° de Pokédex + rareté.
+const INTL_SETS = { M6a: '30th' };
+const INTL_IMG = /^https:\/\/assets\.tcgdex\.net\/(?:fr|en)\/[a-z0-9]+\/[a-z0-9-]+\/[a-z0-9]+\/high\.webp$/i;
 const UA = { 'User-Agent': 'Mozilla/5.0 (EdenProjectTCG admin)' };
 const STOCK_KEY = 'vault:cards';
 const PACKS_KEY = 'vault:packs';  // réglages des packs mystère (prix, marge, raretés, % bonus)
@@ -159,12 +164,43 @@ async function unpublished(kv, set, officialNumbers, p, ja) {
   let cands = s.cards.filter(c => !known.has(c.n) && (!ja || c.name.includes(ja)) && (!p.number || c.n === p.number) &&
     (!p.mega || c.name.includes('メガ')) && (!p.ex || /ex$/i.test(c.name)));
   cands = await mapLimit(cands.slice(0, 60), 8, async c => {
-    const id = tcgId(s.id, c.n), ck = 'cards:tcg:' + id;
-    let rarity = await kv.get(ck);
-    if (rarity === null) { const t = await tcgdex('/cards/' + id); rarity = tcgRarity(t && t.rarity); await kv.set(ck, rarity); }
-    return { cardId: 'tcg-' + id, name: c.name, set: s.id, number: c.n, total: s.total, rarity, img: '', unpublished: true };
+    const id = tcgId(s.id, c.n), ck = 'cards:tcg2:' + id;
+    let info = await kv.get(ck);
+    if (!info) { const t = await tcgdex('/cards/' + id); info = { rarity: tcgRarity(t && t.rarity), dex: t && t.dexId ? t.dexId[0] : 0 }; await kv.set(ck, info); }
+    return { cardId: 'tcg-' + id, name: c.name, set: s.id, number: c.n, total: s.total, rarity: info.rarity, dex: info.dex, img: '', unpublished: true };
   });
-  return cands.filter(c => rarityOk(c, p));
+  cands = cands.filter(c => rarityOk(c, p));
+  // Aperçu : image de la version internationale (même Pokémon, même rareté, même ordre)
+  const intl = INTL_SETS[s.id] && await intlIndex(kv, INTL_SETS[s.id]);
+  if (intl) {
+    const all = await mapLimit(s.cards.filter(c => !known.has(c.n)), 8, async c => ({ n: c.n, ...((await kv.get('cards:tcg2:' + tcgId(s.id, c.n))) || {}) }));
+    for (const c of cands) {
+      if (!c.dex) continue;
+      const rank = all.filter(x => x.dex === c.dex && x.rarity === c.rarity && x.n < c.number).length;
+      const hit = intl.filter(x => x.dex === c.dex && x.rarity === c.rarity)[rank];
+      if (hit) { c.intlImg = hit.img; c.intlRef = hit.ref; }
+    }
+  }
+  return cands;
+}
+
+// Cartes rares (au-delà du numéro officiel) d'un set international : n° Pokédex, rareté, image
+async function intlIndex(kv, setId) {
+  const key = 'cards:intl:' + setId;
+  const cached = await kv.get(key);
+  if (cached) return cached;
+  const [en, fr] = await Promise.all([fetch(`${TCGDEX_ROOT}/en/sets/${setId}`).then(r => r.ok ? r.json() : null).catch(() => null), fetch(`${TCGDEX_ROOT}/fr/sets/${setId}`).then(r => r.ok ? r.json() : null).catch(() => null)]);
+  if (!en || !en.cards) return null;
+  const official = (en.cardCount && en.cardCount.official) || 0;
+  const frImg = Object.fromEntries(((fr && fr.cards) || []).map(c => [c.localId, c.image]));
+  const rares = en.cards.filter(c => /^\d+$/.test(c.localId) && +c.localId > official);
+  const idx = (await mapLimit(rares, 8, async c => {
+    const d = await fetch(`${TCGDEX_ROOT}/en/cards/${setId}-${c.localId}`).then(r => r.ok ? r.json() : null).catch(() => null);
+    const base = frImg[c.localId] || c.image;
+    return d && base ? { n: +c.localId, dex: d.dexId ? d.dexId[0] : 0, rarity: tcgRarity(d.rarity), img: base + '/high.webp', ref: `${setId} ${c.localId}` } : null;
+  })).filter(Boolean).sort((a, b) => a.n - b.n);
+  await kv.set(key, idx, { ex: 60 * 60 * 24 * 7 });
+  return idx;
 }
 
 async function mapLimit(items, n, fn) {
@@ -243,10 +279,10 @@ async function search(kv, q) {
     }
   }
   if (!results.length) return { query, results: [], message: p.set && !p.name && !list.length ? `Set « ${p.set} » introuvable.` : 'Aucune carte trouvée.' };
-  const nUnpub = results.filter(c => c.unpublished).length;
+  const nUnpub = results.filter(c => c.unpublished).length, nIntl = results.filter(c => c.unpublished && c.intlImg).length;
   return {
     query, hits: list.length, results: results.slice(0, 60).map(decorate),
-    note: nUnpub ? `${nUnpub} carte${nUnpub > 1 ? 's' : ''} pas encore publiée${nUnpub > 1 ? 's' : ''} par Pokémon (image indisponible) : ajoute ta photo pour l'utiliser.` : '',
+    note: nUnpub ? `${nUnpub} carte${nUnpub > 1 ? 's' : ''} pas encore publiée${nUnpub > 1 ? 's' : ''} par Pokémon${nIntl ? ` (${nIntl} avec l'aperçu de la version internationale, même illustration)` : ''}${nUnpub > nIntl ? ' : ajoute ta photo pour les autres' : ''}.` : '',
   };
 }
 
@@ -314,19 +350,22 @@ module.exports = async (req, res) => {
           if (!m) return res.status(400).json({ error: 'Carte invalide' });
           const t = await tcgdex('/cards/' + m[1] + '-' + m[2]);
           if (!t) return res.status(400).json({ error: 'Carte introuvable chez TCGdex' });
+          // Photo envoyée, sinon aperçu de la version internationale, sinon image déjà en stock
           const exists = cards.find(x => x.cardId === id);
           const img = String(body.imageData || '');
-          if (!exists) {
-            if (!/^data:image\/(?:jpeg|png|webp);base64,/.test(img)) return res.status(400).json({ error: 'Ajoute une photo de la carte' });
+          const intlImg = INTL_IMG.test(String(c.intlImg || '')) ? c.intlImg : '';
+          if (img) {
+            if (!/^data:image\/(?:jpeg|png|webp);base64,/.test(img)) return res.status(400).json({ error: 'Photo invalide' });
             if (img.length > MAX_IMG * 1.37) return res.status(400).json({ error: 'Photo trop lourde' });
-          }
-          if (img) await kv.set('cards:img:' + id, img);
+            await kv.set('cards:img:' + id, img);
+          } else if (!exists && !intlImg) return res.status(400).json({ error: 'Ajoute une photo de la carte' });
           const setInfo = await kv.get('cards:tcgset:' + m[1].toLowerCase());
-          d = { cardId: id, name: t.name, set: m[1], number: +m[2], total: setInfo && setInfo.total, rarity: tcgRarity(t.rarity), img: '/api/cards?img=' + id };
+          d = { cardId: id, name: t.name, set: m[1], number: +m[2], total: setInfo && setInfo.total, rarity: tcgRarity(t.rarity),
+            img: img ? '/api/cards?img=' + id : exists ? exists.img : intlImg, intlPreview: !img && !exists && !!intlImg };
         }
         const existing = cards.find(x => x.cardId === d.cardId);
-        if (existing) { existing.qty += qty; if (value) existing.value = value; existing.updatedAt = Date.now(); }
-        else cards.unshift({ id: 'crd_' + d.cardId, cardId: d.cardId, name: d.name, nameFr: frName(d.name), set: d.set, number: d.number, total: d.total, rarity: d.rarity, img: d.img, qty, value, addedAt: Date.now() });
+        if (existing) { existing.qty += qty; if (value) existing.value = value; if (d.img !== existing.img) { existing.img = d.img; existing.intlPreview = false; } existing.updatedAt = Date.now(); }
+        else cards.unshift({ id: 'crd_' + d.cardId, cardId: d.cardId, name: d.name, nameFr: frName(d.name), set: d.set, number: d.number, total: d.total, rarity: d.rarity, img: d.img, intlPreview: !!d.intlPreview, qty, value, addedAt: Date.now() });
         await kv.set(STOCK_KEY, cards);
         return res.status(200).json({ cards });
       }
