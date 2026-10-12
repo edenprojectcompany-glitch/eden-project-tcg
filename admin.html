@@ -57,6 +57,10 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;min
 .crd{background:var(--bg2);border:1px solid var(--gb);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px}
 .crd img{width:100%;aspect-ratio:63/88;object-fit:cover;border-radius:8px;background:var(--bg3)}
 .crd-name{font-size:13px;font-weight:700;line-height:1.3}
+.crd-ph{width:100%;aspect-ratio:63/88;border-radius:8px;border:1.5px dashed rgba(255,179,0,.45);background:rgba(255,179,0,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:10px;font-size:11.5px;color:var(--dim);cursor:pointer;position:relative;overflow:hidden}
+.crd-ph b{color:var(--warn);font-size:12px}
+.crd-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.crd-ph input{display:none}
 .crd-sub{font-size:11.5px;color:var(--dim)}
 .crd-rar{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:800;background:rgba(127,217,255,.12);color:var(--c1);margin-left:4px}
 .crd-rar.hot{background:rgba(255,179,0,.15);color:var(--warn)}
@@ -686,19 +690,36 @@ async function searchCards(){
       _crdTimer=setTimeout(searchCards,300); return;
     }
     _crdResults=d.results||[];
-    msg.textContent=d.message||(_crdResults.length?`${_crdResults.length} proposition${_crdResults.length>1?'s':''}${d.query&&d.query.ja?' · recherché : '+d.query.ja:''}`:'Aucune carte trouvée.');
+    msg.textContent=d.message||(_crdResults.length?`${_crdResults.length} proposition${_crdResults.length>1?'s':''}${d.query&&d.query.ja?' · recherché : '+d.query.ja:''}${d.note?' · ⚠️ '+d.note:''}`:'Aucune carte trouvée.');
+    _crdPhotos={};
     document.getElementById('crdResults').innerHTML=_crdResults.map((c,i)=>`<div class="crd">
-      <img src="${escH(c.img)}" alt="" loading="lazy">
+      ${c.unpublished?`<label class="crd-ph" id="crdPh${i}"><b>📷 Ajouter une photo</b>Image pas encore publiée par Pokémon<input type="file" accept="image/*" onchange="pickCardPhoto(${i},this)"></label>`:`<img src="${escH(c.img)}" alt="" loading="lazy">`}
       <div><div class="crd-name">${escH(c.name)}</div><div class="crd-sub">${escH(c.nameFr)}</div><div class="crd-sub">${crdLabel(c)}</div></div>
       <div class="crd-row"><label>Qté</label><input type="number" min="1" value="1" id="crdQty${i}"></div>
       <div class="crd-row"><label>Valeur €</label><input type="number" min="0" step="0.5" placeholder="0" id="crdVal${i}"></div>
       <button class="btn-sm crd-add" onclick="addCard(${i})">+ Ajouter au stock</button></div>`).join('');
   }catch(e){msg.textContent='⚠️ '+e.message;}
 }
+// Photo d'une carte pas encore publiée : réduite à 600 px de large en JPEG avant l'envoi
+let _crdPhotos={};
+function pickCardPhoto(i,input){
+  const file=input.files&&input.files[0]; if(!file) return;
+  const img=new Image(), url=URL.createObjectURL(file);
+  img.onload=()=>{
+    const w=Math.min(600,img.naturalWidth), h=Math.round(img.naturalHeight*w/img.naturalWidth);
+    const cv=document.createElement('canvas'); cv.width=w; cv.height=h; cv.getContext('2d').drawImage(img,0,0,w,h);
+    _crdPhotos[i]=cv.toDataURL('image/jpeg',.82); URL.revokeObjectURL(url);
+    const ph=document.getElementById('crdPh'+i); ph.querySelector('img')?.remove();
+    const pv=document.createElement('img'); pv.src=_crdPhotos[i]; ph.appendChild(pv);
+  };
+  img.onerror=()=>toast('Image illisible','err');
+  img.src=url;
+}
 async function addCard(i){
   const c=_crdResults[i]; const qty=+document.getElementById('crdQty'+i).value; const value=+document.getElementById('crdVal'+i).value;
   if(!qty||qty<1) return toast('Indique une quantité','err');
-  try{const d=await cardsApi('',{action:'add',card:c,qty,value}); _crdStock=d.cards; renderCardStock(); toast(`${c.nameFr||c.name} ajoutée (×${qty})`);}
+  if(c.unpublished&&!_crdPhotos[i]&&!_crdStock.some(x=>x.cardId===c.cardId)) return toast('Ajoute une photo de la carte','err');
+  try{const d=await cardsApi('',{action:'add',card:c,qty,value,imageData:_crdPhotos[i]||''}); _crdStock=d.cards; renderCardStock(); toast(`${c.nameFr||c.name} ajoutée (×${qty})`);}
   catch(e){toast(e.message,'err');}
 }
 async function loadCardStock(){

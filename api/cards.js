@@ -1,25 +1,51 @@
 // api/cards.js — Cartes à l'unité (japonaises) pour les boosters mystère du Vault
-// Recherche à la demande sur la base officielle pokemon-card.com + stock admin.
+// Recherche à la demande sur la base officielle pokemon-card.com (images, numéros)
+// complétée par TCGdex (raretés manquantes, cartes pas encore publiées par Pokémon) + stock admin.
 // Env requis : ADMIN_CODE, KV_REST_API_URL, KV_REST_API_TOKEN
 //
-// GET  ?q=Dracaufeu M2a | M2a 201 | リザードン | Pikachu AR   → propositions
-// GET  ?stock=1                                               → cartes en stock
-// POST {action:'add', card:{cardId,…}, qty, value}            → ajoute au stock
-// POST {action:'update', id, qty?, value?}                     → modifie
-// POST {action:'delete', id}                                   → retire
+// GET  ?q=Dracaufeu M2a | M2a 201 | Mewtwo 30 ans SAR | リザードン   → propositions (admin)
+// GET  ?stock=1                                                    → cartes en stock + réglages packs (admin)
+// GET  ?img=<cardId>                                               → photo d'une carte ajoutée à la main (public)
+// POST {action:'add', card:{cardId,…}, qty, value, imageData?}     → ajoute au stock
+// POST {action:'update', id, qty?, value?}                          → modifie
+// POST {action:'delete', id}                                        → retire
+// POST {action:'save_pack', pack:{…}}                               → réglage d'un pack mystère
 
 const NAMES = require('../lib/pokemon-names.json'); // [id, ja, fr, en]
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 const OFFICIAL = 'https://www.pokemon-card.com';
+const TCGDEX = 'https://api.tcgdex.net/v2/ja';
 const UA = { 'User-Agent': 'Mozilla/5.0 (EdenProjectTCG admin)' };
 const STOCK_KEY = 'vault:cards';
 const PACKS_KEY = 'vault:packs';  // réglages des packs mystère (prix, marge, raretés, % bonus)
 const MAX_DETAILS = 24;      // fiches lues par recherche (nom)
 const INDEX_BATCH = 40;      // fiches lues par appel quand il faut tout parcourir (numéro, rareté)
 const MAX_PAGES = 15;        // 15 × 39 = 585 résultats officiels au maximum
+const MAX_IMG = 450 * 1024;
+// Sets récents dont Pokémon n'a pas encore publié toutes les cartes : vérifiés même sans set dans la recherche
+const RECENT_SETS = ['M6a', 'M6'];  // photo envoyée depuis l'admin (déjà réduite par le navigateur)
 
-const RARITIES = ['C', 'U', 'R', 'RR', 'RRR', 'AR', 'SAR', 'SR', 'UR', 'HR', 'MUR', 'MA', 'BWR', 'CHR', 'CSR', 'ACE', 'S', 'SSR', 'K', 'PR', 'TR'];
+const RARITIES = ['C', 'U', 'R', 'RR', 'RRR', 'AR', 'SAR', 'SR', 'UR', 'HR', 'MUR', 'MA', 'BWR', 'CHR', 'CSR', 'ACE', 'S', 'SSR', 'K', 'PR', 'TR', 'CC', 'RGB', 'FR'];
+// Libellés TCGdex → codes de rareté japonais
+const TCG_RARITY = {
+  'common': 'C', 'uncommon': 'U', 'rare': 'R', 'double rare': 'RR', 'triple rare': 'RRR',
+  'illustration rare': 'AR', 'special illustration rare': 'SAR', 'ultra rare': 'SR', 'hyper rare': 'UR',
+  'mega hyper rare': 'MUR', 'shiny rare': 'S', 'shiny ultra rare': 'SSR', 'ace spec rare': 'ACE',
+  'black white rare': 'BWR', 'character holo rare': 'CHR', 'character super rare': 'CSR',
+  'classic collection': 'CC', 'rgb rare': 'RGB', 'futuristic rare': 'FR',
+};
+// Noms de sets tapés en toutes lettres → code officiel
+const SET_ALIASES = [
+  [/\b30\s*(?:ans|th|[eè]me?)\b(?:\s+(?:anniversaire|anniversary|celebration))?/gi, 'M6a'],
+  [/\b(?:anniversaire|anniversary|celebration)\b/gi, 'M6a'],
+  [/\bm[ée]ga\s+dream(?:\s+ex)?\b/gi, 'M2a'], [/\binferno\s*x\b/gi, 'M2'], [/\bm[ée]ga\s+brave\b/gi, 'M1L'],
+  [/\bm[ée]ga\s+symphonia\b/gi, 'M1S'], [/\b(?:nihil|munikis)\s+zero\b/gi, 'M3'], [/\bninja\s+spinner\b/gi, 'M4'],
+  [/\babyss\s+eye\b/gi, 'M5'], [/\bstorm\s+emeralda?\b/gi, 'M6'], [/\bterastal\s+fest(?:ival)?\b/gi, 'SV8a'],
+  [/\bbattle\s+partners\b/gi, 'SV9'], [/\bheat\s*wave(?:\s+arena)?\b/gi, 'SV9a'],
+  [/\b(?:glory\s+(?:of\s+)?)?team\s+rocket\b/gi, 'SV10'], [/\bblack\s+bolt\b/gi, 'SV11B'],
+  [/\bwhite\s+flare\b/gi, 'SV11W'], [/\bpok[ée]mon\s+151\b/gi, 'SV2a'],
+];
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
@@ -29,6 +55,8 @@ function cors(res) {
 
 const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const isJa = s => /[぀-ヿ一-鿿]/.test(s);
+// Noms officiels : le symbole Méga est une balise HTML
+const cleanName = s => String(s || '').replace(/<span class="pcg pcg-megamark"><\/span>/g, 'M').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').trim();
 
 // Nom FR/EN → nom japonais (correspondance exacte, sinon début du nom)
 function toJapanese(name) {
@@ -47,10 +75,12 @@ const frName = ja => {
   return hit ? hit[2] : '';
 };
 
-// « Dracaufeu M2a AR 201 » → { name, set, number, rarity, mega, ex }
+// « Mewtwo 30 ans SAR » → { name, set, number, rarity, mega, ex }
 function parseQuery(q) {
   const out = { words: [] };
-  for (const raw of String(q || '').trim().split(/\s+/).filter(Boolean)) {
+  let text = String(q || '');
+  for (const [re, code] of SET_ALIASES) text = text.replace(re, ' ' + code + ' ');
+  for (const raw of text.trim().split(/\s+/).filter(Boolean)) {
     const t = raw.replace(/[,;]/g, '');
     const up = t.toUpperCase();
     const num = t.match(/^(\d{1,3})(?:\/\d{1,3})?$/);
@@ -71,27 +101,65 @@ async function officialSearch(params) {
   const r = await fetch(`${OFFICIAL}/card-search/resultAPI.php?${qs}`, { headers: UA });
   if (!r.ok) throw new Error('Base officielle indisponible (' + r.status + ')');
   const j = await r.json();
-  return { maxPage: j.maxPage || 1, hits: j.hitCnt || 0, list: (j.cardList || []).map(c => ({ cardId: c.cardID, name: c.cardNameViewText, img: OFFICIAL + c.cardThumbFile })) };
+  return { maxPage: j.maxPage || 1, hits: j.hitCnt || 0, list: (j.cardList || []).map(c => ({ cardId: c.cardID, name: cleanName(c.cardNameViewText), img: OFFICIAL + c.cardThumbFile })) };
 }
 
+async function tcgdex(path) {
+  try { const r = await fetch(TCGDEX + path); return r.ok ? await r.json() : null; } catch { return null; }
+}
+const tcgId = (set, number) => `${set}-${String(number).padStart(3, '0')}`;
+const tcgRarity = label => TCG_RARITY[String(label || '').toLowerCase()] || '';
+
 // Fiche officielle → numéro, total, rareté, set (mise en cache définitive)
+// Si Pokémon n'affiche pas encore la rareté (sets récents), on la prend chez TCGdex.
 async function details(kv, card) {
   const key = 'cards:detail:' + card.cardId;
   const cached = await kv.get(key);
-  if (cached) return { ...card, ...cached };
-  const r = await fetch(`${OFFICIAL}/card-search/details.php/card/${card.cardId}/regu/all`, { headers: UA });
-  const html = r.ok ? await r.text() : '';
-  const num = html.match(/(\d{1,3})&nbsp;\/&nbsp;(\d{1,3})/);
-  const rar = html.match(/ic_rare_([a-z0-9]+)\.gif/i);
-  const set = html.match(/regulation_logo_\d+\/([^.]+)\.gif/) || card.img.match(/card_images\/large\/([^/]+)\//);
-  const info = {
-    number: num ? +num[1] : null,
-    total: num ? +num[2] : null,
-    rarity: rar ? rar[1].toUpperCase() : '',
-    set: set ? decodeURIComponent(set[1]) : '',
-  };
-  if (html) await kv.set(key, info);
+  if (cached && (cached.rarity || cached.tcgChecked)) return { ...card, ...cached };
+  let info = cached;
+  if (!info) {
+    const r = await fetch(`${OFFICIAL}/card-search/details.php/card/${card.cardId}/regu/all`, { headers: UA });
+    const html = r.ok ? await r.text() : '';
+    if (!html) return { ...card, number: null, total: null, rarity: '', set: '' };
+    const num = html.match(/(\d{1,3})&nbsp;\/&nbsp;(\d{1,3})/);
+    const rar = html.match(/ic_rare_([a-z0-9]+)\.gif/i);
+    const set = html.match(/regulation_logo_\d+\/([^.]+)\.gif/) || card.img.match(/card_images\/large\/([^/]+)\//);
+    info = { number: num ? +num[1] : null, total: num ? +num[2] : null, rarity: rar ? rar[1].toUpperCase() : '', set: set ? decodeURIComponent(set[1]) : '' };
+  }
+  if (!info.rarity && info.set && info.number) {
+    const t = await tcgdex('/cards/' + tcgId(info.set, info.number));
+    info = { ...info, rarity: tcgRarity(t && t.rarity) };
+  }
+  info.tcgChecked = true;
+  await kv.set(key, info);
   return { ...card, ...info };
+}
+
+// Cartes d'un set connues de TCGdex mais pas encore publiées sur le site officiel (pas d'image)
+async function unpublished(kv, set, officialNumbers, p, ja) {
+  const key = 'cards:tcgset:' + set.toLowerCase();
+  let s = await kv.get(key);
+  if (!s) {
+    let j = await tcgdex('/sets/' + encodeURIComponent(set));
+    if (!j) { // TCGdex respecte la casse (M6a, SV11B) : on retrouve le bon identifiant
+      const all = (await tcgdex('/sets')) || [];
+      const hit = all.find(x => x.id.toLowerCase() === set.toLowerCase());
+      if (hit) j = await tcgdex('/sets/' + encodeURIComponent(hit.id));
+    }
+    if (!j || !j.cards) return [];
+    s = { id: j.id, total: j.cardCount && j.cardCount.official, cards: j.cards.filter(c => /^\d+$/.test(c.localId)).map(c => ({ n: +c.localId, name: c.name })) };
+    await kv.set(key, s, { ex: 60 * 60 * 24 });
+  }
+  const known = new Set(officialNumbers);
+  let cands = s.cards.filter(c => !known.has(c.n) && (!ja || c.name.includes(ja)) && (!p.number || c.n === p.number) &&
+    (!p.mega || c.name.includes('メガ')) && (!p.ex || /ex$/i.test(c.name)));
+  cands = await mapLimit(cands.slice(0, 60), 8, async c => {
+    const id = tcgId(s.id, c.n), ck = 'cards:tcg:' + id;
+    let rarity = await kv.get(ck);
+    if (rarity === null) { const t = await tcgdex('/cards/' + id); rarity = tcgRarity(t && t.rarity); await kv.set(ck, rarity); }
+    return { cardId: 'tcg-' + id, name: c.name, set: s.id, number: c.n, total: s.total, rarity, img: '', unpublished: true };
+  });
+  return cands.filter(c => !p.rarity || c.rarity === p.rarity);
 }
 
 async function mapLimit(items, n, fn) {
@@ -116,7 +184,7 @@ function filterCards(cards, p) {
 
 // Liste complète des résultats officiels pour (nom JP, set), mise en cache une semaine
 async function resultList(kv, keyword, set) {
-  const key = 'cards:list:' + keyword + '|' + set.toLowerCase();
+  const key = 'cards:list2:' + keyword + '|' + set.toLowerCase();
   const cached = await kv.get(key);
   if (cached) return cached;
   const first = await officialSearch({ keyword, pg: set });
@@ -129,42 +197,69 @@ async function resultList(kv, keyword, set) {
 
 async function search(kv, q) {
   const p = parseQuery(q);
-  if (!p.name && !p.set) return { results: [], message: 'Tape un nom (français, anglais ou japonais) et/ou un code de set (ex. M2a).' };
+  if (!p.name && !p.set) return { results: [], message: 'Tape un nom (français, anglais ou japonais) et/ou un set (M2a, « 30 ans », « Black Bolt »…).' };
   const ja = p.name ? toJapanese(p.name) : '';
   if (p.name && !ja) return { results: [], message: `Nom « ${p.name} » inconnu. Essaie le nom anglais ou japonais.` };
+  const query = { ...p, ja };
   let list = await resultList(kv, ja, p.set || '');
-  if (!list.length) return { results: [], message: p.set && !p.name ? `Set « ${p.set} » introuvable sur la base officielle.` : 'Aucune carte trouvée.' };
   // Pré-filtre sur le nom avant de lire les fiches
   if (p.mega) list = list.filter(c => c.name.includes('メガ'));
   if (p.ex) list = list.filter(c => /ex$/i.test(c.name));
-  const query = { ...p, ja };
-  const filtered = p.number || p.rarity || !p.name;
-  if (!filtered) {
-    const cards = await mapLimit(list.slice(0, MAX_DETAILS), 8, c => details(kv, c));
-    return { query, hits: list.length, results: cards.map(decorate) };
+  // Avec un set précis, on lit toutes ses fiches pour repérer aussi les cartes pas encore publiées
+  const readAll = p.number || p.rarity || !p.name || p.set;
+  let cards;
+  if (!readAll) {
+    cards = await mapLimit(list.slice(0, MAX_DETAILS), 8, c => details(kv, c));
+  } else {
+    // Toutes les fiches : lues par lots la première fois, puis en cache
+    const known = await mapLimit(list, 16, async c => { const d = await kv.get('cards:detail:' + c.cardId); return d && (d.rarity || d.tcgChecked) ? { ...c, ...d } : null; });
+    const missing = list.filter((c, i) => !known[i]);
+    if (missing.length > INDEX_BATCH) {
+      await mapLimit(missing.slice(0, INDEX_BATCH), 8, c => details(kv, c));
+      return { indexing: true, progress: { done: list.length - missing.length + INDEX_BATCH, total: list.length }, results: [] };
+    }
+    const read = await mapLimit(missing, 8, c => details(kv, c));
+    let j = 0;
+    cards = known.map(c => c || read[j++]);
   }
-  // Numéro ou rareté : il faut toutes les fiches. Lues par lots la première fois, puis en cache.
-  const known = await mapLimit(list, 16, async c => { const d = await kv.get('cards:detail:' + c.cardId); return d ? { ...c, ...d } : null; });
-  const missing = list.filter((c, i) => !known[i]);
-  if (missing.length > INDEX_BATCH) {
-    await mapLimit(missing.slice(0, INDEX_BATCH), 8, c => details(kv, c));
-    return { indexing: true, progress: { done: list.length - missing.length + INDEX_BATCH, total: list.length }, results: [] };
+  let results = filterCards(cards, { ...p, set: null });
+  if (p.set) {
+    const extra = await unpublished(kv, p.set, cards.filter(c => c.set.toLowerCase() === p.set.toLowerCase()).map(c => c.number), p, ja);
+    results = results.concat(extra).sort((a, b) => (a.number || 0) - (b.number || 0));
+  } else if (ja) {
+    for (const set of RECENT_SETS) {
+      const inSet = await mapLimit(await resultList(kv, ja, set), 8, c => details(kv, c));
+      results = (await unpublished(kv, set, inSet.map(c => c.number), p, ja)).concat(results);
+    }
   }
-  const all = known.map((c, i) => c || null);
-  const read = await mapLimit(missing, 8, c => details(kv, c));
-  let j = 0;
-  for (let i = 0; i < all.length; i++) if (!all[i]) all[i] = read[j++];
-  return { query, hits: list.length, results: filterCards(all, { ...p, set: null }).slice(0, 60).map(decorate) };
+  if (!results.length) return { query, results: [], message: p.set && !p.name && !list.length ? `Set « ${p.set} » introuvable.` : 'Aucune carte trouvée.' };
+  const nUnpub = results.filter(c => c.unpublished).length;
+  return {
+    query, hits: list.length, results: results.slice(0, 60).map(decorate),
+    note: nUnpub ? `${nUnpub} carte${nUnpub > 1 ? 's' : ''} pas encore publiée${nUnpub > 1 ? 's' : ''} par Pokémon (image indisponible) : ajoute ta photo pour l'utiliser.` : '',
+  };
 }
 
 module.exports = async (req, res) => {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
-  const code = req.headers['x-admin-code'];
-  if (!code || code !== process.env.ADMIN_CODE) return res.status(403).json({ error: 'Accès refusé' });
 
   try {
     const { kv } = require('@vercel/kv');
+
+    // Photo d'une carte ajoutée à la main : publique (affichée aux clients lors des ouvertures)
+    if (req.method === 'GET' && req.query.img) {
+      const data = await kv.get('cards:img:' + String(req.query.img).slice(0, 60));
+      if (!data) return res.status(404).end();
+      const m = String(data).match(/^data:(image\/(?:jpeg|png|webp));base64,(.+)$/);
+      if (!m) return res.status(404).end();
+      res.setHeader('Content-Type', m[1]);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.status(200).send(Buffer.from(m[2], 'base64'));
+    }
+
+    const code = req.headers['x-admin-code'];
+    if (!code || code !== process.env.ADMIN_CODE) return res.status(403).json({ error: 'Accès refusé' });
 
     if (req.method === 'GET') {
       if (req.query.stock) return res.status(200).json({ cards: (await kv.get(STOCK_KEY)) || [], packs: (await kv.get(PACKS_KEY)) || {} });
@@ -196,11 +291,29 @@ module.exports = async (req, res) => {
 
       if (body.action === 'add') {
         const c = body.card || {};
-        if (!/^\d+$/.test(String(c.cardId || ''))) return res.status(400).json({ error: 'Carte invalide' });
+        const id = String(c.cardId || '');
         if (!qty) return res.status(400).json({ error: 'Quantité requise' });
-        // Les infos viennent de la base officielle (cache), pas du navigateur
-        const d = await details(kv, { cardId: String(c.cardId), name: String(c.name || '').slice(0, 80), img: String(c.img || '') });
-        if (!d.img.startsWith(OFFICIAL + '/assets/images/card_images/')) return res.status(400).json({ error: 'Image invalide' });
+        let d;
+        if (/^\d+$/.test(id)) {
+          // Carte publiée : infos relues depuis la base officielle (cache), pas depuis le navigateur
+          d = await details(kv, { cardId: id, name: cleanName(c.name).slice(0, 80), img: String(c.img || '') });
+          if (!d.img.startsWith(OFFICIAL + '/assets/images/card_images/')) return res.status(400).json({ error: 'Image invalide' });
+        } else {
+          // Carte pas encore publiée : infos TCGdex + photo obligatoire
+          const m = id.match(/^tcg-([A-Za-z0-9-]{1,12})-(\d{3})$/);
+          if (!m) return res.status(400).json({ error: 'Carte invalide' });
+          const t = await tcgdex('/cards/' + m[1] + '-' + m[2]);
+          if (!t) return res.status(400).json({ error: 'Carte introuvable chez TCGdex' });
+          const exists = cards.find(x => x.cardId === id);
+          const img = String(body.imageData || '');
+          if (!exists) {
+            if (!/^data:image\/(?:jpeg|png|webp);base64,/.test(img)) return res.status(400).json({ error: 'Ajoute une photo de la carte' });
+            if (img.length > MAX_IMG * 1.37) return res.status(400).json({ error: 'Photo trop lourde' });
+          }
+          if (img) await kv.set('cards:img:' + id, img);
+          const setInfo = await kv.get('cards:tcgset:' + m[1].toLowerCase());
+          d = { cardId: id, name: t.name, set: m[1], number: +m[2], total: setInfo && setInfo.total, rarity: tcgRarity(t.rarity), img: '/api/cards?img=' + id };
+        }
         const existing = cards.find(x => x.cardId === d.cardId);
         if (existing) { existing.qty += qty; if (value) existing.value = value; existing.updatedAt = Date.now(); }
         else cards.unshift({ id: 'crd_' + d.cardId, cardId: d.cardId, name: d.name, nameFr: frName(d.name), set: d.set, number: d.number, total: d.total, rarity: d.rarity, img: d.img, qty, value, addedAt: Date.now() });
@@ -219,6 +332,7 @@ module.exports = async (req, res) => {
       if (body.action === 'delete') {
         const next = cards.filter(x => x.id !== body.id);
         await kv.set(STOCK_KEY, next);
+        if (card.cardId.startsWith('tcg-')) await kv.del('cards:img:' + card.cardId);
         return res.status(200).json({ cards: next });
       }
       return res.status(400).json({ error: 'Action inconnue' });
