@@ -26,6 +26,9 @@ const MAX_IMG = 450 * 1024;
 // Sets récents dont Pokémon n'a pas encore publié toutes les cartes : vérifiés même sans set dans la recherche
 const RECENT_SETS = ['M6a', 'M6'];  // photo envoyée depuis l'admin (déjà réduite par le navigateur)
 
+// « alt » / « alt art » : toutes les cartes à illustration spéciale
+const ALT_RARITIES = ['AR', 'SAR', 'SR', 'FR', 'CC', 'RGB', 'CHR', 'CSR'];
+const RARITY_LABEL = { AR: 'Art Rare', SAR: 'Special Art Rare', SR: 'Super Rare', UR: 'Ultra Rare (gold)', MUR: 'Mega Ultra Rare', FR: 'Futuristic Rare', CC: 'Classic Collection', RGB: 'RGB Rare', RR: 'Double Rare', CHR: 'Character Rare', CSR: 'Character Super Rare', MA: 'Mega Attack Rare' };
 const RARITIES = ['C', 'U', 'R', 'RR', 'RRR', 'AR', 'SAR', 'SR', 'UR', 'HR', 'MUR', 'MA', 'BWR', 'CHR', 'CSR', 'ACE', 'S', 'SSR', 'K', 'PR', 'TR', 'CC', 'RGB', 'FR'];
 // Libellés TCGdex → codes de rareté japonais
 const TCG_RARITY = {
@@ -80,12 +83,14 @@ function parseQuery(q) {
   const out = { words: [] };
   let text = String(q || '');
   for (const [re, code] of SET_ALIASES) text = text.replace(re, ' ' + code + ' ');
+  text = text.replace(/alt(?:ernative)?(?:[s-]*art)?/gi, ' ALT ');
   for (const raw of text.trim().split(/\s+/).filter(Boolean)) {
     const t = raw.replace(/[,;]/g, '');
     const up = t.toUpperCase();
     const num = t.match(/^(\d{1,3})(?:\/\d{1,3})?$/);
     if (num) { out.number = +num[1]; continue; }
     if (RARITIES.includes(up) && up.length >= 2) { out.rarity = up; continue; }
+    if (up === 'ALT') { out.rarities = ALT_RARITIES; continue; }
     // Codes de set japonais : M2a, SV11B, S12a, SM8b, MC, M-P… (la base officielle ignore la casse)
     if (/^(M|SV|S|SM)\d{1,2}[A-Z]{0,2}$|^(MC|MF|M-P|SV-P|S-P)$/i.test(t)) { out.set = t; continue; }
     if (/^m[ée]ga$/i.test(t)) { out.mega = true; continue; }
@@ -159,7 +164,7 @@ async function unpublished(kv, set, officialNumbers, p, ja) {
     if (rarity === null) { const t = await tcgdex('/cards/' + id); rarity = tcgRarity(t && t.rarity); await kv.set(ck, rarity); }
     return { cardId: 'tcg-' + id, name: c.name, set: s.id, number: c.n, total: s.total, rarity, img: '', unpublished: true };
   });
-  return cands.filter(c => !p.rarity || c.rarity === p.rarity);
+  return cands.filter(c => rarityOk(c, p));
 }
 
 async function mapLimit(items, n, fn) {
@@ -171,12 +176,14 @@ async function mapLimit(items, n, fn) {
   return out;
 }
 
-const decorate = c => ({ ...c, nameFr: frName(c.name), label: `${c.set || '?'} ${c.number ? String(c.number).padStart(3, '0') + '/' + c.total : ''}`.trim() });
+const decorate = c => ({ ...c, nameFr: frName(c.name), rarityLabel: RARITY_LABEL[c.rarity] || '', label: `${c.set || '?'} ${c.number ? String(c.number).padStart(3, '0') + '/' + c.total : ''}`.trim() });
+
+const rarityOk = (c, p) => p.rarity ? c.rarity === p.rarity : p.rarities ? p.rarities.includes(c.rarity) : true;
 
 function filterCards(cards, p) {
   return cards.filter(c =>
     (!p.number || c.number === p.number) &&
-    (!p.rarity || c.rarity === p.rarity) &&
+    rarityOk(c, p) &&
     (!p.mega || c.name.includes('メガ')) &&
     (!p.ex || /ex$/i.test(c.name)) &&
     (!p.set || c.set.toLowerCase() === p.set.toLowerCase()));
@@ -198,7 +205,10 @@ async function resultList(kv, keyword, set) {
 async function search(kv, q) {
   const p = parseQuery(q);
   if (!p.name && !p.set) return { results: [], message: 'Tape un nom (français, anglais ou japonais) et/ou un set (M2a, « 30 ans », « Black Bolt »…).' };
-  const ja = p.name ? toJapanese(p.name) : '';
+  let ja = p.name ? toJapanese(p.name) : '';
+  if (p.name && !ja) { // « mewtwo truc » → on garde le mot reconnu
+    for (const w of p.words) { ja = toJapanese(w); if (ja) { p.ignored = p.words.filter(x => x !== w); break; } }
+  }
   if (p.name && !ja) return { results: [], message: `Nom « ${p.name} » inconnu. Essaie le nom anglais ou japonais.` };
   const query = { ...p, ja };
   let list = await resultList(kv, ja, p.set || '');
@@ -206,7 +216,7 @@ async function search(kv, q) {
   if (p.mega) list = list.filter(c => c.name.includes('メガ'));
   if (p.ex) list = list.filter(c => /ex$/i.test(c.name));
   // Avec un set précis, on lit toutes ses fiches pour repérer aussi les cartes pas encore publiées
-  const readAll = p.number || p.rarity || !p.name || p.set;
+  const readAll = p.number || p.rarity || p.rarities || !p.name || p.set;
   let cards;
   if (!readAll) {
     cards = await mapLimit(list.slice(0, MAX_DETAILS), 8, c => details(kv, c));

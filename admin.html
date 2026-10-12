@@ -693,7 +693,7 @@ async function searchCards(){
     msg.textContent=d.message||(_crdResults.length?`${_crdResults.length} proposition${_crdResults.length>1?'s':''}${d.query&&d.query.ja?' · recherché : '+d.query.ja:''}${d.note?' · ⚠️ '+d.note:''}`:'Aucune carte trouvée.');
     _crdPhotos={};
     document.getElementById('crdResults').innerHTML=_crdResults.map((c,i)=>`<div class="crd">
-      ${c.unpublished?`<label class="crd-ph" id="crdPh${i}"><b>📷 Ajouter une photo</b>Image pas encore publiée par Pokémon<input type="file" accept="image/*" onchange="pickCardPhoto(${i},this)"></label>`:`<img src="${escH(c.img)}" alt="" loading="lazy">`}
+      ${c.unpublished?`<label class="crd-ph" id="crdPh${i}"><b>📷 Ajouter une photo</b><span>${escH(c.set)} ${c.number}/${c.total||'?'}${c.rarityLabel?' · '+escH(c.rarityLabel):''}</span>Image pas encore publiée par Pokémon<input type="file" accept="image/*" onchange="pickCardPhoto(${i},this)"></label>`:`<img src="${escH(c.img)}" alt="" loading="lazy">`}
       <div><div class="crd-name">${escH(c.name)}</div><div class="crd-sub">${escH(c.nameFr)}</div><div class="crd-sub">${crdLabel(c)}</div></div>
       <div class="crd-row"><label>Qté</label><input type="number" min="1" value="1" id="crdQty${i}"></div>
       <div class="crd-row"><label>Valeur €</label><input type="number" min="0" step="0.5" placeholder="0" id="crdVal${i}"></div>
