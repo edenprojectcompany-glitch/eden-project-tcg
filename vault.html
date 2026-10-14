@@ -1144,21 +1144,92 @@ function buildPack(box, maps) {
 // ── Carrousel de socles ──────────────────────────────────────────
 const ring = new THREE.Group(); scene.add(ring);
 const stands = [];
+// ── Podium : piédestal en bronze sculpté, disque de braises, colonne de lumière ──
+// Profil tourné (base à gradins, taille creusée, chapiteau évasé) ; le dessus est un portail de feu animé.
+const PODIUM_TOP = 1.03;
+const G_PEDESTAL = new THREE.LatheGeometry([
+  [0, 0], [.98, 0], [1.02, .04], [1.02, .12], [.94, .16], [.92, .2], [.8, .24], [.7, .34], [.64, .5], [.62, .66],
+  [.66, .78], [.76, .86], [.86, .92], [.9, .96], [.9, PODIUM_TOP], [0, PODIUM_TOP],
+].map(([x, y]) => new THREE.Vector2(x, y)), 128);
+const bronzeMat = new THREE.MeshPhysicalMaterial({ color: 0x24170c, metalness: .88, roughness: .3, clearcoat: .7, clearcoatRoughness: .2, envMapIntensity: 1.5 });
+const trimMat = new THREE.MeshStandardMaterial({ color: 0xe0b866, metalness: 1, roughness: .2, emissive: 0x3a2506, envMapIntensity: 1.6 });
+const NOISE_GLSL = `float ph(vec3 p){ p = fract(p * .1031); p += dot(p, p.zyx + 31.32); return fract((p.x + p.y) * p.z); }
+  float pn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
+    return mix(mix(mix(ph(i), ph(i + vec3(1,0,0)), f.x), mix(ph(i + vec3(0,1,0)), ph(i + vec3(1,1,0)), f.x), f.y),
+               mix(mix(ph(i + vec3(0,0,1)), ph(i + vec3(1,0,1)), f.x), mix(ph(i + vec3(0,1,1)), ph(i + vec3(1,1,1)), f.x), f.y), f.z); }
+  float pf(vec3 p){ float s = 0., a = .5; for (int i = 0; i < 4; i++) { s += a * pn(p); p = p * 2.03 + 5.3; a *= .5; } return s; }`;
+// Disque de braises qui tourbillonne + cercle de runes
+const PORTAL_FS = `uniform float t, sel; uniform vec3 c1, c2; varying vec2 vUv;
+  ${NOISE_GLSL}
+  void main(){
+    vec2 p = vUv * 2. - 1.; float r = length(p), a = atan(p.y, p.x);
+    float sw = a + r * 3.2 - t * .45;
+    float f = pf(vec3(cos(sw) * r * 3., sin(sw) * r * 3., t * .18));
+    float core = smoothstep(1., .05, r);
+    vec3 col = mix(c2, c1, f) * (.18 + 1.1 * pow(f, 1.6)) * core;
+    float ring = smoothstep(.022, 0., abs(r - .66 - .012 * sin(t * 2.)));
+    float ticks = step(.72, fract(a * 36. / 6.2832 + t * .05)) * smoothstep(.03, 0., abs(r - .76));
+    col += c1 * (ring * 1.4 + ticks * .9);
+    col += vec3(1., .95, .85) * smoothstep(.25, 0., r) * .25;
+    col *= .45 + .75 * sel;
+    gl_FragColor = vec4(col * smoothstep(1., .9, r), 1.);
+  }`;
+// Colonne de lumière : stries qui montent, s'efface vers le haut
+const BEAM_FS = `uniform float t, sel; uniform vec3 c1; varying vec2 vUv;
+  ${NOISE_GLSL}
+  void main(){
+    float s = pf(vec3(vUv.x * 24., vUv.y * 3. - t * .7, 1.));
+    float fade = pow(1. - vUv.y, 2.2) * smoothstep(0., .06, vUv.y);
+    gl_FragColor = vec4(c1 * (.08 + .5 * pow(s, 3.)) * fade * sel, 1.);
+  }`;
+// Braises qui montent en tournoyant autour du disque
+const EMBER_VS = `attribute vec3 seed; uniform float t, sel; varying float a;
+  void main(){
+    float k = fract(seed.z + t * (.12 + seed.y * .1));
+    float ang = seed.x * 6.2832 + t * (.25 + seed.y * .3);
+    float rad = .35 + .5 * seed.y + k * .15;
+    vec3 p = vec3(cos(ang) * rad, ${PODIUM_TOP.toFixed(2)} + k * 1.7, sin(ang) * rad);
+    vec4 mv = modelViewMatrix * vec4(p, 1.);
+    gl_Position = projectionMatrix * mv;
+    gl_PointSize = (2. + 3. * seed.y) * (6. / -mv.z);
+    a = sin(k * 3.1416) * (.35 + .65 * sel);
+  }`;
+const EMBER_FS = `uniform vec3 c1; varying float a;
+  void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(mix(c1, vec3(1., .95, .8), .35) * smoothstep(.5, 0., d) * a, 1.); }`;
+const G_EMBERS = (() => {
+  const n = MOBILE ? 24 : 48, s = new Float32Array(n * 3);
+  for (let i = 0; i < n * 3; i++) s[i] = Math.random();
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  g.setAttribute('seed', new THREE.BufferAttribute(s, 3));
+  return g;
+})();
+const G_BEAM = new THREE.CylinderGeometry(.5, .76, 1.7, 64, 1, true).translate(0, PODIUM_TOP + .85, 0);
+
 function buildStand(box, i, n) {
   const a = i / n * Math.PI * 2;
   const grp = new THREE.Group(); grp.position.set(Math.sin(a) * RING_R, 0, Math.cos(a) * RING_R); grp.rotation.y = a;
-  const col = new THREE.Color(box.theme[0]);
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(.78, .9, 1.05, 72), new THREE.MeshPhysicalMaterial({ color: 0x0b0b0f, metalness: .7, roughness: .22, clearcoat: 1, clearcoatRoughness: .1 }));
-  base.position.y = .525; grp.add(base);
-  const gold = new THREE.MeshStandardMaterial({ color: 0xd9b26a, metalness: 1, roughness: .22, emissive: 0x2a1c04 });
-  const lip = new THREE.Mesh(new THREE.TorusGeometry(.79, .03, 16, 96), gold); lip.rotation.x = Math.PI / 2; lip.position.y = 1.05; grp.add(lip);
-  const lip2 = new THREE.Mesh(new THREE.TorusGeometry(.9, .02, 16, 96), gold); lip2.rotation.x = Math.PI / 2; lip2.position.y = .02; grp.add(lip2);
-  const glow = new THREE.Mesh(new THREE.CircleGeometry(.76, 64), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .12, blending: THREE.AdditiveBlending, depthWrite: false }));
-  glow.rotation.x = -Math.PI / 2; glow.position.y = 1.056; grp.add(glow);
+  const c1 = new THREE.Color(box.theme[0]), c2 = new THREE.Color(box.theme[0]).lerp(new THREE.Color(0x3a0d02), .75);
+  const fx = { t: artTime, sel: { value: .35 }, c1: { value: c1 }, c2: { value: c2 } };
+  const base = new THREE.Mesh(G_PEDESTAL, bronzeMat); grp.add(base);
+  for (const [r, y, tube] of [[1.02, .12, .02], [.93, .19, .012], [.63, .66, .012], [.87, .93, .014], [.9, PODIUM_TOP, .026]]) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 14, 128), trimMat); ring.rotation.x = Math.PI / 2; ring.position.y = y; grp.add(ring);
+  }
+  const portal = new THREE.Mesh(new THREE.CircleGeometry(.89, 96), new THREE.ShaderMaterial({ uniforms: fx, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }', fragmentShader: PORTAL_FS }));
+  portal.rotation.x = -Math.PI / 2; portal.position.y = PODIUM_TOP + .002; grp.add(portal);
+  const beam = new THREE.Mesh(G_BEAM, new THREE.ShaderMaterial({ uniforms: fx, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }', fragmentShader: BEAM_FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+  grp.add(beam);
+  const embers = new THREE.Points(G_EMBERS, new THREE.ShaderMaterial({ uniforms: fx, vertexShader: EMBER_VS, fragmentShader: EMBER_FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  embers.frustumCulled = false; grp.add(embers);
+  // Lumière du portail : éclaire le dessous du booster et le chapiteau
+  const lamp = new THREE.PointLight(c1, 1.4, 3.2, 2); lamp.position.y = PODIUM_TOP + .35; grp.add(lamp);
+  // Halo au sol (sélection)
+  const glow = new THREE.Mesh(new THREE.CircleGeometry(1.45, 64), new THREE.MeshBasicMaterial({ color: c1, transparent: true, opacity: .1, blending: THREE.AdditiveBlending, depthWrite: false }));
+  glow.rotation.x = -Math.PI / 2; glow.position.y = .012; grp.add(glow);
   const maps = packMaps(box);
   const pack = buildPack(box, maps); pack.position.y = 2.2; grp.add(pack);
   ring.add(grp);
-  return { box, grp, pack, maps, glow, angle: a, base };
+  return { box, grp, pack, maps, glow, angle: a, base, fx, lamp };
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1688,6 +1759,9 @@ function frame(now) {
     if (sel) { s.pack.rotation.y = idle * (1 - insp.hold) + insp.yaw; s.pack.rotation.x = insp.pitch; }
     else { s.pack.rotation.y = idle; s.pack.rotation.x = 0; }
     s.glow.material.opacity = lerp(s.glow.material.opacity, sel ? .2 : .05, .08);
+    // Le podium sélectionné s'embrase, les autres restent en veille
+    s.fx.sel.value = lerp(s.fx.sel.value, sel ? 1 : .35, .06);
+    s.lamp.intensity = 1.6 * s.fx.sel.value;
   });
   // Caméra : suit sa cible + léger parallaxe souris + tremblement
   if (S.mode !== 'browse') zoom.t = 0;
