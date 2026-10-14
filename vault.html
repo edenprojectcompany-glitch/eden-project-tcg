@@ -778,29 +778,105 @@ const crimpTex = (() => {
 })();
 const crimpMat = new THREE.MeshStandardMaterial({ map: crimpTex, metalness: .75, roughness: .55, color: 0xb8b8b8 });
 
-// ── Illustration animée dans une fenêtre du sachet (boosters mystère) ──
-// Fenêtre en fractions du sachet (x : largeur, top/bot : depuis le haut), reprise par drawPack pour le cadre
-const ART = { x: .85, top: .195, bot: .592 };
-const G_ART = (() => {
-  const w = PW * ART.x, y1 = PH / 2 - ART.top * PH, y0 = PH / 2 - ART.bot * PH;
-  const g = new THREE.PlaneGeometry(w, y1 - y0, 32, 32);
+// ── Boosters mystère : l'illustration animée recouvre tout le sachet, devant et derrière ──
+// Des surfaces épousent le bombé du sachet (corps + bande à déchirer) ; par-dessus, un calque
+// « premium » transparent (liserés dorés, plaque de titre, prix au recto ; médaillon au verso).
+function artGeometry(y0, y1, back, strip) {
+  const g = new THREE.PlaneGeometry(PW, y1 - y0, 40, 40);
   g.translate(0, (y0 + y1) / 2, 0);
-  const p = g.attributes.position;
-  for (let i = 0; i < p.count; i++) { // épouse le bombé du sachet (même formule que pillow)
-    const nx = p.getX(i) / (PW / 2), ny = p.getY(i) / (PH / 2);
-    const b = Math.max(0, 1 - nx * nx) ** .8 * Math.max(0, 1 - Math.abs(ny) ** 5);
-    p.setZ(i, PD / 2 + .075 * b + .004);
+  const p = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), nx = x / (PW / 2), ny = y / (PH / 2);
+    const b = Math.max(0, 1 - nx * nx) ** .8 * Math.max(0, 1 - Math.abs(ny) ** 5);   // même bombé que pillow()
+    const z = PD / 2 + .075 * b + .003;
+    if (back) { p.setX(i, -x); p.setZ(i, -z); } else p.setZ(i, z);
+    uv.setXY(i, x / PW + .5, (y + PH / 2) / PH);   // coordonnées du sachet entier (verso : vu à l'endroit)
   }
+  if (strip) g.translate(PW / 2, -SEAM, 0);        // la bande pivote autour de son bord gauche
   g.computeVertexNormals();
   return g;
-})();
+}
+const G_ART = {
+  body: artGeometry(-PH / 2 + CRIMP, SEAM, false), bodyBack: artGeometry(-PH / 2 + CRIMP, SEAM, true),
+  strip: artGeometry(SEAM, PH / 2 - CRIMP, false, true), stripBack: artGeometry(SEAM, PH / 2 - CRIMP, true, true),
+};
 const artTime = { value: 0 };
-const artTextures = {};
+const artTextures = {}, artOverlays = {};
 function artTexture(url) {
   if (!artTextures[url]) { const t = loader.load(url); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); artTextures[url] = t; }
   return artTextures[url];
 }
-const ART_FS = `uniform sampler2D map; uniform float t, kind, op, aspect; varying vec2 vUv;
+// Calque premium dessiné une fois par booster (recto / verso)
+function artOverlay(box, back) {
+  const key = box.id + (back ? ':b' : ':f');
+  if (artOverlays[key]) return artOverlays[key];
+  const W = MOBILE ? 600 : 1000, H = Math.round(W * PH / PW), S = W / 800;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const topY = H * CRIMP / PH, botY = H - topY, seamY = H * (1 - (SEAM + PH / 2) / PH), cx = W / 2;
+  const gold = (y0, y1) => { const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, '#fff6d6'); gr.addColorStop(.45, '#e9c06a'); gr.addColorStop(1, '#9a6a1c'); return gr; };
+  const text = (str, x, y, font, fill, align = 'center') => { g.font = font; g.textAlign = align; g.textBaseline = 'middle'; g.fillStyle = fill; g.fillText(str, x, y); };
+  const tag = (DESIGNS[box.id] || {}).tag || box.name.toUpperCase();
+  // Liseré doré double sur tout le pourtour
+  const fr = (inset, w, a) => { g.strokeStyle = gold(topY, botY); g.globalAlpha = a; g.lineWidth = w * S; g.beginPath(); g.roundRect(inset * S, topY + inset * S, W - inset * 2 * S, botY - topY - inset * 2 * S, 14 * S); g.stroke(); g.globalAlpha = 1; };
+  fr(16, 4, .95); fr(28, 1.5, .8);
+  if (!back) {
+    // Bande à déchirer : voile sombre + pointillés + texte doré
+    const sg = g.createLinearGradient(0, topY, 0, seamY + 30 * S); sg.addColorStop(0, 'rgba(6,5,10,.72)'); sg.addColorStop(1, 'rgba(6,5,10,0)');
+    g.fillStyle = sg; g.fillRect(0, topY, W, seamY + 30 * S - topY);
+    g.strokeStyle = 'rgba(255,240,200,.75)'; g.lineWidth = 2 * S; g.setLineDash([12 * S, 9 * S]); g.beginPath(); g.moveTo(0, seamY); g.lineTo(W, seamY); g.stroke(); g.setLineDash([]);
+    text('✂  DÉCHIRER ICI  ✂', cx, (topY + seamY) / 2 + 2 * S, `800 ${20 * S}px Manrope, sans-serif`, gold(topY, seamY));
+    // Bandeau haut : marque + série
+    text('EDEN VAULT', 50 * S, seamY + 44 * S, `800 ${16 * S}px Manrope, sans-serif`, gold(seamY, seamY + 60 * S), 'left');
+    text(tag, W - 50 * S, seamY + 44 * S, `800 ${16 * S}px Manrope, sans-serif`, gold(seamY, seamY + 60 * S), 'right');
+    // Dégradé bas pour la lisibilité de la plaque
+    const bg = g.createLinearGradient(0, H * .6, 0, botY); bg.addColorStop(0, 'rgba(4,4,8,0)'); bg.addColorStop(.55, 'rgba(4,4,8,.55)'); bg.addColorStop(1, 'rgba(4,4,8,.85)');
+    g.fillStyle = bg; g.fillRect(0, H * .6, W, botY - H * .6);
+    // Plaque de titre
+    const pw = W - 150 * S, ph = 132 * S, py = H * .705;
+    g.fillStyle = 'rgba(8,6,12,.62)'; g.beginPath(); g.roundRect(cx - pw / 2, py, pw, ph, 16 * S); g.fill();
+    g.strokeStyle = gold(py, py + ph); g.lineWidth = 3 * S; g.stroke();
+    g.lineWidth = 1 * S; g.beginPath(); g.roundRect(cx - pw / 2 + 9 * S, py + 9 * S, pw - 18 * S, ph - 18 * S, 11 * S); g.stroke();
+    let fs = 70 * S; g.font = `700 ${fs}px Fraunces, Georgia, serif`;
+    while (g.measureText(box.name).width > pw - 60 * S && fs > 30 * S) { fs -= 3 * S; g.font = `700 ${fs}px Fraunces, Georgia, serif`; }
+    g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 10 * S;
+    text(box.name, cx, py + ph * .5, g.font, gold(py, py + ph));
+    g.shadowBlur = 0;
+    // Pastille + pied
+    const lab = '1 CARTE RÉELLE À L’INTÉRIEUR';
+    g.font = `800 ${16 * S}px Manrope, sans-serif`; const lw = g.measureText(lab).width + 44 * S, ly = py + ph + 22 * S;
+    g.fillStyle = 'rgba(8,6,12,.7)'; g.beginPath(); g.roundRect(cx - lw / 2, ly, lw, 38 * S, 19 * S); g.fill();
+    g.strokeStyle = gold(ly, ly + 38 * S); g.lineWidth = 2 * S; g.stroke();
+    text(lab, cx, ly + 20 * S, g.font, '#fff3d0');
+    text(`${fmt(box.price)} €`, W - 50 * S, botY - 46 * S, `800 ${30 * S}px Manrope, sans-serif`, gold(botY - 70 * S, botY - 20 * S), 'right');
+    text('AUTHENTIQUE · TIRAGE VÉRIFIABLE', 50 * S, botY - 46 * S, `700 ${12 * S}px Manrope, sans-serif`, 'rgba(255,240,210,.8)', 'left');
+  } else {
+    // Verso : voile + médaillon doré + mentions
+    g.fillStyle = 'rgba(4,4,8,.35)'; g.fillRect(0, topY, W, botY - topY);
+    const cy = H * .45, R = 128 * S;
+    const rg = g.createRadialGradient(cx, cy, R * .2, cx, cy, R * 1.6); rg.addColorStop(0, 'rgba(6,5,10,.75)'); rg.addColorStop(1, 'rgba(6,5,10,0)');
+    g.fillStyle = rg; g.beginPath(); g.arc(cx, cy, R * 1.6, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = gold(cy - R, cy + R); g.lineWidth = 8 * S; g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.stroke();
+    g.lineWidth = 2 * S; g.beginPath(); g.arc(cx, cy, R + 16 * S, 0, Math.PI * 2); g.stroke();
+    for (let k = 0; k < 40; k++) { const a = k / 40 * Math.PI * 2; g.fillStyle = gold(cy - R, cy + R); g.beginPath(); g.arc(cx + Math.cos(a) * (R + 16 * S), cy + Math.sin(a) * (R + 16 * S), 3 * S, 0, Math.PI * 2); g.fill(); }
+    const ring = `EDEN VAULT ✦ ${tag} ✦ CHAMBRE FORTE ✦ `;
+    g.font = `800 ${14 * S}px Manrope, sans-serif`; g.fillStyle = '#ffe9b0';
+    for (let k = 0; k < ring.length; k++) { const a = -Math.PI / 2 + k / ring.length * Math.PI * 2; g.save(); g.translate(cx + Math.cos(a) * (R - 22 * S), cy + Math.sin(a) * (R - 22 * S)); g.rotate(a + Math.PI / 2); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ring[k], 0, 0); g.restore(); }
+    g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 12 * S;
+    text('E', cx, cy + 8 * S, `800 ${150 * S}px Fraunces, Georgia, serif`, gold(cy - 80 * S, cy + 80 * S));
+    g.shadowBlur = 0;
+    text('EDEN PROJECT TCG', cx, H * .68, `800 ${26 * S}px Manrope, sans-serif`, gold(H * .66, H * .7));
+    text('Contient 1 carte Pokémon japonaise réelle,', cx, H * .725, `600 ${16 * S}px Manrope, sans-serif`, 'rgba(255,245,225,.9)');
+    text('conservée dans ton coffre jusqu’à l’envoi.', cx, H * .752, `600 ${16 * S}px Manrope, sans-serif`, 'rgba(255,245,225,.9)');
+    let bx = cx - 120 * S; for (let k = 0; k < 40; k++) { const w = (1 + (k * 7 % 3)) * S; g.fillStyle = 'rgba(255,245,225,.85)'; g.fillRect(bx, botY - 110 * S, w, 44 * S); bx += w + (1 + k * 5 % 3) * S; }
+    text('EV-' + box.id.toUpperCase() + ' · AUTHENTIQUE · TIRAGE VÉRIFIABLE', cx, botY - 46 * S, `700 ${12 * S}px Manrope, sans-serif`, 'rgba(255,240,210,.8)');
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return (artOverlays[key] = t);
+}
+const ART_VS = `varying vec2 vUv; varying vec3 vN, vV;
+  void main(){ vUv = uv; vec4 mv = modelViewMatrix * vec4(position, 1.); vN = normalize(normalMatrix * normal); vV = -mv.xyz; gl_Position = projectionMatrix * mv; }`;
+const ART_FS = `uniform sampler2D map, ov; uniform float t, kind, op, back, aspect; varying vec2 vUv; varying vec3 vN, vV;
   float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
   float h3(vec3 p){ p = fract(p * .1031); p += dot(p, p.zyx + 31.32); return fract((p.x + p.y) * p.z); }
   float n3(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
@@ -808,23 +884,21 @@ const ART_FS = `uniform sampler2D map; uniform float t, kind, op, aspect; varyin
                mix(mix(h3(i + vec3(0,0,1)), h3(i + vec3(1,0,1)), f.x), mix(h3(i + vec3(0,1,1)), h3(i + vec3(1,1,1)), f.x), f.y), f.z); }
   float fbm(vec3 p){ float s = 0., a = .5; for (int i = 0; i < 4; i++) { s += a * n3(p); p = p * 2.03 + 7.1; a *= .5; } return s; }
   void main(){
-    // Recadrage de l'image 16:9 dans la fenêtre du sachet, resserré sur le sujet
     bool mew = kind < .5;
-    vec2 p = (mew ? vec2(.49, .56) : vec2(.48, .5)) + (vUv - .5) * vec2(aspect, 1.) * .72;
-    vec2 c = mew ? vec2(.487, .575) : vec2(.48, .5), rad = mew ? vec2(.085, .2) : vec2(.19, .25);
+    // L'image 16:9 couvre tout le sachet (format portrait), cadrée sur le héros
+    vec2 c = mew ? vec2(.487, .56) : vec2(.48, .5);
+    vec2 p = clamp(c + (vUv - vec2(.5, .47)) * vec2(aspect, 1.) * .96, .002, .998);
+    vec2 rad = mew ? vec2(.085, .2) : vec2(.19, .25);
     float hero = 1. - smoothstep(.55, 1., length((p - c) / rad));
-    // Le héros flotte / plane doucement, sans déformation
     vec2 bob = mew ? vec2(sin(t * .55) * .0035, sin(t * .9) * .009 + sin(t * 2.1) * .0015)
                    : vec2(sin(t * .4) * .005, sin(t * .8) * .008 + sin(t * 1.9) * .0015);
     vec2 q = p - bob * hero;
     vec3 c0 = texture2D(map, p).rgb;
     float fx;
     if (mew) {
-      // Flammes : chaleur qui monte en ondulant
       fx = clamp((c0.r - c0.b) * 1.6, 0., 1.) * (1. - hero);
       q += (vec2(fbm(vec3(p * vec2(5., 3.) + vec2(0., -t * .32), 1.)), fbm(vec3(p * vec2(4., 6.) + vec2(3.7, -t * .45), 2.))) - .5) * .018 * fx;
     } else {
-      // Nuages et brume : dérive lente sur les zones claires
       fx = smoothstep(.42, .85, dot(c0, vec3(.33))) * (1. - hero);
       q += (vec2(fbm(vec3(p * vec2(3., 5.) + vec2(t * .05, 0.), t * .03)), fbm(vec3(p * vec2(4., 3.) + vec2(5., t * .04), 1.))) - .5) * .014 * fx;
     }
@@ -833,26 +907,30 @@ const ART_FS = `uniform sampler2D map; uniform float t, kind, op, aspect; varyin
       col *= 1. + (fbm(vec3(p * vec2(7., 9.) + vec2(t * .08, -t * .7), 3.)) - .45) * .55 * fx;
       col += vec3(1., .8, .62) * (1. - smoothstep(0., 1.25, length((p - c) / vec2(.16, .3)))) * (.5 + .5 * sin(t * 1.3)) * .1;
     } else {
-      // Lumière du soleil qui respire, flamme de la queue, flocons portés par le vent
       col += vec3(1., .9, .72) * .1 * smoothstep(.55, 1., p.y) * (.5 + .5 * sin(t * .6 + p.x * 6.)) * fx;
       float tail = 1. - smoothstep(0., .04, length((p - vec2(.372, .424) - bob) * vec2(1., 1.6)));
       col += vec3(1., .45, .12) * tail * (.45 + .25 * sin(t * 9.) + .15 * sin(t * 23.));
       vec2 sp = p * vec2(46., 26.) + vec2(t * .9, t * 2.4);
       vec2 id = floor(sp), f = fract(sp) - .5;
-      float hs = h2(id);
-      col += vec3(.92, .96, 1.) * step(.93, hs) * smoothstep(.13, 0., length(f - (vec2(h2(id + 3.), h2(id + 7.)) - .5) * .6)) * .7;
+      col += vec3(.92, .96, 1.) * step(.93, h2(id)) * smoothstep(.13, 0., length(f - (vec2(h2(id + 3.), h2(id + 7.)) - .5) * .6)) * .7;
     }
-    // Reflet brillant qui balaie le sachet
+    if (back > .5) col *= .62;
+    // Lumière sur le sachet bombé : ombrage doux + reflet qui suit l'angle de vue
+    vec3 n = normalize(vN), v = normalize(vV), l = normalize(vec3(.35, .6, 1.));
+    col *= .72 + .38 * max(dot(n, l), 0.);
+    col += vec3(1., .96, .9) * pow(max(dot(reflect(-l, n), v), 0.), 26.) * .28;
     float sw = fract(vUv.x * .55 + vUv.y * .35 - t * .09);
-    col += vec3(1.) * smoothstep(.06, 0., abs(sw - .5)) * .14;
-    gl_FragColor = vec4(col * .92, op);
+    col += vec3(1.) * smoothstep(.06, 0., abs(sw - .5)) * .12;
+    // Calque premium (liserés, titre, prix…)
+    vec4 o = texture2D(ov, vUv);
+    col = mix(col, o.rgb, o.a);
+    gl_FragColor = vec4(col * .95, op);
   }`;
-function artMaterial(box) {
+function artMaterial(box, back) {
   return new THREE.ShaderMaterial({
-    uniforms: { map: { value: artTexture(box.art) }, t: artTime, kind: { value: box.artKind === 'sky' ? 1 : 0 }, op: { value: 1 },
-      aspect: { value: (PW * ART.x) / ((ART.bot - ART.top) * PH) / (16 / 9) } },
-    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
-    fragmentShader: ART_FS, transparent: true,
+    uniforms: { map: { value: artTexture(box.art) }, ov: { value: artOverlay(box, back) }, t: artTime, kind: { value: box.artKind === 'sky' ? 1 : 0 },
+      op: { value: 1 }, back: { value: back ? 1 : 0 }, aspect: { value: (PW / PH) / (16 / 9) } },
+    vertexShader: ART_VS, fragmentShader: ART_FS, transparent: true,
   });
 }
 
@@ -978,12 +1056,7 @@ function drawPack(g, W, H, box, d, pass) {
 
   const R = 118 * S;
   if (d.art) {
-    // Fenêtre de l'illustration animée (la 3D vient se poser dessus) : fond sombre + double cadre embossé
-    const wx = W * (1 - ART.x) / 2, wt = H * ART.top, wb = H * ART.bot;
-    fill('print', () => g.rect(wx, wt, W - wx * 2, wb - wt));
-    stroke('emboss', 6, () => g.roundRect(wx - 8 * S, wt - 8 * S, W - wx * 2 + 16 * S, wb - wt + 16 * S, 10 * S));
-    stroke('emboss', 1.5, () => g.roundRect(wx - 16 * S, wt - 16 * S, W - wx * 2 + 32 * S, wb - wt + 32 * S, 14 * S));
-    for (const [x, y] of [[wx - 8 * S, wt - 8 * S], [W - wx + 8 * S, wt - 8 * S], [wx - 8 * S, wb + 8 * S], [W - wx + 8 * S, wb + 8 * S]]) fill('emboss', () => g.arc(x, y, 9 * S, 0, Math.PI * 2));
+    // Boosters illustrés : l'image animée recouvre tout le sachet (voir artGeometry), rien à graver ici
   } else {
   // 6. Médaillon : couronne, perles, texte circulaire, disque holo, monogramme
   fill('print', () => g.arc(cx, cy, R + 34 * S, 0, Math.PI * 2));
@@ -1001,7 +1074,7 @@ function drawPack(g, W, H, box, d, pass) {
 
   }
   // 7. Plaque de titre
-  const py = d.art ? H * ART.bot + 34 * S : cy + R + 70 * S, ph = (d.art ? 128 : 150) * S, pw = W - 150 * S;
+  const py = cy + R + 70 * S, ph = 150 * S, pw = W - 150 * S;
   fill('print', () => g.roundRect(cx - pw / 2, py, pw, ph, 14 * S));
   stroke('emboss', 3, () => g.roundRect(cx - pw / 2, py, pw, ph, 14 * S));
   stroke('emboss', 1, () => g.roundRect(cx - pw / 2 + 8 * S, py + 8 * S, pw - 16 * S, ph - 16 * S, 9 * S));
@@ -1059,7 +1132,12 @@ function buildPack(box, maps) {
   seam.position.set(-PW / 2, SEAM, PD / 2 + .08); seam.geometry.translate(.5, 0, 0); seam.scale.x = .0001;
   g.add(seam);
   g.userData = { body, crB, strip, seam, seamMat, mat };
-  if (box.art) { const am = artMaterial(box); g.add(new THREE.Mesh(G_ART, am)); g.userData.art = am; }
+  if (box.art) {
+    const front = artMaterial(box, false), back = artMaterial(box, true);
+    g.add(new THREE.Mesh(G_ART.body, front), new THREE.Mesh(G_ART.bodyBack, back));
+    strip.add(new THREE.Mesh(G_ART.strip, front), new THREE.Mesh(G_ART.stripBack, back));
+    g.userData.art = [front, back];
+  }
   return g;
 }
 
@@ -1342,7 +1420,7 @@ async function openOne(st, r, prize, i, n) {
   scene.attach(prize);
   const bodyStart = pack.position.clone();
   const packMat = mat; packMat.transparent = true;
-  tween(900, e => { pack.position.y = bodyStart.y - e * 3.2; pack.rotation.x = e * .9; packMat.opacity = 1 - e; if (pack.userData.art) pack.userData.art.uniforms.op.value = 1 - e; }, E.inOut).then(() => { scene.remove(pack); packMat.dispose(); if (pack.userData.art) pack.userData.art.dispose(); });
+  tween(900, e => { pack.position.y = bodyStart.y - e * 3.2; pack.rotation.x = e * .9; packMat.opacity = 1 - e; (pack.userData.art || []).forEach(m => { m.uniforms.op.value = 1 - e; }); }, E.inOut).then(() => { scene.remove(pack); packMat.dispose(); (pack.userData.art || []).forEach(m => m.dispose()); });
   const target = STAGE.clone().add(new THREE.Vector3(0, .38, .55));
   tween(1200 * fx, e => { prize.position.lerpVectors(wp, target, e); prize.rotation.y = (1 - e) * Math.PI * 2; prize.scale.setScalar(lerp(.9, 1, e)); }, E.out);
   await sleep(250 * fx);
