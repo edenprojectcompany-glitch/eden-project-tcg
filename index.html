@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eden Project TCG — Marketplace Premium</title>
+<title>Eden Project TCG — Boutique Premium</title>
 <meta name="description" content="Revendeur Pro & Fournisseur · Pokémon TCG premium — displays japonais et chinois scellés, authentifiés. Livraison depuis Brest.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.edenprojecttcg.com">
-<meta property="og:title" content="Eden Project TCG — Marketplace Pokémon Premium">
+<meta property="og:title" content="Eden Project TCG — Boutique Pokémon Premium">
 <meta property="og:description" content="Displays Pokémon japonaises et chinoises scellées · Revendeur Pro · Prix fournisseur · Livraison depuis Brest">
 <meta property="og:image" content="https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/mega-dream-ex-m2a.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Eden Project TCG — Marketplace Pokémon Premium">
+<meta name="twitter:title" content="Eden Project TCG — Boutique Pokémon Premium">
 <meta name="twitter:description" content="Displays JP/CN scellées · Prix fournisseur · Roue de la fortune · Livraison France">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/mega-dream-ex-m2a.png">
 <meta name="theme-color" content="#0a0a0c">
@@ -855,6 +855,43 @@ h1 span{display:block}
 .news-tag{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   padding:3px 9px;border-radius:100px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text-dim)}
 .news-cta{font-size:12.5px;padding:9px 18px}
+/* ── Article à la une : 30 ans de Pokémon ── */
+.n30{max-width:1100px;margin:0 auto 42px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,217,127,.32);
+  background:linear-gradient(160deg,rgba(255,236,190,.12),rgba(255,255,255,.04) 45%,rgba(255,217,127,.08)),rgba(8,10,20,.45);
+  box-shadow:0 30px 80px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,240,200,.25)}
+.n30-hero{position:relative;aspect-ratio:5/3;overflow:hidden}
+.n30-hero img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 6s ease}
+.n30:hover .n30-hero img{transform:scale(1.03)}
+.n30-hero::after{content:'';position:absolute;inset:auto 0 0 0;height:30%;background:linear-gradient(180deg,transparent,rgba(8,10,20,.65))}
+.n30-badge{position:absolute;bottom:16px;left:16px;z-index:1;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  padding:8px 14px;border-radius:100px;color:#2a1b00;background:linear-gradient(135deg,#fff3c4,#f2c35a 55%,#c8902b);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.n30-body{padding:30px clamp(20px,4vw,48px) 34px}
+.n30-title{font-family:'Fraunces',serif;font-size:clamp(24px,3.4vw,38px);font-weight:500;line-height:1.15;margin:4px 0 14px;letter-spacing:-.01em}
+.n30-title em{font-style:italic;background:linear-gradient(135deg,#fff3c4,#f2c35a 50%,#c8902b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.n30-lead{font-size:15.5px;line-height:1.7;color:#dfe5f2;max-width:76ch;margin-bottom:24px}
+.n30 h4{font-family:'Fraunces',serif;font-size:20px;font-weight:500;margin:28px 0 10px;color:#fff3d6}
+.n30 p{font-size:14px;line-height:1.75;color:#c9d1e2;max-width:80ch;margin-bottom:10px}
+.n30 b{color:#fff}
+.n30-facts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.n30-fact{padding:14px 16px;border-radius:16px;background:rgba(255,217,127,.08);border:1px solid rgba(255,217,127,.22)}
+.n30-fact b{display:block;font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:#ffe3a0;margin-bottom:3px}
+.n30-fact span{font-size:12px;line-height:1.45;color:#c9d1e2}
+.n30-products{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.n30-col{padding:18px 20px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
+.n30-wave{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#ffd97f;margin-bottom:10px}
+.n30-col ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.n30-col li{position:relative;padding-left:16px;font-size:13px;line-height:1.55;color:#c9d1e2}
+.n30-col li::before{content:'✦';position:absolute;left:0;top:0;color:#f2c35a;font-size:10px}
+.n30-eden{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-top:28px;padding:18px 22px;border-radius:18px;
+  background:linear-gradient(120deg,rgba(127,217,255,.1),rgba(201,168,255,.08));border:1px solid rgba(127,217,255,.25)}
+.n30-eden p{margin:4px 0 0}
+.n30-cta{display:flex;gap:10px;flex-wrap:wrap}
+.n30-src{margin-top:18px!important;font-size:11.5px!important;color:#8f99ad!important}
+.n30-src a{color:#a9c8ff}
+.n30-more{max-width:1100px;margin:0 auto 16px}
+.n30-more h3{font-family:'Fraunces',serif;font-size:22px;font-weight:500}
+@media(max-width:860px){.n30-facts{grid-template-columns:1fr 1fr}.n30-products{grid-template-columns:1fr}}
+@media(max-width:480px){.n30-hero{aspect-ratio:4/3}.n30-fact b{font-size:19px}}
 
 /* ── HELP PAGE ── */
 .help-tabs{display:flex;gap:0;margin-bottom:36px;padding:4px;
@@ -1557,11 +1594,10 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 <!-- NAV -->
 <nav>
   <div class="brand" id="navBrand">
-    <span class="mark"></span>
     <span><span class="brand-eden">Eden Project</span> <span class="brand-tcg"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span></span>
   </div>
   <div class="navlinks">
-    <a data-page="catalog" data-i18n="nav.marketplace">Marketplace</a>
+    <a data-page="catalog" data-i18n="nav.marketplace">Boutique</a>
     <a data-page="case" data-i18n="nav.case">Case</a>
     <a data-page="graded" data-i18n="nav.graded">Gradées</a>
     <a data-page="news" data-i18n="nav.news">Nouveautés</a>
@@ -1590,7 +1626,7 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
-  <a data-page="catalog" data-i18n="nav.marketplace">Marketplace</a>
+  <a data-page="catalog" data-i18n="nav.marketplace">Boutique</a>
   <a data-page="case" data-i18n="nav.case">Case</a>
   <a data-page="graded" data-i18n="nav.graded">Gradées</a>
   <a data-page="news" data-i18n="nav.news">Nouveautés</a>
@@ -1793,7 +1829,7 @@ loadAndRenderReviews();
 <div class="page" id="page-catalog">
   <section>
     <div class="sec-head reveal-up">
-      <h2 data-i18n-html="catalog.h2">Marketplace<br><em>— sélection du mois.</em></h2>
+      <h2 data-i18n-html="catalog.h2">Boutique<br><em>— sélection du mois.</em></h2>
       <div class="sub" data-i18n="catalog.sub">22 displays scellés, vérifiés par notre équipe à Brest. Prix fournisseur direct.</div>
     </div>
     <div class="catalog-wrap">
@@ -2275,10 +2311,68 @@ loadAndRenderReviews();
       <h2 data-i18n-html="news.h2">Nouveautés<br><em>— du mois.</em></h2>
       <div class="sub" data-i18n="news.sub">Les sorties Pokémon TCG à surveiller. Mis à jour chaque mois.</div>
     </div>
+
+    <!-- ── À la une : les 30 ans de Pokémon ── -->
+    <article class="n30 reveal-up">
+      <div class="n30-hero">
+        <img src="/image/news/pokemon-30-ans.jpg" alt="Les produits du 30ᵉ Anniversaire du JCC Pokémon : Coffret Dresseur d'Élite, collections, decks, mini-boîtes" loading="lazy">
+        <span class="n30-badge">🎉 À la une · Événement</span>
+      </div>
+      <div class="n30-body">
+        <div class="news-date">Septembre → décembre 2026</div>
+        <h3 class="n30-title">Pokémon fête ses <em>30 ans</em> : tout savoir sur l'extension 30ᵉ Anniversaire</h3>
+        <p class="n30-lead">Le 27 février 1996 sortaient au Japon <b>Pocket Monsters Rouge et Vert</b>. Quelques mois plus tard, le 20 octobre 1996, naissait le jeu de cartes. Trente ans après, Pokémon célèbre l'anniversaire avec une extension pensée pour les collectionneurs, et une première dans l'histoire du JCC.</p>
+
+        <div class="n30-facts">
+          <div class="n30-fact"><b>16 sept. 2026</b><span>sortie mondiale simultanée, une première pour le JCC</span></div>
+          <div class="n30-fact"><b>30 Pikachu</b><span>illustrations uniques, un dans chaque booster</span></div>
+          <div class="n30-fact"><b>30 cartes</b><span>de la Collection Classique, réimprimées à l'identique</span></div>
+          <div class="n30-fact"><b>5 + 1</b><span>cartes brillantes et 1 Énergie brillante par booster</span></div>
+        </div>
+
+        <h4>Une extension pensée pour les collectionneurs</h4>
+        <p>Chaque booster contient cinq cartes brillantes et une carte Énergie de base brillante. On y trouve de nouvelles cartes « illustration rare », mais aussi la <b>Collection Classique</b> : trente cartes historiques réimprimées exactement comme à l'origine (rareté et numéro d'époque compris), que seul le logo des 30 ans permet de distinguer. Elles sont rares dans les boosters classiques, mais garanties dans le booster spécial de la Collection Ultra-Premium.</p>
+        <p>Au Japon, l'extension s'appelle <b>M6a « 30th CELEBRATION »</b> et compte 176 cartes. La version internationale est plus fournie : environ 199 cartes au total, en comptant les raretés secrètes, la Collection Classique et les Énergies brillantes.</p>
+
+        <h4>Les produits de l'anniversaire</h4>
+        <div class="n30-products">
+          <div class="n30-col">
+            <div class="n30-wave">3ᵉ trimestre 2026</div>
+            <ul>
+              <li><b>Coffret Dresseur d'Élite</b> : 9 boosters, carte promo entièrement illustrée de Nidorina (n° 30 du Pokédex), 65 protège-cartes, 16 Énergies brillantes</li>
+              <li><b>Coffrets Nymphali-ex et Amphinobi-ex</b> : carte promo brillante + version grand format, 4 boosters</li>
+              <li><b>Collection poster</b> : promos Artikodin, Électhor et Sulfura, 3 boosters</li>
+              <li><b>Collection K.O.</b> et <b>blister de 2 boosters</b> : carte brillante Évoli + pièce</li>
+            </ul>
+          </div>
+          <div class="n30-col">
+            <div class="n30-wave">4ᵉ trimestre 2026</div>
+            <ul>
+              <li><b>Collection Ultra-Premium Journée / Soirée</b> : Pikachu-ex avec Mentali-ex ou Noctali-ex, 29 boosters + 1 booster Collection Classique</li>
+              <li><b>Collections avec figurine Mew et Mewtwo</b> (figurines Kaiyodo), 5 boosters</li>
+              <li><b>Decks Combat Mentali-ex et Noctali-ex</b> : 60 cartes brillantes, Victini ou Zeraora « illustration rare »</li>
+              <li><b>Collection Premium Métamorph</b> : porte-carte acrylique, 8 boosters</li>
+              <li><b>Collection classeur</b> (5 boosters), <b>Lot de boosters</b> (6 boosters), <b>Collection autocollant réajustable</b> (3 boosters)</li>
+              <li><b>Mini-boîtes</b> : 10 illustrations qui forment deux tableaux, un de jour et un de nuit</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="n30-eden">
+          <div><b>Chez Eden Project TCG</b><p>On suit de près la version japonaise <b>M6a « 30th CELEBRATION »</b>, displays et cartes à l'unité. Une question, une réservation ? Écris-nous.</p></div>
+          <div class="n30-cta">
+            <button class="btn-primary news-cta" data-page="catalog">Voir la boutique →</button>
+            <button class="btn-ghost news-cta" data-page="help">Nous contacter</button>
+          </div>
+        </div>
+        <p class="n30-src">Sources : <a href="https://www.pokemon.com/fr/actualites/jcc-pokemon-produits-30-anniversaire" target="_blank" rel="noopener">pokemon.com</a>, <a href="https://www.tcgplayer.com/content/article/Collector-s-Guide-to-Pok%C3%A9mon-TCG-30th-Celebration/bac99231-4293-4373-af64-6f5ed0d5735d/" target="_blank" rel="noopener">TCGplayer</a>. Contenus et dates selon l'annonce officielle, susceptibles d'évoluer.</p>
+      </div>
+    </article>
+
+    <div class="n30-more reveal-up"><h3>Les autres sorties</h3></div>
     <div class="news-grid">
-      <article class="news-card news-featured reveal-up">
-        <div class="news-badge-top">🔥 Sortie du mois</div>
-        <div class="news-img-wrap">
+      <article class="news-card reveal-up">
+        <div class="news-img-wrap small">
           <img src="https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/glory-rocket-sv10.png" alt="SV10" loading="lazy" onerror="this.style.display='none'">
           <div class="news-img-fallback">⚡</div>
         </div>
@@ -2287,7 +2381,7 @@ loadAndRenderReviews();
           <h3 class="news-title">SV10 — Glory Team Rocket</h3>
           <p class="news-text">Giovanni's Mewtwo ex en SIR, Persian ex, Crobat ex… 132 cartes dont 34 secret rares. Disponible maintenant chez Eden Project TCG.</p>
           <div class="news-tags"><span class="news-tag">JP</span><span class="news-tag">High Demand</span></div>
-          <button class="btn-primary news-cta" data-page="catalog">Voir le catalogue →</button>
+          <button class="btn-primary news-cta" data-page="catalog">Voir la boutique →</button>
         </div>
       </article>
       <article class="news-card reveal-up">
@@ -2309,11 +2403,11 @@ loadAndRenderReviews();
           <div class="news-img-fallback">⚫</div>
         </div>
         <div class="news-body">
-          <div class="news-date">Juin 2026 — Bientôt disponible</div>
+          <div class="news-date">Juin 2026</div>
           <h3 class="news-title">SV11b — Black Bolt</h3>
-          <p class="news-text">Zekrom ex BWR, célébration Unova. 20 boosters · 7 cartes/booster · 2–3 SAR/boîte. Sortie prévue début juin.</p>
-          <div class="news-tags"><span class="news-tag">JP</span><span class="news-tag">PRÉCOMMANDE</span></div>
-          <button class="btn-primary news-cta" data-page="catalog">Précommander →</button>
+          <p class="news-text">Zekrom ex BWR, célébration Unova. 20 boosters · 7 cartes/booster · 2–3 SAR/boîte.</p>
+          <div class="news-tags"><span class="news-tag">JP</span><span class="news-tag">Unova</span></div>
+          <button class="btn-primary news-cta" data-page="catalog">Voir la boutique →</button>
         </div>
       </article>
       <article class="news-card reveal-up">
@@ -2669,10 +2763,9 @@ loadAndRenderReviews();
   <div class="foot-main">
     <div>
       <div class="foot-brand-name">
-        <span class="mark"></span>
         <span class="brand-eden">Eden Project</span> <span class="brand-tcg" style="margin-left:4px"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span>
       </div>
-      <p class="foot-desc" data-i18n="footer.desc">Marketplace dédiée aux cartes Pokémon japonaises et chinoises. Revendeur Pro &amp; Grossiste. Sélection rigoureuse, authentification garantie, expédition depuis Brest.</p>
+      <p class="foot-desc" data-i18n="footer.desc">Boutique dédiée aux cartes Pokémon japonaises et chinoises. Revendeur Pro &amp; Grossiste. Sélection rigoureuse, authentification garantie, expédition depuis Brest.</p>
       <div class="foot-socials">
         <!-- Email -->
         <a href="mailto:contact@edenprojecttcg.com" class="foot-social" title="Email" style="background:#1a1a2e;border-color:rgba(127,217,255,.25)">
@@ -2691,7 +2784,7 @@ loadAndRenderReviews();
       </div>
     </div>
     <div class="foot-col">
-      <h5 data-i18n="footer.marketplace">Marketplace</h5>
+      <h5 data-i18n="footer.marketplace">Boutique</h5>
       <a data-page="catalog" data-i18n="footer.jp">Displays JP</a>
       <a data-page="catalog" data-i18n="footer.cn">Displays CN</a>
       <a data-page="case" data-i18n="footer.case">Acheter en Case</a>
@@ -2823,7 +2916,7 @@ loadAndRenderReviews();
 (function(){
   var I18N = {
     fr: {
-      'nav.marketplace':'Marketplace','nav.case':'Case','nav.graded':'Gradées',
+      'nav.marketplace':'Boutique','nav.case':'Case','nav.graded':'Gradées',
       'nav.news':'Nouveautés','nav.collection':'Ma collection','nav.help':'Aide',
       'nav.account':'Mon compte','nav.search':'Rechercher…',
       'hero.badge':'Revendeur Pro & Fournisseur','hero.eyebrow':'Édition Japonaise · Scellé d\'origine',
@@ -2834,7 +2927,7 @@ loadAndRenderReviews();
       'band.2.h4':'Logistique blindée','band.2.p':'Emballage sécurisé, suivi Chronopost.',
       'band.3.h4':'Support privé','band.3.p':'Un accompagnement collectionneur dédié.',
       'band.4.h4':'Revendeur Pro','band.4.p':'Tarifs fournisseurs & accès stock direct.',
-      'catalog.h2':'Marketplace<br><em>— sélection du mois.</em>',
+      'catalog.h2':'Boutique<br><em>— sélection du mois.</em>',
       'catalog.sub':'22 displays scellés, vérifiés par notre équipe à Brest. Prix fournisseur direct.',
       'catalog.filter.all':'Tous','catalog.filter.jp':'🇯🇵 Japonais','catalog.filter.cn':'🇨🇳 Chinois',
       'catalog.no_results':'Aucun produit trouvé.',
@@ -2888,8 +2981,8 @@ loadAndRenderReviews();
       'help.h2':'Centre<br><em>d\'aide.</em>',
       'help.sub':'Tout ce que vous devez savoir avant de commander.',
       'help.tab.faq':'FAQ','help.tab.shipping':'Livraison','help.tab.promos':'Codes promo',
-      'footer.desc':'Marketplace dédiée aux cartes Pokémon japonaises et chinoises. Revendeur Pro & Grossiste.',
-      'footer.marketplace':'Marketplace','footer.account':'Compte','footer.help':'Aide',
+      'footer.desc':'Boutique dédiée aux cartes Pokémon japonaises et chinoises. Revendeur Pro & Grossiste.',
+      'footer.marketplace':'Boutique','footer.account':'Compte','footer.help':'Aide',
       'footer.jp':'Displays JP','footer.cn':'Displays CN','footer.case':'Acheter en Case',
       'footer.graded':'Cartes Gradées','footer.collection':'Ma collection','footer.orders':'Mes commandes',
       'footer.register':'Créer un compte','footer.promo':'Codes promo',
@@ -2953,7 +3046,7 @@ loadAndRenderReviews();
       'checkout.trust.stripe':'Stripe & PayPal · Aucun stockage de données bancaires',
     },
     en: {
-      'nav.marketplace':'Marketplace','nav.case':'Case','nav.graded':'Graded',
+      'nav.marketplace':'Shop','nav.case':'Case','nav.graded':'Graded',
       'nav.news':'New Releases','nav.collection':'My Collection','nav.help':'Help',
       'nav.account':'My Account','nav.search':'Search…',
       'hero.badge':'Pro Reseller & Wholesaler','hero.eyebrow':'Japanese Edition · Factory Sealed',
@@ -2964,7 +3057,7 @@ loadAndRenderReviews();
       'band.2.h4':'Secure Logistics','band.2.p':'Reinforced packaging, tracked delivery.',
       'band.3.h4':'Private Support','band.3.p':'Dedicated collector assistance.',
       'band.4.h4':'Pro Reseller','band.4.p':'Wholesale pricing & direct stock access.',
-      'catalog.h2':'Marketplace<br><em>— monthly selection.</em>',
+      'catalog.h2':'Shop<br><em>— monthly selection.</em>',
       'catalog.sub':'22 sealed displays, verified by our team. Direct wholesale pricing.',
       'catalog.filter.all':'All','catalog.filter.jp':'🇯🇵 Japanese','catalog.filter.cn':'🇨🇳 Chinese',
       'catalog.no_results':'No products found.',
@@ -3018,8 +3111,8 @@ loadAndRenderReviews();
       'help.h2':'Help<br><em>centre.</em>',
       'help.sub':'Everything you need to know before ordering.',
       'help.tab.faq':'FAQ','help.tab.shipping':'Shipping','help.tab.promos':'Promo codes',
-      'footer.desc':'Marketplace dedicated to Japanese & Chinese Pokémon cards. Pro Reseller & Wholesaler.',
-      'footer.marketplace':'Marketplace','footer.account':'Account','footer.help':'Help',
+      'footer.desc':'Shop dedicated to Japanese & Chinese Pokémon cards. Pro Reseller & Wholesaler.',
+      'footer.marketplace':'Shop','footer.account':'Account','footer.help':'Help',
       'footer.jp':'JP Displays','footer.cn':'CN Displays','footer.case':'Buy a Case',
       'footer.graded':'Graded Cards','footer.collection':'My Collection','footer.orders':'My Orders',
       'footer.register':'Create an account','footer.promo':'Promo codes',
