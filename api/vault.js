@@ -17,9 +17,11 @@ const { packOdds, pickCard } = require('../lib/vault-odds');
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 const SITE = process.env.SITE_URL || 'https://www.edenprojecttcg.com';
 const MAX_OPEN = 10;
-const PACK_INFO = { // textes affichés sur les sachets (le nom et le prix viennent du calculateur)
-  ar: { tagline: '1 carte Art Rare garantie', theme: ['#ffd97f', '#c9a8ff'] },
-  ex: { tagline: '1 carte ex garantie', theme: ['#b98aff', '#7fd9ff'] },
+// Les deux boosters mystère : illustration animée sur le sachet, nom et prix par défaut
+// (le nom et le prix réels viennent du calculateur de l'admin dès qu'un réglage est enregistré)
+const PACK_INFO = {
+  ar: { name: 'Mystère AR', price: 9.9, tagline: '1 carte Art Rare garantie', theme: ['#ffd97f', '#c9a8ff'], art: '/image/vault3d/mew-sm.jpg', artKind: 'flames' },
+  ex: { name: 'Mystère EX', price: 4.9, tagline: '1 carte ex garantie', theme: ['#7fd9ff', '#b98aff'], art: '/image/vault3d/pack-dracaufeu.jpg', artKind: 'sky' },
 };
 
 const K = {
@@ -67,21 +69,22 @@ async function nextRoll(kv, uid) {
 }
 
 // ── Catalogue : packs réglés dans l'admin + cartes en stock ───
+// Les deux boosters sont toujours présentés ; sans réglage ou sans stock, ils sont « bientôt disponibles »
 async function catalog(kv) {
   const [stock, packs] = await Promise.all([kv.get(K.cards), kv.get(K.packs)]);
   const items = {}, boxes = [];
   for (const id of ['ar', 'ex']) {
-    const p = packs && packs[id];
-    if (!p || !(p.price > 0)) continue;
-    const odds = packOdds(stock || [], p);
-    if (!odds.ok) continue;
-    for (const c of odds.rows) items[c.cardId] = {
+    const info = PACK_INFO[id], p = (packs && packs[id]) || {};
+    const odds = p.price > 0 ? packOdds(stock || [], p) : { ok: false, rows: [], ev: 0 };
+    const rows = odds.ok ? odds.rows : [];
+    for (const c of rows) items[c.cardId] = {
       id: c.cardId, kind: 'card', name: c.nameFr ? `${c.nameFr} · ${c.rarity}` : c.name, nameJa: c.name, short: c.nameFr || c.name,
       img: playImg(c.img), value: c.value, rarity: c.rarity, set: c.set, number: c.number, total: c.total, intlPreview: !!c.intlPreview,
     };
     boxes.push({
-      id, name: p.name, tagline: PACK_INFO[id].tagline, price: p.price, theme: PACK_INFO[id].theme,
-      ev: round2(odds.ev), table: odds.rows.map(c => ({ itemId: c.cardId, p: c.p, tier: c.lot, qty: c.qty })),
+      id, name: p.name || info.name, tagline: info.tagline, price: p.price > 0 ? p.price : info.price, theme: info.theme,
+      art: info.art, artKind: info.artKind, available: rows.length > 0,
+      ev: round2(odds.ev || 0), table: rows.map(c => ({ itemId: c.cardId, p: c.p, tier: c.lot, qty: c.qty })),
       _odds: odds, _pack: p,
     });
   }
@@ -150,7 +153,7 @@ async function buy(kv, req, user, { boxId, count }) {
   const n = Math.min(MAX_OPEN, Math.max(1, Math.floor(+count || 1)));
   const { boxes } = await catalog(kv);
   const box = boxes.find(b => b.id === boxId);
-  if (!box) throw new HttpError(404, 'Pack indisponible');
+  if (!box || !box.available) throw new HttpError(409, 'Ce booster sera bientôt disponible');
   const inStock = box.table.reduce((a, r) => a + r.qty, 0);
   if (inStock < n) throw new HttpError(409, inStock ? `Plus que ${inStock} pack${inStock > 1 ? 's' : ''} disponible${inStock > 1 ? 's' : ''}` : 'Pack en rupture de stock');
   const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
