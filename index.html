@@ -1524,6 +1524,30 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   .cart-panel { width: 100vw; }
 }
 
+/* ══ Cartes en verre transparent : elles laissent voir le fond animé Évoli (comme la carte de Mew) ══
+   Voile blanc léger + liseré clair, sans flou d'arrière-plan (trop coûteux sur un fond animé). */
+:root{
+  --card-glass:linear-gradient(160deg,rgba(255,255,255,.11),rgba(255,255,255,.035) 55%,rgba(255,255,255,.07)),rgba(10,14,28,.18);
+  --card-glass-soft:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02)),rgba(10,14,28,.14);
+  --card-glass-border:rgba(255,255,255,.17);
+}
+.product,.case-card,.news-card,.rv-card,.dash-card,.dash-orders,.wheel-section,.co-section,.co-summary,.help-ship-card{
+  background:var(--card-glass)!important;border-color:var(--card-glass-border)!important;
+}
+.product-img,.case-img{background:transparent!important}
+.news-img-wrap{background:var(--card-glass-soft)!important}
+.news-upcoming{background:var(--card-glass)!important;border-color:rgba(201,168,255,.28)!important}
+/* Reflet sur l'arête haute, comme une vitre */
+.product::before,.case-card::before{content:'';position:absolute;left:14px;right:14px;top:0;height:1px;pointer-events:none;z-index:1;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent)}
+.case-card{position:relative}
+/* Lisibilité : voile sombre sous les textes (le haut, avec la photo, reste transparent) et gris éclaircis */
+.product-body,.case-body{background:linear-gradient(180deg,rgba(6,10,22,0),rgba(6,10,22,.42) 28%,rgba(6,10,22,.5));
+  border-radius:0 0 var(--radius-card) var(--radius-card)}
+.product,.case-card,.news-card,.rv-card,.dash-card,.dash-orders,.wheel-section,.co-section,.co-summary,.help-ship-card{
+  --text-dim:#c3cbdc;--text-dimmer:#97a1b6}
+.rv-card,.news-card{background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.04)),rgba(6,10,22,.38)!important}
+
 </style>
 </head>
 <body>
