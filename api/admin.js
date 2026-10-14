@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
       const [prices, stocks, wheel, flashsale, shipping, graded] = await Promise.all([
         kv.get('admin:prices'),
         kv.get('admin:stocks'),
-        kv.get('admin:wheel'),
+        kv.get('admin:gift'),
         kv.get('admin:flashsale'),
         kv.get('admin:shipping'),
         kv.get('admin:graded'),
@@ -141,7 +141,7 @@ module.exports = async (req, res) => {
           code: p.code ? String(p.code).slice(0, 20) : null,
           color: /^#[0-9a-fA-F]{6}$/.test(p.color) ? p.color : '#1a1a28',
         }));
-        await kv.set('admin:wheel', validated);
+        await kv.set('admin:gift', validated);
         return res.status(200).json({ ok: true });
       }
 

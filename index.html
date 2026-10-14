@@ -12,7 +12,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/mega-dream-ex-m2a.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Eden Project TCG — Boutique Pokémon Premium">
-<meta name="twitter:description" content="Displays JP/CN scellées · Prix fournisseur · Roue de la fortune · Livraison France">
+<meta name="twitter:description" content="Displays JP/CN scellées · Prix fournisseur · Booster cadeau · Livraison France">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/mega-dream-ex-m2a.png">
 <meta name="theme-color" content="#0a0a0c">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%237fd9ff'/><stop offset='.33' stop-color='%23c9a8ff'/><stop offset='.66' stop-color='%23ffb3e6'/><stop offset='1' stop-color='%23a8ffd4'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='%230a0a0c'/><rect width='32' height='32' rx='8' fill='url(%23g)' opacity='.85'/><text x='16' y='22' font-family='serif' font-size='19' text-anchor='middle' fill='%230a0a0c' font-weight='700'>E</text></svg>" type="image/svg+xml">
@@ -1561,6 +1561,16 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   .cart-panel { width: 100vw; }
 }
 
+/* Booster cadeau (tableau de bord) */
+.gift-row{display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.gift-odds{list-style:none;margin:0;padding:0;flex:1;min-width:220px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gift-odds li{padding:10px 12px;border-radius:12px;background:rgba(255,217,127,.07);border:1px solid rgba(255,217,127,.2);font-size:13px}
+.gift-odds small{color:var(--text-dim)}
+.gift-act{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.gift-btn{display:inline-flex;text-decoration:none}
+.gift-btn.is-off{opacity:.5;pointer-events:none}
+.gift-note{font-size:11.5px;color:var(--text-dim)}
+@media(max-width:560px){.gift-odds{grid-template-columns:1fr}}
 /* Filtre « En stock » : vert uniquement quand au moins un produit est disponible, atténué sinon */
 .chip-stock{opacity:.6}
 .chip-stock.has-stock{opacity:1;background:rgba(127,255,170,.12);border-color:rgba(127,255,170,.3);color:var(--success)}
@@ -1885,11 +1895,11 @@ loadAndRenderReviews();
     <div class="auth-wrap">
       <div class="auth-pitch reveal-up">
         <h2 data-i18n-html="auth.h2">Un espace<br><em>taillé pour les passionnés.</em></h2>
-        <p data-i18n="auth.p">Suivez votre collection, accédez aux ventes privées et à la roue de la fortune mensuelle.</p>
+        <p data-i18n="auth.p">Suivez votre collection, accédez aux ventes privées et à votre booster cadeau mensuel.</p>
         <ul class="auth-features">
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Portfolio valorisé en direct (eBay live)</li>
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Accès anticipé aux nouveaux arrivages</li>
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Roue de la fortune · 1 tirage / 30 jours</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Booster cadeau · 1 par mois après ton 1ᵉʳ achat</li>
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Codes promo réservés membres</li>
         </ul>
       </div>
@@ -1992,7 +2002,7 @@ loadAndRenderReviews();
       <div id="dash-unauth" style="text-align:center;padding:55px 20px;border:1px solid var(--glass-border);border-radius:22px;background:var(--glass)">
         <div style="font-size:46px;margin-bottom:16px;opacity:.35">📊</div>
         <div style="font-family:'Fraunces',serif;font-size:22px;margin-bottom:8px">Votre portfolio vous attend</div>
-        <p style="color:var(--text-dim);margin-bottom:22px;max-width:360px;margin-left:auto;margin-right:auto;font-size:13.5px">Créez un compte pour suivre la valeur de votre collection et accéder à la roue de la fortune mensuelle.</p>
+        <p style="color:var(--text-dim);margin-bottom:22px;max-width:360px;margin-left:auto;margin-right:auto;font-size:13.5px">Créez un compte pour suivre la valeur de votre collection et ouvrir votre booster cadeau mensuel.</p>
         <button class="btn-primary" data-page="auth">Créer un compte</button>
       </div>
       <!-- Connecté -->
@@ -2009,8 +2019,26 @@ loadAndRenderReviews();
           </div>
           <button class="btn-ghost btn-sm" id="logoutBtn" style="margin-left:16px" data-i18n="dash.logout">Déconnexion</button>
         </div>
-        <!-- Roue de la fortune -->
-        <div class="wheel-section reveal-up">
+        <!-- Booster cadeau (remplace la roue de la fortune) : s'ouvre dans la chambre forte du Vault -->
+        <div class="wheel-section gift-section reveal-up" id="giftSection">
+          <h4>🎁 Booster cadeau</h4>
+          <div class="desc">Après ton premier achat, ouvre un booster cadeau dans la chambre forte du Vault. Il cache un code de réduction, la livraison offerte ou un booster à joindre à ta commande.</div>
+          <div class="gift-row">
+            <ul class="gift-odds">
+              <li><b>-5 %</b> sur ta commande <small>(max 15 €)</small></li>
+              <li><b>Livraison offerte</b> <small>dès 50 €</small></li>
+              <li><b>-10 €</b> <small>dès 80 €</small></li>
+              <li><b>Booster offert</b> <small>dès 50 €</small></li>
+            </ul>
+            <div class="gift-act">
+              <div class="wheel-cooldown" id="giftStatus"></div>
+              <a class="btn-primary gift-btn" id="giftBtn" href="/vault?gift=1">🎁 Ouvrir mon booster cadeau</a>
+              <div class="gift-note">1 par mois · par semaine dès 1 500 € d'achats · par jour dès 5 000 € · code à usage unique, valable 30 jours</div>
+            </div>
+          </div>
+        </div>
+        <!-- Ancienne roue : conservée masquée (ses éléments sont encore utilisés par le script du tableau de bord) -->
+        <div class="wheel-section reveal-up" hidden>
           <h4 data-i18n="dash.wheel.title">🎡 Roue de la fortune</h4>
           <div class="desc" id="wheelDesc">Un tirage gratuit tous les 30 jours, sans obligation d'achat. Tentez de gagner des réductions, des boosters ou une display gratuite.</div>
           <div class="wheel-wrap">
@@ -2462,8 +2490,8 @@ loadAndRenderReviews();
           <div class="faq-a">Oui, notre système de prix dégressifs est visible directement sur chaque produit. Pour des commandes importantes (cases complètes), des tarifs fournisseurs exclusifs sont disponibles — consultez la page Case ou contactez-nous directement.</div>
         </div>
         <div class="faq-item">
-          <div class="faq-q">Comment fonctionne la roue de la fortune ? <span class="arrow">▾</span></div>
-          <div class="faq-a">La roue est 100% gratuite et sans obligation d'achat : un tirage par mois pour tout membre inscrit. La roue est disponible une fois par mois pour les membres inscrits. Les membres VIP bénéficient d'une fréquence augmentée : hebdomadaire dès 1 500 € d'achats cumulés (Gold), quotidienne dès 5 000 € (Diamond). Elle offre des réductions de 5 % à 20 %, de la livraison offerte, des boosters, voire une display gratuite. Les codes sont immédiatement disponibles dans votre espace "Mes coupons".</div>
+          <div class="faq-q">Comment fonctionne le booster cadeau ? <span class="arrow">▾</span></div>
+          <div class="faq-a">Le booster cadeau est gratuit et se débloque après votre premier achat : vous l'ouvrez dans la chambre forte du Vault, une fois par mois. Les membres VIP en ouvrent plus souvent : chaque semaine dès 1 500 € d'achats cumulés (Gold), chaque jour dès 5 000 € (Diamond). Il contient l'un de ces gains : -5 % sur votre commande (plafonné à 15 €), la livraison offerte dès 50 €, -10 € dès 80 € d'achat ou un booster offert avec une commande d'au moins 50 €. Chaque code est à usage unique, valable 30 jours, et apparaît aussitôt dans votre espace "Mes coupons".</div>
         </div>
         <div class="faq-item">
           <div class="faq-q">Puis-je combiner un code promo et une réduction dégressive ? <span class="arrow">▾</span></div>
@@ -2509,7 +2537,7 @@ loadAndRenderReviews();
       <!-- Avantages membres -->
       <div class="help-panel" id="help-promos">
         <p style="color:var(--text-dim);font-size:13.5px;line-height:1.7;max-width:600px;margin-bottom:28px">
-          En tant que membre Eden Project TCG, vous accédez à des réductions exclusives. Les codes sont envoyés par e-mail et via la roue de la fortune — jamais affichés publiquement.
+          En tant que membre Eden Project TCG, vous accédez à des réductions exclusives. Les codes sont envoyés par e-mail et gagnés dans votre booster cadeau — jamais affichés publiquement.
         </p>
         <div style="display:flex;flex-direction:column;gap:14px;max-width:640px">
           <div style="padding:18px 20px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border)">
@@ -2531,10 +2559,10 @@ loadAndRenderReviews();
           <div style="padding:18px 20px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border)">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
               <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,217,127,.12);display:grid;place-items:center;font-size:18px">🎡</div>
-              <div style="font-weight:600;font-size:14px">Codes roue de la fortune</div>
+              <div style="font-weight:600;font-size:14px">Codes du booster cadeau</div>
               <div style="margin-left:auto;font-size:11px;color:var(--foil-2);font-weight:700">EXCLUSIF</div>
             </div>
-            <div style="font-size:13px;color:var(--text-dim)">Remises de -5 % à -20 %, livraison offerte ou display gratuite — gagnés lors de votre tirage mensuel (fréquence augmentée pour les membres VIP Gold et Diamond). Usage unique.</div>
+            <div style="font-size:13px;color:var(--text-dim)">-5 % (max 15 €), -10 € dès 80 €, livraison offerte ou booster offert — gagnés dans votre booster cadeau mensuel (plus fréquent pour les membres VIP Gold et Diamond). Usage unique, valables 30 jours.</div>
           </div>
           <div style="padding:18px 20px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border)">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
@@ -2660,7 +2688,7 @@ loadAndRenderReviews();
       </div>
       <div class="dash-orders" style="padding:28px 32px">
         <h4 style="font-family:'Fraunces',serif;font-size:17px;font-weight:500;margin-bottom:14px;color:var(--foil-1)">Finalités du traitement</h4>
-        <p style="font-size:13.5px;color:var(--text-dim);line-height:1.75">Les données sont utilisées pour : la gestion des comptes et commandes, l'envoi d'emails transactionnels (confirmation, réinitialisation de mot de passe), le programme de fidélité, la roue de la fortune. Elles ne sont jamais revendues à des tiers.</p>
+        <p style="font-size:13.5px;color:var(--text-dim);line-height:1.75">Les données sont utilisées pour : la gestion des comptes et commandes, l'envoi d'emails transactionnels (confirmation, réinitialisation de mot de passe), le programme de fidélité, le booster cadeau. Elles ne sont jamais revendues à des tiers.</p>
       </div>
       <div class="dash-orders" style="padding:28px 32px">
         <h4 style="font-family:'Fraunces',serif;font-size:17px;font-weight:500;margin-bottom:14px;color:var(--foil-1)">Durée de conservation</h4>
@@ -2754,13 +2782,13 @@ loadAndRenderReviews();
       <span class="hi">Authenticité certifiée sur chaque produit</span>
       <span>Expédition depuis Brest · France</span>
       <span>22 displays en stock · Prix fournisseur</span>
-      <span>Roue de la fortune · Codes promo membres</span>
+      <span>Booster cadeau · Codes promo membres</span>
       <span><span class="brand-eden">Eden Project</span> <span class="brand-tcg"><span class="t">T</span><span class="c">C</span><span class="g">G</span></span></span>
       <span>Revendeur Pro &amp; Fournisseur</span>
       <span class="hi">Authenticité certifiée sur chaque produit</span>
       <span>Expédition depuis Brest · France</span>
       <span>22 displays en stock · Prix fournisseur</span>
-      <span>Roue de la fortune · Codes promo membres</span>
+      <span>Booster cadeau · Codes promo membres</span>
     </div>
   </div>
   <div class="foot-main">
@@ -2837,12 +2865,12 @@ loadAndRenderReviews();
     </button>
     <span class="emoji">🎁</span>
     <h2>Avant de partir…<br><em>un cadeau pour vous.</em></h2>
-    <p>Profitez de <strong>-10% sur votre première commande</strong> avec le code exclusif ci-dessous. Valable 48h.</p>
+    <p>Profitez de <strong>-5% sur votre première commande</strong> avec le code exclusif ci-dessous, valable sur votre première commande.</p>
     <div class="exit-code-box">
-      <span class="code" id="exitCode">WELCOME10</span>
+      <span class="code" id="exitCode">WELCOME5</span>
       <button class="copy-btn" id="exitCopyBtn">Copier</button>
     </div>
-    <button class="btn-primary" id="exitCtaBtn">Profiter de -10% →</button>
+    <button class="btn-primary" id="exitCtaBtn">Profiter de -5% →</button>
     <span class="skip" id="exitSkip">Non merci, je paie plein tarif</span>
   </div>
 </div>
@@ -2864,7 +2892,7 @@ loadAndRenderReviews();
     <h2 class="ve-title">Vérifie ta boîte mail !</h2>
     <p class="ve-sub">Un email de confirmation vient d'être envoyé à<br><strong id="veEmailDisplay">ton adresse</strong></p>
     <div class="ve-email-box" id="veEmailBox">—</div>
-    <p class="ve-tip">📬 Clique sur le lien dans l'email pour activer ton compte<br>et débloquer ton code <span style="color:#f0c060;font-weight:700">WELCOME10 (-10%)</span><br><span style="opacity:.6">⏱ Lien valable 24 heures · Vérifie tes spams si besoin</span></p>
+    <p class="ve-tip">📬 Clique sur le lien dans l'email pour activer ton compte<br>et débloquer ton code <span style="color:#f0c060;font-weight:700">WELCOME5 (-5%)</span><br><span style="opacity:.6">⏱ Lien valable 24 heures · Vérifie tes spams si besoin</span></p>
     <button class="ve-cta" id="veCtaBtn">✓ J'ai compris, merci !</button>
     <button class="ve-resend" id="veResendBtn">Renvoyer l'email de confirmation</button>
   </div>
@@ -2879,10 +2907,10 @@ loadAndRenderReviews();
     <h2 class="wp-title">Bienvenue sur<br><em>Eden Project TCG !</em></h2>
     <p class="wp-sub">Pour célébrer ton inscription, voici ton code exclusif réservé à ta première commande.</p>
     <div class="wp-code-wrap">
-      <span class="wp-code" id="wpCode">WELCOME10</span>
+      <span class="wp-code" id="wpCode">WELCOME5</span>
       <button class="wp-copy" id="wpCopyBtn">Copier</button>
     </div>
-    <p class="wp-legal">-10% · sans minimum d'achat · valable une seule fois</p>
+    <p class="wp-legal">-5% · sans minimum d'achat · valable une seule fois</p>
     <button class="wp-cta" id="wpApplyBtn">✨ Appliquer mon code maintenant</button>
     <button class="wp-skip" id="wpSkipBtn">Je l'utiliserai plus tard</button>
   </div>
@@ -2897,7 +2925,7 @@ loadAndRenderReviews();
     <span class="su-icon">🎡</span>
     <div class="su-badge">✦ Premier achat confirmé</div>
     <h2 class="su-title">Ton <span>tour de roue</span><br>est débloqué !</h2>
-    <p class="su-sub">Merci pour ta confiance.<br>Tente ta chance et remporte des <strong>réductions, boosters</strong> ou même une <strong>display gratuite</strong> !</p>
+    <p class="su-sub">Merci pour ta confiance.<br>Ton <strong>booster cadeau</strong> est débloqué : ouvre-le dans le Vault pour gagner une <strong>réduction, la livraison offerte ou un booster</strong> !</p>
     <p class="su-detail">Retrouve la roue dans ton espace membre · Tirage mensuel gratuit</p>
     <button class="su-cta" id="suCtaBtn">🎡 Tourner la roue maintenant</button>
     <button class="su-skip" id="suSkipBtn">J'y reviendrai plus tard</button>
@@ -2959,7 +2987,7 @@ loadAndRenderReviews();
       'modal.stock_in_stock':'✓ En stock','modal.stock_available':'boîtes disponibles',
       'modal.stock_hurry':'🔥 Seulement','modal.stock_available_2':'disponibles — commandez vite',
       'auth.h2':'Un espace<br><em>taillé pour les passionnés.</em>',
-      'auth.p':'Suivez votre collection, accédez aux ventes privées et à la roue de la fortune mensuelle.',
+      'auth.p':'Suivez votre collection, accédez aux ventes privées et à votre booster cadeau mensuel.',
       'auth.tab.login':'Connexion','auth.tab.register':'Inscription',
       'auth.name':'Nom complet','auth.email':'Adresse e-mail','auth.password':'Mot de passe',
       'auth.login_btn':'Se connecter','auth.register_btn':'Créer mon compte',
@@ -3089,7 +3117,7 @@ loadAndRenderReviews();
       'modal.stock_in_stock':'✓ In stock','modal.stock_available':'boxes available',
       'modal.stock_hurry':'🔥 Only','modal.stock_available_2':'available — order fast',
       'auth.h2':'A space<br><em>built for collectors.</em>',
-      'auth.p':'Track your collection, access private sales and the monthly fortune wheel.',
+      'auth.p':'Track your collection, access private sales and your monthly gift booster.',
       'auth.tab.login':'Sign in','auth.tab.register':'Register',
       'auth.name':'Full name','auth.email':'Email address','auth.password':'Password',
       'auth.login_btn':'Sign in','auth.register_btn':'Create my account',
@@ -3249,10 +3277,10 @@ window.addEventListener('load', () => {
   /* ══ CONSTANTES ══ */
   const IMG_BASE = 'https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/';
   const PROMO_CODES = {
-    EDEN5:{pct:5,type:'discount'}, WELCOME5:{pct:5,type:'discount'},
-    WELCOME10:{pct:10,type:'discount'},
+    EDEN5:{pct:5,type:'discount',rule:{maxEur:15}}, WELCOME5:{pct:5,type:'discount'},
     EDEN10:{pct:10,type:'discount'}, TCG15:{pct:15,type:'discount'},
     EDEN20:{pct:20,type:'discount'}, SHIP0:{pct:0,type:'shipping'},
+    MOINS10:{pct:0,type:'discount',rule:{fixedEur:10,minAmount:80}},
     BOOSTER:{pct:0,type:'info',msg:'🎁 Un booster sera joint à votre commande !'},
     FREE_DISPLAY:{pct:0,type:'info',msg:'🎁 Contactez-nous pour réclamer votre display gratuite !'},
   };
@@ -3351,7 +3379,17 @@ window.addEventListener('load', () => {
   }
 
   /* ══ STATE ══ */
-  let cart = [], currentShip = 4.90, promoDiscount = 0, shipPromo = false, promoInfo = '';
+  let cart = [], currentShip = 4.90, promoDiscount = 0, shipPromo = false, promoInfo = '', promoRule = null;
+  // Pourcentage réellement appliqué : même calcul que le serveur (lib/prices.js effectiveDiscountPct)
+  // -5 % plafonné à 15 € (EDEN5), -10 € fixe dès 80 € (MOINS10)
+  function effPct(sub){
+    if(!(sub>0)) return promoRule&&promoRule.fixedEur?0:promoDiscount;
+    if(promoRule&&promoRule.fixedEur) return sub>=(promoRule.minAmount||0)?Math.min(100,promoRule.fixedEur/sub*100):0;
+    if(promoRule&&promoRule.maxEur&&sub*promoDiscount/100>promoRule.maxEur) return promoRule.maxEur/sub*100;
+    return promoDiscount;
+  }
+  // Texte de confirmation d'un code de réduction
+  const promoOkText=e=>e.rule&&e.rule.fixedEur?`✓ -${e.rule.fixedEur} € appliqué (dès ${e.rule.minAmount} € d'achat)`:`✓ -${e.pct}% appliqué${e.rule&&e.rule.maxEur?` (max ${e.rule.maxEur} €)`:''}`;
   let currentFilter = 'all', searchQuery = '';
   let authUser = null, authToken = null;
   let wheelPrizes = [...DEFAULT_WHEEL], wheelAngle = 0, wheelSpinning = false;
@@ -4138,8 +4176,8 @@ void main(){
   function applyPromoCodeDirect(code){
     const entry=PROMO_CODES[code.toUpperCase()];
     if(!entry||entry.type==='info') return;
-    if(entry.type==='shipping'){shipPromo=true;promoDiscount=0;}
-    else{promoDiscount=entry.pct;shipPromo=false;}
+    if(entry.type==='shipping'){shipPromo=true;promoDiscount=0;promoRule=null;}
+    else{promoDiscount=entry.pct;promoRule=entry.rule||null;shipPromo=false;}
     try{const inp=document.getElementById('promoInput');if(inp)inp.value=code;}catch{}
     renderCart();
   }
@@ -4149,13 +4187,13 @@ void main(){
     go('catalog'); // Redirige vers le catalogue après inscription
     const copy=document.getElementById('wpCopyBtn');
     if(copy) copy.onclick=()=>{
-      navigator.clipboard?.writeText('WELCOME10').catch(()=>{});
+      navigator.clipboard?.writeText('WELCOME5').catch(()=>{});
       copy.textContent='✓ Copié !';
       setTimeout(()=>{copy.textContent='Copier';},2500);
     };
     document.getElementById('wpApplyBtn').onclick=()=>{
       ov.style.display='none';
-      applyPromoCodeDirect('WELCOME10');
+      applyPromoCodeDirect('WELCOME5');
       if(!cart.length) go('catalog');
       else go('checkout');
     };
@@ -4691,7 +4729,7 @@ void main(){
         </button>
       </div>`;}).join('');
     const sub=cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
-    const discounted=sub*(1-promoDiscount/100);
+    const discounted=sub*(1-effPct(sub)/100);
     const _selShipMode=document.querySelector('.ship-opt.selected')?.dataset.ship;
     const ship=(shipPromo&&_selShipMode==='mr')?0:currentShip;
     document.getElementById('cartSub').textContent=sub.toFixed(2).replace('.',',')+' €';
@@ -4976,14 +5014,14 @@ void main(){
   /* ══ COUPONS WON ══ */
   const COUPON_INFO = {
     SHIP0:       { icon:'🚚', label:'Livraison gratuite',  desc:'Frais de port offerts sur votre commande', minAmount:50,  type:'shipping' },
-    BOOSTER:     { icon:'🎴', label:'Booster offert',      desc:'Un booster sera joint à votre colis',      minAmount:0,   type:'prize'    },
+    BOOSTER:     { icon:'🎴', label:'Booster offert',      desc:'Un booster sera joint à votre colis',      minAmount:50,  type:'prize'    },
+    MOINS10:     { icon:'🏷️', label:'-10 € sur votre commande', desc:'Remise fixe sur le total du panier', minAmount:80, type:'discount' },
     FREE_DISPLAY:{ icon:'🎁', label:'Display gratuite',    desc:'Contactez-nous pour récupérer votre display', minAmount:0, type:'prize' },
-    EDEN5:       { icon:'🏷️', label:'-5% sur votre commande',  desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
+    EDEN5:       { icon:'🏷️', label:'-5% sur votre commande',  desc:'Réduction plafonnée à 15 €', minAmount:0,  type:'discount' },
     EDEN10:      { icon:'🏷️', label:'-10% sur votre commande', desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
     TCG15:       { icon:'🏷️', label:'-15% sur votre commande', desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
     EDEN20:      { icon:'🏷️', label:'-20% sur votre commande', desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
     WELCOME5:    { icon:'🏷️', label:'-5% bienvenue',          desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
-    WELCOME10:   { icon:'🏷️', label:'-10% bienvenue',         desc:'Réduction appliquée au total du panier', minAmount:0,  type:'discount' },
   };
 
   function renderWonCodes(wonCodes){
@@ -4996,18 +5034,22 @@ void main(){
     list.innerHTML=all.map((w,i)=>{
       const info=COUPON_INFO[w.code]||{icon:'🎟️',label:w.code,desc:'Code promo',minAmount:0,type:'discount'};
       const isUsed=!!w.used;
+      // Codes du booster cadeau : valables 30 jours (les anciens codes sans date restent valables)
+      const isExpired=!isUsed&&w.expiresAt&&new Date(w.expiresAt).getTime()<Date.now();
+      const expDate=w.expiresAt?new Date(w.expiresAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'';
       const usedDate=w.usedAt?new Date(w.usedAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'';
       const wonDate=w.wonAt?new Date(w.wonAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'';
       const minTxt=info.minAmount>0?`Utilisable dès ${info.minAmount}€ d'achat`:'Sans minimum d\'achat';
-      return `<div class="coupon-card ${isUsed?'used':'available'}">
+      return `<div class="coupon-card ${isUsed||isExpired?'used':'available'}">
         <div class="coupon-icon">${info.icon}</div>
         <div class="coupon-body">
           <div class="coupon-code">${w.code}</div>
           <div class="coupon-desc">${info.label} — ${info.desc}</div>
-          <div class="coupon-min">${minTxt}${wonDate?' · Gagné le '+wonDate:''}</div>
+          <div class="coupon-min">${minTxt}${wonDate?' · Gagné le '+wonDate:''}${expDate&&!isUsed?' · Valable jusqu\'au '+expDate:''}</div>
         </div>
         ${isUsed
           ?`<span class="coupon-status done">✓ Utilisé${usedDate?' le '+usedDate:''}</span>`
+          :isExpired?`<span class="coupon-status done">Expiré</span>`
           :`<button class="coupon-copy" onclick="copyCoupon('${w.code}',this)">Copier</button>
             <span class="coupon-status ok">Disponible</span>`
         }
@@ -5218,7 +5260,7 @@ void main(){
       } else {
         lbl.textContent='Félicitations !';
         codeEl.innerHTML=`Votre code : <span class="code-chip">${prize.code}</span>`;
-        promoDiscount=promoEntry?.pct||0;
+        promoDiscount=promoEntry?.pct||0; promoRule=promoEntry?.rule||null;
         renderCart();
       }
     }
@@ -5226,7 +5268,21 @@ void main(){
     document.getElementById('spinBtn').textContent='🎁 Tirage effectué';
     updateWheelCooldown();
   }
+  // Booster cadeau : mêmes règles que le serveur (lib/gift.js)
+  function renderGift(){
+    const st=document.getElementById('giftStatus'), btn=document.getElementById('giftBtn'); if(!st||!btn) return;
+    const lock=(txt,label)=>{st.innerHTML=txt;btn.classList.add('is-off');btn.setAttribute('aria-disabled','true');btn.textContent=label;btn.onclick=e=>e.preventDefault();};
+    btn.classList.remove('is-off');btn.removeAttribute('aria-disabled');btn.onclick=null;btn.textContent='🎁 Ouvrir mon booster cadeau';
+    if(!(authUser&&authUser.orders&&authUser.orders.length)) return lock('🔒 <strong>Débloqué après ton premier achat</strong>','🔒 Achète pour débloquer');
+    const spent=authUser.orders.reduce((s,o)=>s+parseFloat(o.amount||0),0);
+    const cdMs=spent>=5000?864e5:spent>=1500?7*864e5:30*864e5;
+    const tier=spent>=5000?'💎 Diamond — 1 par jour':spent>=1500?'🥇 Gold — 1 par semaine':'1 par mois';
+    const next=authUser.lastSpin?new Date(new Date(authUser.lastSpin).getTime()+cdMs):null;
+    if(next&&next>new Date()) return lock(`Prochain booster cadeau le <strong>${next.toLocaleDateString('fr-FR')}</strong> · ${tier}`,'⏳ Bientôt disponible');
+    st.innerHTML=`✨ <strong>Ton booster cadeau t'attend !</strong> · ${tier}`;
+  }
   function updateWheelCooldown(){
+    renderGift();
     const cd=document.getElementById('wheelCooldown'); if(!cd) return;
     const btn=document.getElementById('spinBtn');
     // Roue verrouillée jusqu'au premier achat
@@ -5312,7 +5368,7 @@ void main(){
     // Pré-remplir adresse si connecté
     if(typeof prefillShippingAddress==='function') prefillShippingAddress();
     const sub=cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
-    const effectivePct=promoDiscount;
+    const effectivePct=effPct(sub);
     const discAmount=sub*effectivePct/100;
     const discounted=sub-discAmount;
     document.getElementById('coLines').innerHTML=cart.map(i=>
@@ -5507,8 +5563,8 @@ void main(){
     const entry=PROMO_CODES[code];
     const wheelCfg=WHEEL_ONLY_CODES_FRONT[code];
 
-    // Codes première commande (WELCOME10, WELCOME5) : compte requis + 0 commande
-    const FIRST_ORDER_CODES_FRONT=new Set(['WELCOME10','WELCOME5']);
+    // Code première commande (WELCOME5) : compte requis + 0 commande
+    const FIRST_ORDER_CODES_FRONT=new Set(['WELCOME5']);
     if(FIRST_ORDER_CODES_FRONT.has(code)){
       if(!authUser){
         msg.textContent='✗ Créez un compte pour utiliser ce code de bienvenue';msg.className='promo-msg promo-ko';
@@ -5538,10 +5594,10 @@ void main(){
     }
 
     if(entry){
-      if(entry.type==='shipping'){shipPromo=true;promoDiscount=0;msg.textContent='✓ Livraison offerte appliquée';msg.className='promo-msg promo-ok';}
+      if(entry.type==='shipping'){shipPromo=true;promoDiscount=0;promoRule=null;msg.textContent='✓ Livraison offerte appliquée';msg.className='promo-msg promo-ok';}
       else if(entry.type==='info'){msg.textContent='✓ '+entry.msg;msg.className='promo-msg promo-ok';}
-      else{promoDiscount=entry.pct;shipPromo=false;msg.textContent=`✓ -${entry.pct}% appliqué`;msg.className='promo-msg promo-ok';}
-    } else {promoDiscount=0;shipPromo=false;msg.textContent='✗ Code invalide';msg.className='promo-msg promo-ko';}
+      else{promoDiscount=entry.pct;promoRule=entry.rule||null;shipPromo=false;msg.textContent=promoOkText(entry);msg.className='promo-msg promo-ok';}
+    } else {promoDiscount=0;promoRule=null;shipPromo=false;msg.textContent='✗ Code invalide';msg.className='promo-msg promo-ko';}
     renderCheckout(); renderCart();
   });
   document.getElementById('payBtn').addEventListener('click',initiateStripePayment);
@@ -5594,7 +5650,7 @@ void main(){
       const data=await res.json();
       if(data.url){
         const _sub=cart.reduce((s,i)=>s+i.unitPrice*i.qty,0);
-        const _tot=((_sub*(1-promoDiscount/100))+((shipPromo&&currentShipMode==='mr')?0:currentShip)).toFixed(2).replace('.',',')+' €';
+        const _tot=((_sub*(1-effPct(_sub)/100))+((shipPromo&&currentShipMode==='mr')?0:currentShip)).toFixed(2).replace('.',',')+' €';
         sessionStorage.setItem('eden_pending_total',_tot);
         if(data.sessionId) sessionStorage.setItem('eden_pending_ref','EDN-'+data.sessionId.slice(-6).toUpperCase());
         // Redirection dans le même onglet — le panier est sauvé en localStorage
@@ -5844,7 +5900,7 @@ void main(){
     overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
 
     document.getElementById('exitCopyBtn')?.addEventListener('click',()=>{
-      navigator.clipboard?.writeText('WELCOME10').catch(()=>{});
+      navigator.clipboard?.writeText('WELCOME5').catch(()=>{});
       const btn=document.getElementById('exitCopyBtn');
       btn.textContent='✓ Copié !'; btn.style.color='var(--success)';
       setTimeout(()=>{btn.textContent='Copier';btn.style.color='';},2500);
@@ -5852,7 +5908,7 @@ void main(){
     document.getElementById('exitCtaBtn')?.addEventListener('click',()=>{
       // Pré-remplir le champ promo et aller au checkout
       const inp=document.getElementById('promoInput');
-      if(inp) inp.value='WELCOME10';
+      if(inp) inp.value='WELCOME5';
       close();
       if(cart.length) go('checkout');
       else go('catalog');

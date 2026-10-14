@@ -3,7 +3,8 @@
 
 const { PAYPAL_BASE, getPayPalToken } = require('../lib/paypal');
 const jwt = require('jsonwebtoken');
-const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, PRODUCT_LANG, getServerPrice, computeLangPools, CASE_CATALOG, getCasePrice } = require('../lib/prices');
+const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, PRODUCT_LANG, effectiveDiscountPct, getServerPrice, computeLangPools, CASE_CATALOG, getCasePrice } = require('../lib/prices');
+const { wonCodeValid } = require('../lib/gift');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 
@@ -86,7 +87,7 @@ module.exports = async (req, res) => {
     }
     const shipping = parsedShip;
 
-    // ── Codes première commande (WELCOME10, WELCOME5) ──
+    // ── Code première commande (WELCOME5) ──
     if (FIRST_ORDER_CODES.has(code)) {
       if (kvFailed) {
         return res.status(503).json({ error: 'Service temporairement indisponible, réessayez dans quelques secondes' });
@@ -155,11 +156,12 @@ module.exports = async (req, res) => {
       if (!verifiedUser) return res.status(401).json({ error: 'Utilisateur introuvable' });
       const now = Date.now();
       wonCodeIndex = (verifiedUser.wonCodes || []).findIndex(w =>
-        w.code === code && !w.used &&
+        w.code === code && !w.used && wonCodeValid(w, now) &&
         (!w.reserved || now - new Date(w.reservedAt || 0).getTime() > 2 * 60 * 60 * 1000)
       );
       if (wonCodeIndex === -1) {
-        return res.status(403).json({ error: `Code ${code} invalide — gagné via la roue uniquement et utilisable une seule fois` });
+        const expired = (verifiedUser.wonCodes || []).some(w => w.code === code && !w.used && !wonCodeValid(w, now));
+        return res.status(403).json({ error: expired ? `Code ${code} expiré (valable 30 jours après le gain)` : `Code ${code} invalide — gagné via le booster cadeau uniquement et utilisable une seule fois` });
       }
       if (wheelCodeConfig.minAmount > 0 && rawSubtotal < wheelCodeConfig.minAmount) {
         return res.status(400).json({ error: `Code ${code} utilisable à partir de ${wheelCodeConfig.minAmount}€ d'achat` });
@@ -167,7 +169,8 @@ module.exports = async (req, res) => {
     }
 
     // Remise effective : uniquement via code promo explicite — aucune remise automatique
-    const discountPct = promoCodePct;
+    // Plafond (-5 % max 15 €) ou remise fixe (-10 €) convertis en pourcentage appliqué à chaque article
+    const discountPct = effectiveDiscountPct(code, promoCodePct, rawSubtotal);
 
     // Passe 2 : items validés avec remise
     const validatedItems = rawItems.map(({ item, qty, serverPrice }) => ({

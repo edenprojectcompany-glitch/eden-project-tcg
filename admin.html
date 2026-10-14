@@ -307,7 +307,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
     <button class="nav-tab" data-tab="clients">👥 Clients</button>
     <button class="nav-tab" data-tab="produits">🏷️ Produits</button>
     <button class="nav-tab" data-tab="flash">⚡ Flash</button>
-    <button class="nav-tab" data-tab="roue">🎡 Roue</button>
+    <button class="nav-tab" data-tab="roue">🎁 Booster cadeau</button>
     <button class="nav-tab" data-tab="livraison">🚚 Livraison</button>
     <button class="nav-tab" data-tab="gradees">🏅 Gradées</button>
     <button class="nav-tab" data-tab="devis">📝 Devis</button>
@@ -466,10 +466,10 @@ tr:hover td{background:rgba(255,255,255,.015)}
 
     <!-- ROUE -->
     <div class="tab" id="tab-roue">
-      <div class="sec-head"><div class="sec-title">🎡 Roue de la fortune</div></div>
-      <p style="font-size:12.5px;color:var(--dim);margin-bottom:16px">Les probabilités doivent totaliser exactement 100%.</p>
+      <div class="sec-head"><div class="sec-title">🎁 Booster cadeau <span class="sec-meta">— remplace la roue de la fortune, s'ouvre dans le Vault</span></div></div>
+      <p style="font-size:12.5px;color:var(--dim);margin-bottom:16px">Débloqué après un 1ᵉʳ achat · 1 booster par mois (par semaine dès 1 500 € d'achats, par jour dès 5 000 €) · chaque code est à usage unique et valable 30 jours · le -5 % est plafonné à 15 €. Les probabilités doivent totaliser exactement 100 %.</p>
       <div id="wheelRows" style="display:flex;flex-direction:column;gap:10px"></div>
-      <button class="btn-sm" id="saveWheelBtn" style="margin-top:16px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer la roue</button>
+      <button class="btn-sm" id="saveWheelBtn" style="margin-top:16px;background:var(--c1);color:#0a0a0c;border-color:var(--c1);font-weight:700">💾 Enregistrer les gains</button>
       <div id="wheelMsg" style="margin-top:10px;font-size:12.5px"></div>
     </div>
 
@@ -1525,14 +1525,12 @@ document.getElementById('saveFlashBtn').addEventListener('click',async()=>{
 });
 
 /* ══ ROUE ══ */
+// Gains du booster cadeau (ex-roue) — identiques à lib/gift.js
 const DEFAULT_WHEEL=[
-  {label:'-5%  EDEN5',        prob:35, code:'EDEN5',        color:'#5ec4ef'},
-  {label:'-10% EDEN10',       prob:28, code:'EDEN10',       color:'#b08fe8'},
-  {label:'Livraison offerte', prob:15, code:'SHIP0',        color:'#7ecfb0'},
-  {label:'-15% TCG15',        prob:10, code:'TCG15',        color:'#d98ec8'},
-  {label:'Booster offert',    prob:7,  code:'BOOSTER',      color:'#c8a848'},
-  {label:'-20% EDEN20',       prob:4,  code:'EDEN20',       color:'#d07070'},
-  {label:'Display gratuite!', prob:1,  code:'FREE_DISPLAY', color:'#e84040'},
+  {label:'-5 % (max 15 €)',            prob:65, code:'EDEN5',   color:'#7fd9ff'},
+  {label:'Livraison offerte dès 50 €', prob:20, code:'SHIP0',   color:'#a8ffd4'},
+  {label:'-10 € dès 80 €',             prob:10, code:'MOINS10', color:'#c9a8ff'},
+  {label:'Booster offert dès 50 €',    prob:5,  code:'BOOSTER', color:'#ffd97f'},
 ];
 let _wheel=[];
 function buildRoue(wheel){
@@ -1554,7 +1552,7 @@ document.getElementById('saveWheelBtn').addEventListener('click',async()=>{
   if(Math.abs(total-100)>0.5){msg.style.color='var(--danger)';msg.textContent=`Total ${total.toFixed(1)}% ≠ 100%`;return;}
   try{
     await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Code':_code},body:JSON.stringify({action:'set_wheel',data:wheel})});
-    _wheel=wheel;msg.style.color='var(--success)';msg.textContent='✓ Roue mise à jour';
+    _wheel=wheel;msg.style.color='var(--success)';msg.textContent='✓ Gains du booster cadeau mis à jour';
   }catch{msg.style.color='var(--danger)';msg.textContent='Erreur';}
   setTimeout(()=>msg.textContent='',3000);
 });
