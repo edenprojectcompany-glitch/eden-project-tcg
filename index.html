@@ -1561,6 +1561,9 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
   .cart-panel { width: 100vw; }
 }
 
+/* Filtre « En stock » : vert uniquement quand au moins un produit est disponible, atténué sinon */
+.chip-stock{opacity:.6}
+.chip-stock.has-stock{opacity:1;background:rgba(127,255,170,.12);border-color:rgba(127,255,170,.3);color:var(--success)}
 /* ══ Cartes en verre transparent : elles laissent voir le fond animé Évoli (comme la carte de Mew) ══
    Voile blanc léger + liseré clair, sans flou d'arrière-plan (trop coûteux sur un fond animé). */
 :root{
@@ -1848,7 +1851,7 @@ loadAndRenderReviews();
       </div>
       <div class="filters">
         <button class="chip active" data-filter="all">Tous (22)</button>
-        <button class="chip" data-filter="stock" style="background:rgba(127,255,170,.12);border-color:rgba(127,255,170,.3);color:var(--success)">✅ En stock</button>
+        <button class="chip chip-stock" data-filter="stock">✅ En stock</button>
         <button class="chip" data-filter="jp">🇯🇵 Japonais (13)</button>
         <button class="chip" data-filter="cn">🇨🇳 Chinois (9)</button>
       </div>
@@ -3200,7 +3203,7 @@ loadAndRenderReviews();
     if(window._filterCounts){
       var fc = window._filterCounts;
       document.querySelectorAll('.chip[data-filter="all"]').forEach(function(c){ c.textContent = window.t('catalog.filter.all')+' ('+fc.total+')'; });
-      document.querySelectorAll('.chip[data-filter="stock"]').forEach(function(c){ c.innerHTML = '✅ En stock ('+(fc.inStock||0)+')'; });
+      document.querySelectorAll('.chip[data-filter="stock"]').forEach(function(c){ c.innerHTML = (fc.inStock ? '✅' : '⏳') + ' En stock ('+(fc.inStock||0)+')'; c.classList.toggle('has-stock', !!fc.inStock); });
       document.querySelectorAll('.chip[data-filter="jp"]').forEach(function(c){ c.innerHTML = window.t('catalog.filter.jp')+' ('+fc.jp+')'; });
       document.querySelectorAll('.chip[data-filter="cn"]').forEach(function(c){ c.innerHTML = window.t('catalog.filter.cn')+' ('+fc.cn+')'; });
     }
@@ -3318,18 +3321,25 @@ window.addEventListener('load', () => {
     {id:22,name:'M5 — Mega Abyss Eye', sub:'Display JP · 30 boosters',         price:120, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'abyss-eye-m5.png',         ebay:128,tiers:[{q:12,p:120},{q:12,p:110},{q:36,p:105}],desc:'M5 — Dragapult en Mega Évolution. Nouvelle rareté MUR. 30 boosters.'},
   ];
 
-  /* ── Mise à jour dynamique des compteurs de filtres ── */
-  (function updateFilterCounts(){
+  /* ── Mise à jour dynamique des compteurs de filtres ──
+     Appelée au chargement PUIS après réception des vrais stocks (loadProductOverrides) :
+     sinon tous les produits comptaient « en stock » avant que les stocks n'arrivent.
+     Même règle que le badge « Bientôt de retour » : stock admin à 0 = indisponible. */
+  window.updateFilterCounts = function updateFilterCounts(){
     const total = products.filter(p=>p.price!==null).length;
     const jp = products.filter(p=>p.lang==='jp'&&p.price!==null).length;
     const cn = products.filter(p=>p.lang==='cn'&&p.price!==null).length;
     const inStock = products.filter(p=>p.price!==null&&!(p.stock!=null&&p.stock===0)).length;
     window._filterCounts = {total, jp, cn, inStock};
     document.querySelectorAll('.chip[data-filter="all"]').forEach(c=>c.textContent=`${t('catalog.filter.all')} (${total})`);
-    document.querySelectorAll('.chip[data-filter="stock"]').forEach(c=>c.innerHTML=`✅ En stock (${inStock})`);
+    document.querySelectorAll('.chip[data-filter="stock"]').forEach(c=>{
+      c.innerHTML=`${inStock?'✅':'⏳'} En stock (${inStock})`;
+      c.classList.toggle('has-stock', inStock>0);   // vert seulement s'il y a vraiment du stock
+    });
     document.querySelectorAll('.chip[data-filter="jp"]').forEach(c=>c.innerHTML=`${t('catalog.filter.jp')} (${jp})`);
     document.querySelectorAll('.chip[data-filter="cn"]').forEach(c=>c.innerHTML=`${t('catalog.filter.cn')} (${cn})`);
-  })();
+  };
+  window.updateFilterCounts();
 
   /* ══ UTILITAIRES SÉCURITÉ ══ */
   // Encode les caractères HTML spéciaux — à utiliser partout où des données issues
@@ -5751,6 +5761,8 @@ void main(){
           p._flashEndTime=null;
         }
       });
+      // Les vrais stocks sont connus : on recompte les filtres (« En stock »)
+      if(window.updateFilterCounts) window.updateFilterCounts();
       // Appliquer config livraison et gradées depuis KV
       if(shipping){ shippingCfg=shipping; applyShippingConfig(shipping); }
       if(graded) applyGradedConfig(graded);
