@@ -904,8 +904,21 @@ function artOverlay(box, back) {
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d');
   const topY = H * CRIMP / PH, botY = H - topY, seamY = H * (1 - (SEAM + PH / 2) / PH), cx = W / 2;
-  const gold = (y0, y1) => { const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, '#fff6d6'); gr.addColorStop(.45, '#e9c06a'); gr.addColorStop(1, '#9a6a1c'); return gr; };
-  const text = (str, x, y, font, fill, align = 'center') => { g.font = font; g.textAlign = align; g.textBaseline = 'middle'; g.fillStyle = fill; g.fillText(str, x, y); };
+  const gold = (y0, y1) => {
+    const gr = g.createLinearGradient(0, y0, 0, y1);
+    [[0, '#fffbe8'], [.16, '#f8dc8a'], [.38, '#b07a22'], [.5, '#fff1bf'], [.62, '#e2b04c'], [.82, '#8a5a14'], [1, '#f3d27e']].forEach(([o, c]) => gr.addColorStop(o, c));
+    return gr;
+  };
+  // Lettres dorées : fin contour brun (relief) + reflet clair en haut, comme une dorure à chaud
+  const text = (str, x, y, font, fill, align = 'center') => {
+    g.font = font; g.textAlign = align; g.textBaseline = 'middle';
+    if (fill instanceof CanvasGradient) {
+      const px = parseFloat(font.match(/(\d+(?:\.\d+)?)px/)[1]);
+      g.save(); g.shadowBlur = 0; g.lineJoin = 'round'; g.strokeStyle = 'rgba(58,32,4,.9)'; g.lineWidth = Math.max(1.5, px * .06); g.strokeText(str, x, y + px * .03); g.restore();
+      g.fillStyle = fill; g.fillText(str, x, y);
+      g.save(); g.shadowBlur = 0; g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(0, y - px * .5, c.width, px * .18); g.restore();
+    } else { g.fillStyle = fill; g.fillText(str, x, y); }
+  };
   const tag = (DESIGNS[box.id] || {}).tag || box.name.toUpperCase();
   // Liseré doré double sur tout le pourtour
   const fr = (inset, w, a) => { g.strokeStyle = gold(topY, botY); g.globalAlpha = a; g.lineWidth = w * S; g.beginPath(); g.roundRect(inset * S, topY + inset * S, W - inset * 2 * S, botY - topY - inset * 2 * S, 14 * S); g.stroke(); g.globalAlpha = 1; };
@@ -937,7 +950,7 @@ function artOverlay(box, back) {
     g.font = `800 ${16 * S}px Manrope, sans-serif`; const lw = g.measureText(lab).width + 44 * S, ly = py + ph + 22 * S;
     g.fillStyle = 'rgba(8,6,12,.7)'; g.beginPath(); g.roundRect(cx - lw / 2, ly, lw, 38 * S, 19 * S); g.fill();
     g.strokeStyle = gold(ly, ly + 38 * S); g.lineWidth = 2 * S; g.stroke();
-    text(lab, cx, ly + 20 * S, g.font, '#fff3d0');
+    text(lab, cx, ly + 20 * S, g.font, gold(ly + 4 * S, ly + 34 * S));
     text(`${fmt(box.price)} €`, W - 50 * S, botY - 46 * S, `800 ${30 * S}px Manrope, sans-serif`, gold(botY - 70 * S, botY - 20 * S), 'right');
     text('AUTHENTIQUE · TIRAGE VÉRIFIABLE', 50 * S, botY - 46 * S, `700 ${12 * S}px Manrope, sans-serif`, 'rgba(255,240,210,.8)', 'left');
   } else {
@@ -950,7 +963,7 @@ function artOverlay(box, back) {
     g.lineWidth = 2 * S; g.beginPath(); g.arc(cx, cy, R + 16 * S, 0, Math.PI * 2); g.stroke();
     for (let k = 0; k < 40; k++) { const a = k / 40 * Math.PI * 2; g.fillStyle = gold(cy - R, cy + R); g.beginPath(); g.arc(cx + Math.cos(a) * (R + 16 * S), cy + Math.sin(a) * (R + 16 * S), 3 * S, 0, Math.PI * 2); g.fill(); }
     const ring = `EDEN VAULT ✦ ${tag} ✦ CHAMBRE FORTE ✦ `;
-    g.font = `800 ${14 * S}px Manrope, sans-serif`; g.fillStyle = '#ffe9b0';
+    g.font = `800 ${14 * S}px Manrope, sans-serif`; g.fillStyle = gold(cy - R, cy + R);
     for (let k = 0; k < ring.length; k++) { const a = -Math.PI / 2 + k / ring.length * Math.PI * 2; g.save(); g.translate(cx + Math.cos(a) * (R - 22 * S), cy + Math.sin(a) * (R - 22 * S)); g.rotate(a + Math.PI / 2); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ring[k], 0, 0); g.restore(); }
     g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 12 * S;
     text('E', cx, cy + 8 * S, `800 ${150 * S}px Fraunces, Georgia, serif`, gold(cy - 80 * S, cy + 80 * S));
@@ -1042,6 +1055,9 @@ const ART_FS = `uniform sampler2D map, ov; uniform float t, kind, op, back, aspe
       float sw = fract(vUv.x * .55 + vUv.y * .35 - t * .09);
       col += (.5 + .5 * cos(6.2832 * (vUv.y + t * .1 + vec3(0., .33, .67)))) * smoothstep(.07, 0., abs(sw - .5)) * .22;
       vec4 o = texture2D(ov, vUv);
+      float gm = o.a * smoothstep(.1, .3, o.r - o.b);
+      float shine = pow(max(dot(reflect(-l, n), v), 0.), 14.) * 1.4 + smoothstep(.05, 0., abs(fract(vUv.x * .7 - vUv.y * .45 - t * .18) - .5)) * .9;
+      o.rgb += vec3(1., .86, .55) * gm * shine + o.rgb * gm * .12;
       gl_FragColor = vec4(mix(col, o.rgb, o.a), op);
       return;
     }
@@ -1084,6 +1100,9 @@ const ART_FS = `uniform sampler2D map, ov; uniform float t, kind, op, back, aspe
     col += vec3(1.) * smoothstep(.06, 0., abs(sw - .5)) * .12;
     // Calque premium (liserés, titre, prix…)
     vec4 o = texture2D(ov, vUv);
+    float gm = o.a * smoothstep(.1, .3, o.r - o.b);
+    float shine = pow(max(dot(reflect(-l, n), v), 0.), 14.) * 1.4 + smoothstep(.05, 0., abs(fract(vUv.x * .7 - vUv.y * .45 - t * .18) - .5)) * .9;
+    o.rgb += vec3(1., .86, .55) * gm * shine + o.rgb * gm * .12;
     col = mix(col, o.rgb, o.a);
     gl_FragColor = vec4(col * .95, op);
   }`;
