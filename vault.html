@@ -452,11 +452,24 @@ const sfx = (() => {
       const conv = ctx.createConvolver(); conv.buffer = ir;
       verb = ctx.createGain(); verb.gain.value = .32;
       verb.connect(conv).connect(comp);
+      loadBuf('tear'); loadBuf('handle');
     }
     if (ctx.state === 'suspended') ctx.resume();
     return ctx;
   };
   const ok = () => S.muted ? null : ensure();
+  // Vrais enregistrements (domaine public, Wikimedia Commons) : bande arrachée et sachet manipulé
+  const bufs = {};
+  const loadBuf = name => { if (name in bufs) return; bufs[name] = null; fetch('/sound/' + name + '.wav').then(r => r.arrayBuffer()).then(b => ctx.decodeAudioData(b)).then(d => { bufs[name] = d; }).catch(() => {}); };
+  const play = (name, offset, dur, vol) => {
+    const b = bufs[name]; if (!b) return false;
+    const t = ctx.currentTime, src = ctx.createBufferSource(); src.buffer = b;
+    src.playbackRate.value = .96 + Math.random() * .08;
+    const d = Math.min(dur ?? b.duration, b.duration - offset), g = ctx.createGain();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .006); g.gain.setValueAtTime(vol, t + Math.max(.01, d - .03)); g.gain.linearRampToValueAtTime(0, t + d);
+    src.connect(g); out(g, .06); src.start(t, Math.max(0, offset), d + .02);
+    return true;
+  };
   const out = (node, wet = .35) => { node.connect(master); if (wet) { const g = ctx.createGain(); g.gain.value = wet; node.connect(g).connect(verb); } };
   const env = (g, t, a, d, v) => { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + a + d); };
   // Bruit filtré (souffle, froissement)
@@ -520,13 +533,15 @@ const sfx = (() => {
   return {
     click() { if (!ok()) return; bell(1760, ctx.currentTime, .12, .03, 2, 1.5); },
     // Prise en main du sachet : froissement doux du plastique
-    handle() { if (!ok()) return; const t = ctx.currentTime; crinkle(t, .5, 70, .2, 600, 3500); crinkle(t + .55, .35, 50, .15, 700, 3200); },
+    handle() { if (!ok()) return; if (play('handle', 0, undefined, .8)) return; const t = ctx.currentTime; crinkle(t, .5, 70, .2, 600, 3500); crinkle(t + .55, .35, 50, .15, 700, 3200); },
     swish() { if (!ok()) return; noise(ctx.currentTime, .45, { vol: .07, freq: 500, sweep: 2600, q: .6, attack: .12 }); },
     // Pendant la déchirure : froissement d'alu + petits craquements
-    crackle() { if (!ok()) return; rip(ctx.currentTime, .08 + Math.random() * .05, .3 + Math.random() * .2, .32); },
+    // La déchirure suit le doigt : on joue le passage de l'enregistrement qui correspond à l'avancée
+    crackle(p = .5) { if (!ok()) return; const b = bufs.tear; if (!play('tear', b ? p * b.duration * .6 : 0, .12, .75)) rip(ctx.currentTime, .1, .3, .3); },
     // La bande cède : « zip » métallique granuleux + claquement sourd
     tear() {
       if (!ok()) return; const t = ctx.currentTime;
+      if (play('tear', bufs.tear ? bufs.tear.duration * .55 : 0, undefined, 1)) return;
       rip(t, .34, .8, .6);
       // Petit souffle d'air quand le sachet s'ouvre (pas de « boum » électronique)
       noise(t + .16, .32, { vol: .05, freq: 900, sweep: 260, type: 'lowpass', attack: .02, wet: .12 });
@@ -1708,7 +1723,7 @@ async function openOne(st, r, prize, i, n) {
       seam.scale.x = Math.max(.0001, PW * p); seamMat.opacity = p;
       burstLight.color.set('#ffcf8a'); burstLight.position.copy(STAGE).add(new THREE.Vector3(-PW / 2 + PW * p, SEAM + .1, .6)); burstLight.intensity = p > 0 && p < 1 ? 2.2 : 0;
       if (p - lastCrack > .045) {
-        sfx.crackle(); vibrate(4); lastCrack = p;
+        sfx.crackle(p); vibrate(4); lastCrack = p;
         // Gerbe d'étincelles au point de déchirure, projetée vers l'avant et vers le haut
         const tip = new THREE.Vector3(-PW / 2 + PW * p, SEAM, PD / 2 + .06); pack.localToWorld(tip);
         particleBurst(tip, { n: 26, speed: 2.4, up: 1.6, grav: 7, life: .55, size: .035, spread: .8, dir: new THREE.Vector3(.6, .7, .9) });
