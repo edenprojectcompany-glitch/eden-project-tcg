@@ -1558,9 +1558,14 @@ function warmUp() {
     const hidden = []; scene.traverse(o => { if (!o.visible) { hidden.push(o); o.visible = true; } });
     const tmp = new THREE.Group(); tmp.position.copy(STAGE); scene.add(tmp);
     tmp.add(new THREE.Mesh(new THREE.PlaneGeometry(.1, .1), RAY_MAT));
-    tmp.add(new THREE.Mesh(new THREE.PlaneGeometry(.1, .1), new THREE.MeshBasicMaterial({ map: dotTex, transparent: true, alphaTest: .03, side: THREE.DoubleSide, toneMapped: false })));
+    // Lot (image sRGB, comme les vraies cartes) et sachet en fondu (matériau transparent) : mêmes réglages qu'à l'ouverture
+    const srgb = new THREE.CanvasTexture(document.createElement('canvas')); srgb.colorSpace = THREE.SRGBColorSpace;
+    tmp.add(new THREE.Mesh(new THREE.PlaneGeometry(.1, .1), new THREE.MeshBasicMaterial({ map: srgb, transparent: true, alphaTest: .03, side: THREE.DoubleSide, toneMapped: false, color: 0xe6e6e6 })));
+    for (const st of stands) { const pk = buildPack(st.box, st.maps); pk.userData.mat.transparent = true; pk.scale.setScalar(.01); tmp.add(pk); }
     tmp.add(new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3)).setAttribute('color', new THREE.BufferAttribute(new Float32Array(3), 3)), new THREE.PointsMaterial({ map: dotTex, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })));
     renderer.compile(scene, camera);
+    // Un rendu réel, par le même chemin que l'affichage (filtre de lueur), finit la préparation
+    if (composer) composer.render(); else renderer.render(scene, camera);
     hidden.forEach(o => { o.visible = false; }); scene.remove(tmp);
   } catch {}
 }
