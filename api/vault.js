@@ -14,6 +14,7 @@
 // GET  ?q=config&gift=1                  → le booster cadeau seul, avec ses gains et leurs chances
 // POST {action:'gift_state'}             → éligibilité du joueur (premier achat, délai)
 // POST {action:'open_gift'}              → tirage vérifiable, code à usage unique valable 30 jours
+// POST {action:'demo_open', boxId, count}→ démo gratuite : rien n'est débité, stock et coffre intacts
 
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -84,6 +85,43 @@ async function giftConfig(kv) {
     table: table.map(seg => ({ itemId: giftItemId(seg), p: (+seg.prob || 0) / 100, tier: GIFT_TIER[seg.code] || 'uncommon' })),
   };
   return { gift: true, imgBase: '', maxOpen: 1, items, boxes: [box] };
+}
+// ── Mode démo : ouverture gratuite, sans paiement, sans toucher au stock ni au coffre ──
+// Sans réglage enregistré, on prend les préréglages de l'admin ; chaque lot compte pour 1 exemplaire.
+const DEMO_PACKS = {
+  ar: { name: 'Mystère AR', base: ['AR'], bonus: ['SAR'], bonusPct: 3, price: 9.9, margin: 25, feePct: 1.5, feeFix: .25 },
+  ex: { name: 'Mystère EX', base: ['RR'], bonus: ['AR', 'SAR'], bonusPct: 5, price: 4.9, margin: 25, feePct: 1.5, feeFix: .25 },
+};
+const DEMO_SEALED = [
+  { id: 'sv2a', name: 'Booster Pokémon 151 (SV2a)', lang: 'jp', kind: 'booster', tag: 'BOOSTER', img: '/image/packs/sv2a.webp', value: 15 },
+  { id: 'sv8a', name: 'Booster Terastal Festival (SV8a)', lang: 'jp', kind: 'booster', tag: 'BOOSTER', img: '/image/packs/sv8a.webp', value: 10 },
+  { id: 'sv10', name: 'Booster Glory Team Rocket (SV10)', lang: 'jp', kind: 'booster', tag: 'BOOSTER', img: '/image/packs/sv10.webp', value: 5 },
+  { id: 'm2a', name: 'Booster Méga Dream ex (M2a)', lang: 'jp', kind: 'booster', tag: 'BOOSTER', img: '/image/packs/m2a.webp', value: 9 },
+  { id: 'cn151-3', name: 'Booster CN151 Vol.3', lang: 'cn', kind: 'booster', tag: 'BOOSTER', img: '/image/packs/cn151-3.webp', value: 5 },
+  { id: 'cn-30ans', name: 'Booster 30 ans (chinois)', lang: 'cn', kind: 'booster', tag: 'BOOSTER30', img: '/image/packs/cn-30ans.jpg', value: 8 },
+];
+async function demoOpen(kv, { boxId, count }) {
+  if (boxId === 'gift') {
+    const table = await giftTable(kv), prize = pickGift(table, Math.random());
+    return { demo: true, results: [{ item: giftItemId(prize), tier: GIFT_TIER[prize.code] || 'uncommon' }], won: { code: prize.code, label: prize.label, expiresAt: new Date(Date.now() + 30 * 864e5).toISOString() } };
+  }
+  const info = PACK_INFO[boxId];
+  if (!info) throw new HttpError(404, 'Booster inconnu');
+  const [cards, sealed, packs] = await Promise.all([kv.get(K.cards), kv.get(K.sealed), kv.get(K.packs)]);
+  const lots = (sealed || []).length ? sealed : DEMO_SEALED;
+  const saved = (packs || {})[boxId] || {};
+  const src = packSource(boxId, cards, lots, saved.price > 0 ? packs : { ...packs, [boxId]: DEMO_PACKS[boxId] || saved });
+  const pool = src.pool.map(c => ({ ...c, qty: Math.max(1, +c.qty || 0) }));
+  const odds = packOdds(pool, src.perDraw);
+  if (!odds.ok || !odds.rows.length) throw new HttpError(409, info.sealed ? 'Aucun lot scellé pour la démo' : 'Ajoute des cartes dans « Cartes Vault » pour essayer ce booster');
+  const n = Math.min(MAX_OPEN, Math.max(1, Math.floor(+count || 1))) * src.draws;
+  const results = [], items = {};
+  for (let i = 0; i < n; i++) {
+    const c = pickCard(odds.rows, Math.random());
+    items[c.cardId] = { id: c.cardId, kind: c.kind || 'card', name: c.kind ? c.name : (c.nameFr ? `${c.nameFr} · ${c.rarity}` : c.name), short: c.nameFr || c.name, img: playImg(c.img), value: c.value, rarity: c.rarity, set: c.set, number: c.number, total: c.total, intlPreview: !!c.intlPreview };
+    results.push({ item: c.cardId, tier: c.lot });
+  }
+  return { demo: true, results, items };
 }
 const publicGiftStatus = user => { const s = giftStatus(user); return { eligible: s.eligible, reason: s.reason, nextAt: s.nextAt }; };
 async function openGift(kv, req) {
@@ -307,6 +345,11 @@ module.exports = async (req, res) => {
     // Booster cadeau et coffre du joueur : disponibles même avant l'ouverture publique du Vault
     if (body.action === 'gift_state') { const { user } = await getAccount(kv, req); return res.status(200).json({ status: publicGiftStatus(user) }); }
     if (body.action === 'open_gift') return res.status(200).json(await openGift(kv, req));
+    // Démo : le booster cadeau pour tous, les autres boosters une fois le Vault ouvert (ou avec le code admin)
+    if (body.action === 'demo_open') {
+      if (body.boxId !== 'gift' && !opened && !isAdmin(req)) return res.status(403).json({ error: 'Le Vault ouvre bientôt' });
+      return res.status(200).json(await demoOpen(kv, body));
+    }
     if (body.action === 'state') return res.status(200).json(await state(kv, await getUser(kv, req)));
     if (!opened && !isAdmin(req)) return res.status(403).json({ error: 'Le Vault ouvre bientôt' });
     const user = await getUser(kv, req);

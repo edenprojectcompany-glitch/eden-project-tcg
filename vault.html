@@ -237,6 +237,9 @@ textarea.input{height:auto;min-height:96px;padding:12px 16px;resize:vertical;fon
   .step{display:grid;grid-template-columns:24px 1fr;column-gap:10px;align-items:center}
   .step b{margin:0;grid-row:span 2}
 }
+#demoBtn.on{background:linear-gradient(135deg,#ffe7a8,#d9b26a);color:#2a1904;border-color:transparent;font-weight:800}
+.demo-flag{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:30;padding:7px 16px;border-radius:999px;font:800 11px Manrope,sans-serif;letter-spacing:.16em;color:#2a1904;background:linear-gradient(135deg,#ffe7a8,#d9b26a);box-shadow:0 6px 24px rgba(217,178,106,.35);pointer-events:none;transition:opacity .3s}
+.demo-flag.off{opacity:0}
 </style>
 </head>
 <body>
@@ -266,6 +269,7 @@ textarea.input{height:auto;min-height:96px;padding:12px 16px;resize:vertical;fon
   <div class="top">
     <a class="brand" href="/"><b>Eden Vault</b><small>EDEN PROJECT TCG</small></a>
     <div class="sp"></div>
+    <button class="pill glass" id="demoBtn" title="Ouvre les boosters gratuitement : rien n’est débité ni ajouté au coffre">▶ Démo</button>
     <button class="pill glass hide-m" id="liteBtn" title="Change la qualité du rendu 3D"></button>
     <button class="pill glass hide-m" id="musicBtn" aria-label="Musique">♪ Musique</button>
     <button class="pill glass hide-m" id="soundBtn" aria-label="Son">🔊</button>
@@ -298,6 +302,7 @@ textarea.input{height:auto;min-height:96px;padding:12px 16px;resize:vertical;fon
 
   <div class="zoomhint glass">Molette pour dézoomer · attrape le booster pour le tourner</div>
   <div class="counter off" id="counter"></div>
+  <div class="demo-flag off" id="demoFlag">MODE DÉMO · GRATUIT · RIEN N’EST DÉBITÉ</div>
   <div class="tearbar off" id="tearbar">
     <div class="tearhint glass">Glisse sur le booster de gauche à droite pour le déchirer <i>→</i></div>
     <div style="display:flex;gap:10px"><button class="btn btn-glass btn-sm" id="tearBtn">Déchirer</button><button class="btn btn-glass btn-sm" id="allBtn">Tout ouvrir</button></div>
@@ -400,7 +405,7 @@ const TIER_COLOR = { common: '#b8bcc8', uncommon: '#7fd9ff', rare: '#c9a8ff', ep
 // ════════════════════════════════════════════════════════════
 // ÉTAT + API (même serveur que /vault)
 // ════════════════════════════════════════════════════════════
-const S = { cfg: null, st: null, token: null, sel: 0, count: 1, mode: 'boot', muted: false };
+const S = { cfg: null, st: null, token: null, sel: 0, count: 1, mode: 'boot', muted: false, demo: new URLSearchParams(location.search).get('demo') === '1' };
 // Même connexion que la boutique (edn_token)
 try { S.token = localStorage.getItem('edn_token') || sessionStorage.getItem('edn_token_ss'); S.muted = localStorage.getItem('vault_muted') === 'true'; } catch {}
 // Avant l'ouverture au public, l'accès se fait avec le code admin (gardé le temps de l'onglet, comme /admin)
@@ -1503,7 +1508,8 @@ function prizeMesh(it) {
 async function openFlow() {
   if (S.mode !== 'browse') return;
   const st = stands[S.sel], b = st.box;
-  if (!S.token) return openAuth('login');
+  if (!S.token && !S.demo) return openAuth('login');
+  if (S.demo) return demoFlow(st, b);
   if (b.free) return openGiftFlow(st, b);
   const n = S.count;
   // Pas assez de boosters payés : on passe au paiement Stripe
@@ -1521,6 +1527,28 @@ async function openFlow() {
   S.st = resp.state; renderUser();
   showSummary(b, resp.results);
 }
+
+// Démo : même mise en scène, tirage sans paiement, rien n'est enregistré
+async function demoFlow(st, b) {
+  S.mode = 'busy'; $('#openBtn').disabled = true;
+  let resp;
+  try { resp = await api('demo_open', { boxId: b.id, count: b.free ? 1 : S.count }); }
+  catch (e) { S.mode = 'browse'; renderPanel(); toast(e.message, 'bad'); return; }
+  Object.assign(S.cfg.items, resp.items || {});
+  $('#panel').classList.add('off'); arrows(false);
+  setView(VIEW_STAGE); sfx.hum(); sfx.music.duck(true);
+  autoAll = false;
+  const prizes = await Promise.all(resp.results.map(r => prizeMesh(item(r.item))));
+  const per = b.draws || 1;
+  for (let i = 0; i < resp.results.length; i++) await (i % per ? openExtra : openOne)(st, resp.results[i], prizes[i], i, resp.results.length);
+  if (b.free) showGiftSummary(b, resp.results[0], resp.won); else showSummary(b, resp.results);
+}
+function setDemo(on) {
+  S.demo = on; $('#demoBtn').classList.toggle('on', on); $('#demoFlag').classList.toggle('off', !on);
+  $('#demoBtn').textContent = on ? '✕ Quitter la démo' : '▶ Démo';
+  if (S.mode === 'browse') renderPanel();
+}
+$('#demoBtn').onclick = () => { setDemo(!S.demo); sfx.click(); if (S.demo) toast('Mode démo : ouvre autant de boosters que tu veux, rien n’est débité', 'ok'); };
 
 // Booster cadeau : tirage serveur (lib/gift.js), même mise en scène que les boosters
 async function openGiftFlow(st, b) {
@@ -1541,12 +1569,13 @@ async function openGiftFlow(st, b) {
 function showGiftSummary(b, r, won) {
   $('#counter').classList.add('off');
   $('#shTitle').textContent = 'Ton cadeau';
-  $('#shSub').textContent = `Code ajouté à ton compte · valable jusqu’au ${dateFr(won.expiresAt)}`;
+  $('#shSub').textContent = S.demo ? 'Démo : ce code n’est pas enregistré sur ton compte' : `Code ajouté à ton compte · valable jusqu’au ${dateFr(won.expiresAt)}`;
   $('#shItems').innerHTML = `<div class="it" style="--c:${TIER_COLOR[r.tier]};grid-column:1/-1;padding:22px"><b style="font-size:20px">${esc(won.label)}</b><span>Code à usage unique</span><div class="v num" style="font-size:28px;letter-spacing:.12em">${esc(won.code)}</div></div>`;
   $('#shSum').innerHTML = `Saisis le code <b class="num">${esc(won.code)}</b> dans ton panier sur la boutique : il est aussi enregistré dans ton tableau de bord.`;
   $('#shActions').innerHTML = `<button class="btn btn-glass" id="shKeep">Fermer</button> <button class="btn btn-glass" id="shCopy">Copier le code</button> <a class="btn btn-gold" href="/">Aller à la boutique</a>`;
+  if (S.demo) { $('#shSum').textContent = 'En vrai, ce code serait valable 30 jours dans ton panier.'; $('#shActions').innerHTML = '<button class="btn btn-glass" id="shKeep">Fermer</button> <button class="btn btn-gold" id="shAgain">Rejouer la démo</button>'; $('#shAgain').onclick = async () => { closeSummary(); await sleep(500); openFlow(); }; }
   $('#shKeep').onclick = closeSummary;
-  $('#shCopy').onclick = () => { navigator.clipboard?.writeText(won.code).then(() => toast('Code copié ✦', 'ok'), () => {}); };
+  if ($('#shCopy')) $('#shCopy').onclick = () => { navigator.clipboard?.writeText(won.code).then(() => toast('Code copié ✦', 'ok'), () => {}); };
   $('#sheet').classList.remove('off');
   S.mode = 'summary';
 }
@@ -1665,7 +1694,7 @@ async function presentPrize(r, prize, wp, i, n, fx) {
   tween(700, e => { prize.position.lerpVectors(pp, pp.clone().add(new THREE.Vector3(3.5, 2.5, -1)), e); prize.scale.setScalar(lerp(1, .1, e)); prize.material.opacity = 1 - e; }, E.inOut).then(() => { scene.remove(prize); prize.geometry.dispose(); prize.material.map?.dispose(); prize.material.dispose(); });
   showcase.hide(); roomDimT = 0;
   tween(500, e => { burstLight.intensity *= (1 - e); bloom.strength = lerp(bloom.strength, BLOOM_BASE, e); });
-  bumpChest();
+  if (!S.demo) bumpChest();
   await sleep(350);
 }
 
@@ -1690,7 +1719,7 @@ function showSummary(b, results) {
   const total = results.reduce((s, r) => s + item(r.item).value, 0);
   const per = b.draws || 1, packsOpened = Math.max(1, Math.round(results.length / per));
   $('#shTitle').textContent = per > 1 ? `Tes ${results.length} boosters scellés` : results.length > 1 ? `${results.length} boosters ouverts` : 'Ta carte';
-  $('#shSub').textContent = b.name + ' · ajouté à ton coffre';
+  $('#shSub').textContent = b.name + (S.demo ? ' · démo : rien n’est ajouté à ton coffre' : ' · ajouté à ton coffre');
   $('#shItems').innerHTML = results.map(r => {
     const it = item(r.item), src = imgOf(it);
     return `<div class="it" style="--c:${TIER_COLOR[r.tier]}">${src ? `<img src="${src}" alt="">` : ''}<b>${esc(it.name)}</b><span>${TIER_FR[r.tier]}</span><div class="v num">${eur(it.value)}</div></div>`;
@@ -1700,6 +1729,7 @@ function showSummary(b, results) {
   $('#shActions').innerHTML = `<button class="btn btn-glass" id="shKeep">Fermer</button>
     <button class="btn btn-gold" id="shAgain">${left >= n ? `Ouvrir ×${n} · ${left} restant${left > 1 ? 's' : ''}` : `Racheter ×${n} · ${eur(b.price * n)}`}</button>`;
   $('#shKeep').onclick = closeSummary;
+  if (S.demo) $('#shAgain').textContent = 'Rejouer la démo';
   $('#shAgain').onclick = async () => { closeSummary(); S.count = n; renderPanel(); await sleep(500); openFlow(); };
   $('#sheet').classList.remove('off');
   S.mode = 'summary';
@@ -1794,6 +1824,7 @@ function renderPanel() {
   document.querySelectorAll('#seg button').forEach(bt => bt.onclick = () => { S.count = +bt.dataset.n; sfx.click(); renderPanel(); });
   const btn = $('#openBtn');
   btn.disabled = S.mode !== 'browse';
+  if (S.demo) { $('#pEyebrow').textContent = 'Mode démo · gratuit'; btn.innerHTML = `▶ Essayer${S.count > 1 ? ' ×' + S.count : ''} gratuitement`; return; }
   if (!b.available && !have) { btn.innerHTML = 'Bientôt disponible'; btn.disabled = true; }
   else if (!S.token) btn.innerHTML = 'Se connecter pour ouvrir';
   else if (have >= S.count) btn.innerHTML = `Ouvrir${S.count > 1 ? ' ×' + S.count : ''}`;
@@ -1809,6 +1840,7 @@ function renderGiftPanel(b) {
   $('.p-foot span').innerHTML = '1 par mois · par semaine dès 1 500 € d’achats · par jour dès 5 000 € · <a href="/" style="color:var(--gold2)">retour à la boutique</a>';
   const btn = $('#openBtn'), g = S.gift;
   btn.disabled = S.mode !== 'browse';
+  if (S.demo) { $('#pEyebrow').textContent = 'Mode démo · aucun vrai code'; btn.innerHTML = '▶ Essayer gratuitement'; return; }
   if (!S.token) btn.innerHTML = 'Se connecter pour ouvrir';
   else if (!g) { btn.innerHTML = 'Vérification…'; btn.disabled = true; }
   else if (g.eligible) btn.innerHTML = '🎁 Ouvrir mon cadeau';
@@ -2017,7 +2049,7 @@ addEventListener('resize', resize);
   const start = Math.max(0, boxes.findIndex(b => b.id === (new URLSearchParams(location.search).get('box') || 'ar')));
   selectIndex(start, true); ringAngle = ringTarget;
   await loadState();
-  S.mode = 'browse'; renderPanel();
+  S.mode = 'browse'; setDemo(S.demo); renderPanel();
   // Retour de Stripe : les boosters sont crédités par le webhook, on attend qu'ils apparaissent
   const qs = new URLSearchParams(location.search);
   if (qs.get('paid') || qs.get('cancel')) history.replaceState(null, '', '/vault');
