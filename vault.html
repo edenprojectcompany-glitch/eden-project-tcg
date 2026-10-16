@@ -429,7 +429,7 @@ const credits = id => (S.st?.credits || {})[id] || 0;
 const totalCredits = () => Object.values(S.st?.credits || {}).reduce((a, n) => a + n, 0);
 const eur = n => fmt(n) + ' €';
 // Noms des raretés affichés aux clients (jamais la valeur des cartes : elle bouge chaque jour)
-const RAR_FR = { AR: 'Art Rare', SAR: 'Special Art Rare', SR: 'Super Rare', UR: 'Ultra Rare', RR: 'Carte ex', BOOSTER: 'Booster scellé', BOOSTER30: 'Booster 30 ans', DISPLAY: 'Display scellée', CADEAU: 'Cadeau' };
+const RAR_FR = { AR: 'AR', SAR: 'SAR', SR: 'SR', UR: 'UR', RR: 'RR (ex)', BOOSTER: 'Booster scellé', BOOSTER30: 'Booster 30 ans', DISPLAY: 'Display scellée', CADEAU: 'Cadeau' };
 const rarFr = r => RAR_FR[r] || r || '';
 const rarList = a => (a || []).map(rarFr).join(' ou ') || '—';
 const itemLine = it => [rarFr(it.rarity), it.set, it.number].filter(Boolean).join(' · ');
@@ -486,16 +486,16 @@ const sfx = (() => {
       const a = buf.getChannelData(ch); let i = 0;
       while (i < n) {
         const x = i / n, dens = .4 + power * Math.sin(x * Math.PI) ** .6;
-        i += Math.max(8, (sr / (500 + 2600 * dens)) * (.4 + Math.random() * 1.2)) | 0;
-        const L = 24 + Math.random() * 110 | 0, amp = (.25 + Math.random() * .75) * (Math.random() < .08 ? 1.8 : 1);
+        i += Math.max(12, (sr / (260 + 1100 * dens)) * (.5 + Math.random())) | 0;
+        const L = 90 + Math.random() * 260 | 0, amp = (.3 + Math.random() * .7);
         for (let k = 0; k < L && i + k < n; k++) a[i + k] += (Math.random() * 2 - 1) * amp * Math.exp(-k / (L * .3));
       }
-      for (let k = 0; k < n; k++) a[k] += (Math.random() * 2 - 1) * .05;   // grain continu du film
+      for (let k = 0; k < n; k++) a[k] += (Math.random() * 2 - 1) * .03;   // grain continu du film
     }
     const src = ctx.createBufferSource(); src.buffer = buf;
-    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 900;
-    const pk = ctx.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 3400; pk.Q.value = .9; pk.gain.value = 5;
-    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 9500;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 280;
+    const pk = ctx.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 1100; pk.Q.value = .8; pk.gain.value = 4;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3800;
     const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol * .5, t + .01); g.gain.linearRampToValueAtTime(vol, t + d * .5); g.gain.exponentialRampToValueAtTime(.001, t + d + .03);
     src.connect(hp).connect(pk).connect(lp).connect(g); out(g, .08); src.start(t);
   };
@@ -520,17 +520,17 @@ const sfx = (() => {
   return {
     click() { if (!ok()) return; bell(1760, ctx.currentTime, .12, .03, 2, 1.5); },
     // Prise en main du sachet : froissement doux du plastique
-    handle() { if (!ok()) return; const t = ctx.currentTime; crinkle(t, .5, 90, .28, 1800, 8000); crinkle(t + .55, .35, 60, .2, 2200, 7000); },
+    handle() { if (!ok()) return; const t = ctx.currentTime; crinkle(t, .5, 70, .2, 600, 3500); crinkle(t + .55, .35, 50, .15, 700, 3200); },
     swish() { if (!ok()) return; noise(ctx.currentTime, .45, { vol: .07, freq: 500, sweep: 2600, q: .6, attack: .12 }); },
     // Pendant la déchirure : froissement d'alu + petits craquements
-    crackle() { if (!ok()) return; rip(ctx.currentTime, .07 + Math.random() * .05, .35 + Math.random() * .2, .45); },
+    crackle() { if (!ok()) return; rip(ctx.currentTime, .08 + Math.random() * .05, .3 + Math.random() * .2, .32); },
     // La bande cède : « zip » métallique granuleux + claquement sourd
     tear() {
       if (!ok()) return; const t = ctx.currentTime;
-      rip(t, .26, 1, .9);
+      rip(t, .34, .8, .6);
       // Petit souffle d'air quand le sachet s'ouvre (pas de « boum » électronique)
       noise(t + .16, .32, { vol: .05, freq: 900, sweep: 260, type: 'lowpass', attack: .02, wet: .12 });
-      crinkle(t + .2, .25, 140, .22, 3000, 9000);
+
     },
     // Ouverture : souffle qui monte dans la salle
     hum() { if (!ok()) return; const t = ctx.currentTime; noise(t, 1.2, { vol: .05, freq: 160, sweep: 700, q: .8, type: 'lowpass', attack: .4, wet: .5 }); sub(48, t, 1.4, .12, .9); },
@@ -1522,16 +1522,16 @@ const RAY_MAT = new THREE.ShaderMaterial({
 });
 function godRays(at, lvl) {
   const g = new THREE.Group(); g.position.copy(at); scene.add(g);
-  const mats = [], n = 9 + lvl * 3;
+  const mats = [], n = 5 + lvl * 2;
   for (let k = 0; k < n; k++) {
     const m = RAY_MAT.clone(); m.uniforms.c.value.set(lvl >= 3 ? (k % 2 ? '#ffd97f' : '#ffb3e6') : '#ffe2b0'); mats.push(m);
     const ray = new THREE.Mesh(new THREE.PlaneGeometry(.05 + Math.random() * .09, 1).translate(0, .5, 0), m);
     ray.rotation.z = (k / (n - 1) - .5) * 2.4 + (Math.random() - .5) * .15; ray.rotation.y = (Math.random() - .5) * .6;
-    ray.userData.len = 1.6 + Math.random() * 1.8; g.add(ray);
+    ray.userData.len = .9 + Math.random() * 1.1; g.add(ray);
   }
   tween(1500, (e, k) => {
     g.children.forEach((r, i) => { r.scale.y = r.userData.len * E.out(Math.min(1, k * 2.2)); });
-    mats.forEach((m, i) => { m.uniforms.o.value = Math.sin(Math.min(1, k * 1.6) * Math.PI) * (.55 + .25 * Math.sin(i * 1.7 + k * 12)); });
+    mats.forEach((m, i) => { m.uniforms.o.value = Math.sin(Math.min(1, k * 1.6) * Math.PI) * (.28 + .1 * Math.sin(i * 1.7 + k * 8)); });
     g.rotation.z = k * .15;
   }, t => t).then(() => { scene.remove(g); g.children.forEach(r => r.geometry.dispose()); mats.forEach(m => m.dispose()); });
 }
@@ -1731,8 +1731,12 @@ async function openOne(st, r, prize, i, n) {
   tween(380, (e, k) => { body.scale.x = 1 + Math.sin(k * Math.PI) * .03; body.scale.z = 1 + Math.sin(k * Math.PI) * .25; });
   { const c0 = new THREE.Vector3(0, SEAM, PD / 2 + .05); pack.localToWorld(c0);
     for (let k = 0; k < 5; k++) { const pt = new THREE.Vector3(-PW / 2 + PW * k / 4, SEAM, PD / 2 + .05); pack.localToWorld(pt); particleBurst(pt, { n: 40, speed: 3.2, up: 2.2, grav: 7, life: .8, size: .04, spread: 1.1, dir: new THREE.Vector3(0, 1, .6) }); } }
-  const sv = new THREE.Vector3(2.4, 3.2, 1.2), sp = strip.position.clone();
-  tween(900, (e, k) => { strip.position.set(sp.x + sv.x * k * .9, sp.y + sv.y * k - 2.2 * k * k, sp.z + sv.z * k); strip.rotation.z = .32 + k * 5; strip.rotation.x = k * 3; }, t => t);
+  const sp = strip.position.clone(), rz0 = strip.rotation.z;
+  tween(380, e => { strip.rotation.z = lerp(rz0, .95, e); strip.rotation.x = -.35 * e; strip.position.y = sp.y + .03 * e; }, E.out)
+    .then(() => tween(1100, (e, k) => {
+      strip.position.set(sp.x + .35 * k, sp.y + .03 + .25 * k - 3.4 * k * k, sp.z + .5 * k);
+      strip.rotation.z = .95 + .9 * k; strip.rotation.x = -.35 - 1.1 * k; strip.rotation.y = .4 * k;
+    }, t => t));
   seamMat.opacity = 1;
   burstLight.color.set('#ffd9a0'); burstLight.position.copy(STAGE).add(new THREE.Vector3(0, SEAM + .6, .7));
   const lightUp = tween(500, e => { burstLight.intensity = 2 + e * (2 + lvl * 1.5); bloom.strength = BLOOM_BASE + e * (.04 + lvl * .06); roomDimT = 1; });
@@ -1742,7 +1746,7 @@ async function openOne(st, r, prize, i, n) {
   // ── Le vrai booster sort du sachet ──
   sfx.swish();
   const p0 = prize.position.clone();
-  await tween(1000 * fx, e => { prize.position.y = lerp(p0.y, SEAM + .95, e); prize.scale.setScalar(lerp(.72, .9, e)); }, E.out);
+  await tween(1500 * fx, e => { prize.position.y = lerp(p0.y, SEAM + .95, e); prize.scale.setScalar(lerp(.72, .9, e)); prize.rotation.z = Math.sin(e * Math.PI) * .03; }, E.inOut);
   await lightUp;
 
   // ── Présentation : le sachet tombe, le lot tourne et grandit ──
