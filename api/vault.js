@@ -98,7 +98,7 @@ const DEMO_SEALED = [
   { id: 'sv10', name: 'Booster Glory Team Rocket (SV10)', lang: 'jp', kind: 'booster', tag: 'BOOSTER', img: '/image/packs/sv10.webp', value: 5 },
   { id: 'm2a', name: 'Booster Méga Dream ex (M2a)', lang: 'jp', kind: 'booster', tag: 'BOOSTER', img: '/image/packs/m2a.webp', value: 9 },
   { id: 'cn151-3', name: 'Booster CN151 Vol.3', lang: 'cn', kind: 'booster', tag: 'BOOSTER', img: '/image/packs/cn151-3.webp', value: 5 },
-  { id: 'cn-30ans', name: 'Booster 30 ans (chinois)', lang: 'cn', kind: 'booster', tag: 'BOOSTER30', img: '/image/packs/cn-30ans.jpg', value: 8 },
+  { id: 'cn-30ans', name: 'Booster 30 ans (chinois)', lang: 'cn', kind: 'booster', tag: 'BOOSTER30', img: '/image/packs/cn-30ans.png', value: 8 },
 ];
 async function demoOpen(kv, { boxId, count }) {
   if (boxId === 'gift') {
