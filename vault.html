@@ -240,6 +240,7 @@ textarea.input{height:auto;min-height:96px;padding:12px 16px;resize:vertical;fon
 #demoBtn.on{background:linear-gradient(135deg,#ffe7a8,#d9b26a);color:#2a1904;border-color:transparent;font-weight:800}
 .demo-flag{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:30;padding:7px 16px;border-radius:999px;font:800 11px Manrope,sans-serif;letter-spacing:.16em;color:#2a1904;background:linear-gradient(135deg,#ffe7a8,#d9b26a);box-shadow:0 6px 24px rgba(217,178,106,.35);pointer-events:none;transition:opacity .3s}
 .demo-flag.off{opacity:0}
+.p-win{display:block;margin-top:6px;font-size:12px;line-height:1.5;color:var(--gold2)}
 </style>
 </head>
 <body>
@@ -1953,7 +1954,8 @@ function renderPanel() {
   $('#pEyebrow').textContent = have ? `${have} booster${have > 1 ? 's' : ''} payé${have > 1 ? 's' : ''} à ouvrir` : 'Booster mystère';
   $('#pName').textContent = b.name; $('#pTag').textContent = b.tagline;
   $('#sPrice').textContent = eur(b.price);
-  $('#sEv').textContent = rarList(b.guaranteed); $('#sBest').textContent = rarList(b.bonus); $('#sLots').textContent = b.bonusPct ? `${String(b.bonusPct).replace('.', ',')} %` : '—';
+  $('#sEv').textContent = (b.draws || 1) > 1 ? `${b.draws} boosters` : rarList(b.guaranteed);
+  if (b.contents?.length) $('#pTag').innerHTML = esc(b.tagline) + '<span class="p-win">À gagner : ' + b.contents.map(esc).join(' · ') + '</span>'; $('#sBest').textContent = rarList(b.bonus); $('#sLots').textContent = b.bonusPct ? `${String(b.bonusPct).replace('.', ',')} %` : '—';
   $('#dots').innerHTML = stands.map((s, i) => `<i class="${i === S.sel ? 'on' : ''}"></i>`).join('');
   $('#seg').innerHTML = [1, 2, 3, 5].map(n => `<button data-n="${n}" class="${n === S.count ? 'on' : ''}">×${n}</button>`).join('');
   document.querySelectorAll('#seg button').forEach(bt => bt.onclick = () => { S.count = +bt.dataset.n; sfx.click(); renderPanel(); });

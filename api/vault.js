@@ -30,7 +30,7 @@ const PACK_INFO = {
   ar: { name: 'Mystère AR', price: 9.9, tagline: '1 carte AR garantie', theme: ['#ffd97f', '#c9a8ff'], art: '/image/vault3d/mew-sm.jpg', artKind: 'flames' },
   ex: { name: 'Mystère EX', price: 4.9, tagline: '1 carte ex garantie', theme: ['#7fd9ff', '#b98aff'], art: '/image/vault3d/pack-dracaufeu.jpg', artKind: 'sky' },
   // Booster Légende : 2 boosters scellés tirés dans le stock « Lots scellés » (151, SV8a, SV10, M2a, CN151, 30 ans CN…)
-  legend: { name: 'Booster Légende', price: 19.9, tagline: '2 boosters scellés garantis', theme: ['#c77dff', '#5ad1ff'], art: '/image/vault3d/pack-mewtwo.jpg', artKind: 'psy', artAspect: 1.25, draws: 2, sealed: true },
+  legend: { name: 'Booster Légende', price: 19.9, tagline: '2 boosters aléatoires garantis', theme: ['#c77dff', '#5ad1ff'], art: '/image/vault3d/pack-mewtwo.jpg', artKind: 'psy', artAspect: 1.25, draws: 2, sealed: true },
 };
 // Réglage par défaut du Booster Légende (modifiable dans le calculateur de l'admin)
 const DEFAULT_LEGEND = { price: 19.9, margin: 25, base: ['BOOSTER', 'BOOSTER30'], bonus: ['DISPLAY'], bonusPct: 2, feePct: 1.5, feeFix: .25 };
@@ -195,6 +195,8 @@ async function catalog(kv) {
     boxes.push({
       id, name: pack.name || info.name, tagline: info.tagline, price: pack.price > 0 ? pack.price : info.price, theme: info.theme,
       art: info.art, artKind: info.artKind, artAspect: info.artAspect || 16 / 9, draws, available: rows.length > 0 && inStock >= draws,
+      // Booster Légende : liste des boosters à gagner (lots scellés enregistrés, sinon préréglages)
+      contents: info.sealed ? ((sealed || []).length ? sealed : DEMO_SEALED).filter(l => (pack.base || []).includes(l.tag)).map(l => l.name.replace(/^Booster /, '')) : undefined,
       guaranteed: pack.base || [], bonus: (pack.bonus || []).filter(r => !(pack.base || []).includes(r)), bonusPct: +pack.bonusPct || 0,
       ev: round2((odds.ev || 0) * draws), table: rows.map(c => ({ itemId: c.cardId, p: c.p, tier: c.lot, qty: c.qty })),
       _odds: odds, _pack: pack,
