@@ -9,10 +9,16 @@
 // POST {action:'open', boxId, count}     → ouvre des packs déjà payés
 // POST {action:'rotate_seed', clientSeed}→ révèle la graine serveur (tirage vérifiable)
 // POST {action:'admin_grant', email, boxId, count} / {action:'admin_open', open} / {action:'admin_info'} (code admin)
+//
+// Booster cadeau (ex-roue, lib/gift.js) — accessible même quand le Vault est fermé :
+// GET  ?q=config&gift=1                  → le booster cadeau seul, avec ses gains et leurs chances
+// POST {action:'gift_state'}             → éligibilité du joueur (premier achat, délai)
+// POST {action:'open_gift'}              → tirage vérifiable, code à usage unique valable 30 jours
 
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { packOdds, pickCard } = require('../lib/vault-odds');
+const { giftStatus, giftTable, pickGift, awardGift } = require('../lib/gift');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
 const SITE = process.env.SITE_URL || 'https://www.edenprojecttcg.com';
@@ -47,15 +53,60 @@ function cors(res) {
 const isAdmin = req => { const c = req.headers['x-admin-code']; return !!c && !!process.env.ADMIN_CODE && c === process.env.ADMIN_CODE; };
 
 // Compte du site (même connexion que la boutique)
-async function getUser(kv, req) {
+async function getAccount(kv, req) {
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   if (!token) throw new HttpError(401, 'Connecte-toi pour continuer');
   let d;
   try { d = jwt.verify(token, process.env.JWT_SECRET); } catch { throw new HttpError(401, 'Session expirée, reconnecte-toi'); }
-  const user = await kv.get(`user:${d.email}`);
+  const key = `user:${String(d.email || '').toLowerCase().trim()}`;
+  const user = await kv.get(key);
   if (!user) throw new HttpError(401, 'Compte introuvable');
   if (user.tokenVersion != null && d.tokenVersion !== user.tokenVersion) throw new HttpError(401, 'Session expirée, reconnecte-toi');
+  return { key, user };
+}
+async function getUser(kv, req) {
+  const { user } = await getAccount(kv, req);
   return { id: user.id, email: user.email, name: user.name };
+}
+
+// ── Booster cadeau ─────────────────────────────────────────────
+// Niveau d'animation de chaque gain (le booster offert est le gros lot)
+const GIFT_TIER = { EDEN5: 'common', SHIP0: 'uncommon', MOINS10: 'rare', BOOSTER: 'legendary' };
+const giftItemId = seg => 'gift-' + (seg.code || seg.label);
+async function giftConfig(kv) {
+  const table = await giftTable(kv);
+  const items = Object.fromEntries(table.map(seg => [giftItemId(seg), {
+    id: giftItemId(seg), kind: 'coupon', name: seg.label, short: seg.label, code: seg.code, color: seg.color, value: 0, rarity: 'CADEAU',
+  }]));
+  const box = {
+    id: 'gift', name: 'Booster cadeau', tagline: 'Un code offert à chaque ouverture', price: 0, free: true, theme: ['#ffd97f', '#ff8f8f'],
+    draws: 1, available: true, ev: 0,
+    table: table.map(seg => ({ itemId: giftItemId(seg), p: (+seg.prob || 0) / 100, tier: GIFT_TIER[seg.code] || 'uncommon' })),
+  };
+  return { gift: true, imgBase: '', maxOpen: 1, items, boxes: [box] };
+}
+const publicGiftStatus = user => { const s = giftStatus(user); return { eligible: s.eligible, reason: s.reason, nextAt: s.nextAt }; };
+async function openGift(kv, req) {
+  const { key, user: u0 } = await getAccount(kv, req);
+  // Même verrou que /api/spin : un seul tirage à la fois par compte
+  const lock = `spin:lock:${u0.email.toLowerCase().trim()}`;
+  if (!(await kv.set(lock, '1', { ex: 15, nx: true }))) throw new HttpError(429, 'Ouverture déjà en cours, réessaie dans quelques secondes');
+  try {
+    const user = await kv.get(key);
+    const st = giftStatus(user);
+    if (!st.eligible) throw new HttpError(st.reason === 'first-order' ? 403 : 429, st.reason === 'first-order' ? 'Ton booster cadeau se débloque après ton premier achat' : 'Ton prochain booster cadeau n’est pas encore prêt', { status: publicGiftStatus(user) });
+    const table = await giftTable(kv);
+    const r = await nextRoll(kv, user.id);
+    const prize = pickGift(table, r.roll);
+    const won = awardGift(user, prize);
+    user.loyalty = (user.loyalty || 0) + 10 + (prize.code ? 20 : 0);
+    await kv.set(key, user);
+    const lite = { id: user.id, email: user.email, name: user.name };
+    return {
+      results: [{ item: giftItemId(prize), tier: GIFT_TIER[prize.code] || 'uncommon', roll: r.roll, nonce: r.nonce, clientSeed: r.clientSeed, serverHash: r.serverHash }],
+      won: { code: won.code, label: won.label, expiresAt: won.expiresAt }, status: publicGiftStatus(user), state: await state(kv, lite),
+    };
+  } finally { await kv.del(lock).catch(() => {}); }
 }
 
 // ── Provably fair : HMAC(serverSeed, clientSeed:nonce) ─────────
@@ -240,6 +291,7 @@ module.exports = async (req, res) => {
 
     if (req.method === 'GET') {
       if ((req.query && req.query.q) !== 'config') return res.status(400).json({ error: 'Requête inconnue' });
+      if (req.query.gift === '1') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).json({ ...(await giftConfig(kv)), open: opened }); }
       if (!opened && !isAdmin(req)) return res.status(200).json({ closed: true });
       const { items, boxes } = await catalog(kv);
       res.setHeader('Cache-Control', 'no-store');
@@ -252,6 +304,10 @@ module.exports = async (req, res) => {
       if (!isAdmin(req)) return res.status(403).json({ error: 'Accès refusé' });
       return res.status(200).json(await admin(kv, body));
     }
+    // Booster cadeau et coffre du joueur : disponibles même avant l'ouverture publique du Vault
+    if (body.action === 'gift_state') { const { user } = await getAccount(kv, req); return res.status(200).json({ status: publicGiftStatus(user) }); }
+    if (body.action === 'open_gift') return res.status(200).json(await openGift(kv, req));
+    if (body.action === 'state') return res.status(200).json(await state(kv, await getUser(kv, req)));
     if (!opened && !isAdmin(req)) return res.status(403).json({ error: 'Le Vault ouvre bientôt' });
     const user = await getUser(kv, req);
     switch (body.action) {

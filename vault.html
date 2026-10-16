@@ -404,6 +404,8 @@ const S = { cfg: null, st: null, token: null, sel: 0, count: 1, mode: 'boot', mu
 // Même connexion que la boutique (edn_token)
 try { S.token = localStorage.getItem('edn_token') || sessionStorage.getItem('edn_token_ss'); S.muted = localStorage.getItem('vault_muted') === 'true'; } catch {}
 // Avant l'ouverture au public, l'accès se fait avec le code admin (gardé le temps de l'onglet, comme /admin)
+// /vault?gift=1 : le booster cadeau du compte client (ouvert même quand le Vault est fermé au public)
+const GIFT = new URLSearchParams(location.search).get('gift') === '1';
 const adminCode = () => { try { return sessionStorage.getItem('eden_admin_code') || ''; } catch { return ''; } };
 async function api(action, body = {}) {
   const h = { 'Content-Type': 'application/json' };
@@ -1024,6 +1026,7 @@ const DESIGNS = {
   rocket: { base: ['#050507', '#1d1d24', '#4d4d59'], accent: 'crimson',  pattern: 'chevron',   ink: '#000000', tag: 'SÉRIE NOIRE' },
   grail:  { base: ['#5e3e0e', '#c4923d', '#f7e0a2'], accent: 'platinum', pattern: 'guilloche', ink: '#2a1904', tag: 'ÉDITION GRAAL' },
   daily:  { base: ['#042924', '#0f7d69', '#5fe3c3'], accent: 'silver',   pattern: 'stars',     ink: '#01130f', tag: 'CADEAU DU JOUR' },
+  gift:   { base: ['#4a0710', '#b01e2e', '#ff6f6f'], accent: 'gold',     pattern: 'stars',     ink: '#220307', tag: 'BOOSTER CADEAU' },
 };
 const ACCENTS = {
   gold: ['#fff5d2', '#e3b75e', '#7e5412'], silver: ['#ffffff', '#cfd6e2', '#5f6776'], rose: ['#ffeaf3', '#eaa5bd', '#7c3f55'],
@@ -1452,6 +1455,27 @@ function flash(color) { const f = $('#flash'); f.style.setProperty('--c', color)
 // ════════════════════════════════════════════════════════════
 let tearCtl = null;          // contrôle de la déchirure en cours
 let autoAll = false;
+// Bon cadeau doré dessiné : intitulé du gain + code
+function couponTexture(it) {
+  const W = 1024, H = 640, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  g.save(); g.beginPath(); g.roundRect(8, 8, W - 16, H - 16, 46);
+  g.moveTo(8 + 54, H / 2); g.arc(8, H / 2, 54, 0, Math.PI * 2); g.moveTo(W - 8 + 54, H / 2); g.arc(W - 8, H / 2, 54, 0, Math.PI * 2);
+  g.clip('evenodd');
+  const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, '#fff3cf'); gr.addColorStop(.4, '#f0c766'); gr.addColorStop(.7, '#c58f2c'); gr.addColorStop(1, '#fff0c4');
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  g.globalAlpha = .12; g.fillStyle = '#fff'; for (let k = -H; k < W; k += 46) { g.beginPath(); g.moveTo(k, 0); g.lineTo(k + 18, 0); g.lineTo(k + 18 + H, H); g.lineTo(k + H, H); g.fill(); } g.globalAlpha = 1;
+  g.strokeStyle = '#7a5410'; g.lineWidth = 5; g.setLineDash([16, 12]); g.strokeRect(70, 52, W - 140, H - 104); g.setLineDash([]);
+  g.fillStyle = '#5c3d08'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '800 34px Manrope, sans-serif'; g.fillText('BON CADEAU · EDEN PROJECT TCG', W / 2, 118);
+  let fs = 92; g.font = `800 ${fs}px Fraunces, Georgia, serif`;
+  while (g.measureText(it.name).width > W - 200 && fs > 44) { fs -= 4; g.font = `800 ${fs}px Fraunces, Georgia, serif`; }
+  g.fillText(it.name, W / 2, 262);
+  g.fillStyle = 'rgba(60,35,4,.88)'; g.beginPath(); g.roundRect(W / 2 - 250, 350, 500, 112, 24); g.fill();
+  g.fillStyle = '#ffe9a8'; g.font = '800 64px ui-monospace, Consolas, monospace'; g.fillText(it.code || '', W / 2, 408);
+  g.fillStyle = '#5c3d08'; g.font = '700 28px Manrope, sans-serif'; g.fillText('Code à usage unique · valable 30 jours', W / 2, 520);
+  g.restore();
+  return new THREE.CanvasTexture(c);
+}
 function prizeMesh(it) {
   return new Promise(resolve => {
     const make = (tex, ar) => {
@@ -1460,6 +1484,7 @@ function prizeMesh(it) {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: .03, side: THREE.DoubleSide, toneMapped: false, color: 0xe6e6e6 }));
       resolve(m);
     };
+    if (it.kind === 'coupon') return make(couponTexture(it), 1.6);
     const src = imgOf(it);
     if (it.kind === 'coin' || !src) {
       // Pièce EC dessinée
@@ -1479,6 +1504,7 @@ async function openFlow() {
   if (S.mode !== 'browse') return;
   const st = stands[S.sel], b = st.box;
   if (!S.token) return openAuth('login');
+  if (b.free) return openGiftFlow(st, b);
   const n = S.count;
   // Pas assez de boosters payés : on passe au paiement Stripe
   if (credits(b.id) < n) return buyFlow(b, n);
@@ -1494,6 +1520,35 @@ async function openFlow() {
   for (let i = 0; i < resp.results.length; i++) await (i % per ? openExtra : openOne)(st, resp.results[i], prizes[i], i, resp.results.length);
   S.st = resp.state; renderUser();
   showSummary(b, resp.results);
+}
+
+// Booster cadeau : tirage serveur (lib/gift.js), même mise en scène que les boosters
+async function openGiftFlow(st, b) {
+  if (!S.gift?.eligible) return;
+  S.mode = 'busy'; $('#openBtn').disabled = true;
+  let resp;
+  try { resp = await api('open_gift'); }
+  catch (e) { S.mode = 'browse'; if (e.data?.status) S.gift = e.data.status; renderPanel(); toast(e.message, 'bad'); return; }
+  S.gift = resp.status;
+  $('#panel').classList.add('off'); arrows(false);
+  setView(VIEW_STAGE); sfx.hum(); sfx.music.duck(true);
+  autoAll = false;
+  const r = resp.results[0], prize = await prizeMesh(item(r.item));
+  await openOne(st, r, prize, 0, 1);
+  S.st = resp.state; renderUser();
+  showGiftSummary(b, r, resp.won);
+}
+function showGiftSummary(b, r, won) {
+  $('#counter').classList.add('off');
+  $('#shTitle').textContent = 'Ton cadeau';
+  $('#shSub').textContent = `Code ajouté à ton compte · valable jusqu’au ${dateFr(won.expiresAt)}`;
+  $('#shItems').innerHTML = `<div class="it" style="--c:${TIER_COLOR[r.tier]};grid-column:1/-1;padding:22px"><b style="font-size:20px">${esc(won.label)}</b><span>Code à usage unique</span><div class="v num" style="font-size:28px;letter-spacing:.12em">${esc(won.code)}</div></div>`;
+  $('#shSum').innerHTML = `Saisis le code <b class="num">${esc(won.code)}</b> dans ton panier sur la boutique : il est aussi enregistré dans ton tableau de bord.`;
+  $('#shActions').innerHTML = `<button class="btn btn-glass" id="shKeep">Fermer</button> <button class="btn btn-glass" id="shCopy">Copier le code</button> <a class="btn btn-gold" href="/">Aller à la boutique</a>`;
+  $('#shKeep').onclick = closeSummary;
+  $('#shCopy').onclick = () => { navigator.clipboard?.writeText(won.code).then(() => toast('Code copié ✦', 'ok'), () => {}); };
+  $('#sheet').classList.remove('off');
+  S.mode = 'summary';
 }
 
 // Achat : Stripe Checkout, puis retour sur /vault où les boosters payés attendent d'être ouverts
@@ -1513,7 +1568,7 @@ async function openOne(st, r, prize, i, n) {
   const { strip, seam, seamMat, body, crB, mat } = pack.userData;
   seamMat.color.set('#ffe7b5');
   prize.position.set(0, SEAM - .95, 0); prize.scale.setScalar(.72); pack.add(prize);
-  $('#counter').textContent = n > 1 ? `BOOSTER ${i + 1} / ${n}` : st.box.free ? 'COFFRE DU JOUR' : 'BOOSTER VIRTUEL';
+  $('#counter').textContent = n > 1 ? `BOOSTER ${i + 1} / ${n}` : st.box.free ? 'BOOSTER CADEAU' : 'BOOSTER VIRTUEL';
   $('#counter').classList.remove('off');
   const fromRotY = pack.rotation.y;
   await tween(900, e => { pack.position.lerpVectors(from, STAGE, e); pack.rotation.y = lerp(fromRotY + Math.PI * 2, 0, e); }, E.inOut);
@@ -1592,8 +1647,9 @@ async function presentPrize(r, prize, wp, i, n, fx) {
 
   // Carte d'info
   $('#rTier').textContent = TIER_FR[r.tier]; $('#rTier').style.color = TIER_COLOR[r.tier];
-  $('#rName').textContent = it.name; $('#rVal').textContent = 'Valeur ' + eur(it.value) + (it.intlPreview ? ' · illustration version internationale' : '');
-  $('#rNext').textContent = i < n - 1 ? 'Booster suivant' : 'Voir le récap';
+  $('#rName').textContent = it.name; $('#rVal').textContent = it.kind === 'coupon' ? `Code ${it.code} · valable 30 jours` : 'Valeur ' + eur(it.value) + (it.intlPreview ? ' · illustration version internationale' : '');
+  if (it.kind === 'coupon') $('#rTier').textContent = r.tier === 'legendary' ? 'GROS LOT' : 'TON CADEAU';
+  $('#rNext').textContent = i < n - 1 ? 'Booster suivant' : it.kind === 'coupon' ? 'Voir mon code' : 'Voir le récap';
   $('#reveal').classList.remove('off');
   S.mode = 'reveal';
   prize.userData.spin = true;
@@ -1726,6 +1782,7 @@ const mouse = { x: 0, y: 0 };
 function renderPanel() {
   if (!S.cfg || !stands.length) return;
   const b = stands[S.sel].box;
+  if (b.free) return renderGiftPanel(b);
   const best = b.table.length ? Math.max(...b.table.map(r => item(r.itemId).value)) : 0;
   const have = credits(b.id);
   $('#pEyebrow').textContent = have ? `${have} booster${have > 1 ? 's' : ''} payé${have > 1 ? 's' : ''} à ouvrir` : 'Booster mystère';
@@ -1741,6 +1798,21 @@ function renderPanel() {
   else if (!S.token) btn.innerHTML = 'Se connecter pour ouvrir';
   else if (have >= S.count) btn.innerHTML = `Ouvrir${S.count > 1 ? ' ×' + S.count : ''}`;
   else btn.innerHTML = `Acheter${S.count > 1 ? ' ×' + S.count : ''} · <span class="num">${eur(b.price * S.count)}</span>`;
+}
+// Panneau du booster cadeau : gains et chances, état du compte
+const dateFr = iso => new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+function renderGiftPanel(b) {
+  $('#pEyebrow').textContent = 'Ton cadeau Eden Project';
+  $('#pName').textContent = b.name; $('#pTag').textContent = b.tagline + ' · valable 30 jours';
+  $('.stats').innerHTML = b.table.map(r => `<div class="stat"><span>${esc(item(r.itemId).name)}</span><b class="num" style="color:${TIER_COLOR[r.tier]}">${(r.p * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %</b></div>`).join('');
+  $('#dots').innerHTML = ''; $('#seg').style.display = 'none'; arrows(false);
+  $('.p-foot span').innerHTML = '1 par mois · par semaine dès 1 500 € d’achats · par jour dès 5 000 € · <a href="/" style="color:var(--gold2)">retour à la boutique</a>';
+  const btn = $('#openBtn'), g = S.gift;
+  btn.disabled = S.mode !== 'browse';
+  if (!S.token) btn.innerHTML = 'Se connecter pour ouvrir';
+  else if (!g) { btn.innerHTML = 'Vérification…'; btn.disabled = true; }
+  else if (g.eligible) btn.innerHTML = '🎁 Ouvrir mon cadeau';
+  else { btn.disabled = true; btn.innerHTML = g.reason === 'first-order' ? 'Débloqué après ton premier achat' : `Prochain cadeau le ${dateFr(g.nextAt)}`; }
 }
 function renderUser() {
   const slot = $('#userSlot');
@@ -1839,7 +1911,12 @@ $('#meLite').onclick = () => $('#liteBtn').click();
 syncMe();
 // Livraison depuis le coffre : branchée à l'étape suivante (relais Chronopost + Boxtal, comme la boutique)
 $('#shipBtn').onclick = () => toast('L’envoi depuis le coffre arrive très bientôt : tes cartes sont bien gardées ✦');
-async function loadState() { if (!S.token) { renderUser(); return; } try { S.st = await api('state'); } catch {} renderUser(); renderPanel(); }
+async function loadState() {
+  if (!S.token) { renderUser(); renderPanel(); return; }
+  try { S.st = await api('state'); } catch {}
+  if (GIFT) try { S.gift = (await api('gift_state')).status; } catch {}
+  renderUser(); renderPanel();
+}
 
 // ════════════════════════════════════════════════════════════
 // BOUCLE DE RENDU
@@ -1914,7 +1991,7 @@ addEventListener('resize', resize);
   $('#liteBtn').onclick = () => { location.search = LITE ? '?lite=0' : '?lite=1'; };
   resize();
   requestAnimationFrame(frame);
-  const loadCfg = () => fetch('/api/vault?q=config', { headers: adminCode() ? { 'X-Admin-Code': adminCode() } : {} }).then(r => { if (!r.ok) throw 0; return r.json(); });
+  const loadCfg = () => fetch('/api/vault?q=config' + (GIFT ? '&gift=1' : ''), { headers: adminCode() ? { 'X-Admin-Code': adminCode() } : {} }).then(r => { if (!r.ok) throw 0; return r.json(); });
   try { S.cfg = await loadCfg(); }
   catch { $('#fallback').classList.add('on'); return; }
   // Vault pas encore ouvert au public : écran d'attente (le code admin donne l'accès)
