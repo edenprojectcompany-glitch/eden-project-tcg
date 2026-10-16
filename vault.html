@@ -1443,7 +1443,8 @@ const bursts = [];
 const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.25, 'rgba(255,255,255,.85)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
 // Particules génériques : couleurs chaudes par particule, gravité, traînée de refroidissement
 const SPARK_COLS = [new THREE.Color('#fff6dc'), new THREE.Color('#ffd98a'), new THREE.Color('#ffb04a'), new THREE.Color('#ff7a26')];
-function particleBurst(pos, { n = 120, speed = 3, up = 1.2, grav = 5, life = 1, size = .05, spread = 1, dir = null, cols = SPARK_COLS } = {}) {
+function particleBurst(pos, { n: n0 = 120, speed = 3, up = 1.2, grav = 5, life = 1, size = .05, spread = 1, dir = null, cols = SPARK_COLS } = {}) {
+  const n = Math.max(6, Math.round(n0 * (MOBILE || LITE ? .5 : 1)));
   const p = new Float32Array(n * 3), c = new Float32Array(n * 3), v = [];
   for (let i = 0; i < n; i++) {
     p.set([pos.x, pos.y, pos.z], i * 3);
@@ -1550,6 +1551,17 @@ function godRays(at, lvl) {
     g.rotation.z = k * .15;
   }, t => t).then(() => { scene.remove(g); g.children.forEach(r => r.geometry.dispose()); mats.forEach(m => m.dispose()); });
 }
+function warmUp() {
+  try {
+    const hidden = []; scene.traverse(o => { if (!o.visible) { hidden.push(o); o.visible = true; } });
+    const tmp = new THREE.Group(); tmp.position.copy(STAGE); scene.add(tmp);
+    tmp.add(new THREE.Mesh(new THREE.PlaneGeometry(.1, .1), RAY_MAT));
+    tmp.add(new THREE.Mesh(new THREE.PlaneGeometry(.1, .1), new THREE.MeshBasicMaterial({ map: dotTex, transparent: true, alphaTest: .03, side: THREE.DoubleSide, toneMapped: false })));
+    tmp.add(new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3)).setAttribute('color', new THREE.BufferAttribute(new Float32Array(3), 3)), new THREE.PointsMaterial({ map: dotTex, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })));
+    renderer.compile(scene, camera);
+    hidden.forEach(o => { o.visible = false; }); scene.remove(tmp);
+  } catch {}
+}
 function flash(color) { const f = $('#flash'); f.style.setProperty('--c', color); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
 
 // ════════════════════════════════════════════════════════════
@@ -1581,7 +1593,7 @@ function couponTexture(it) {
 function prizeMesh(it) {
   return new Promise(resolve => {
     const make = (tex, ar) => {
-      tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+      tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; renderer.initTexture(tex);
       const h = it.kind === 'display' ? 1.25 : 1.55, w = h * ar;
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: .03, side: THREE.DoubleSide, toneMapped: false, color: 0xe6e6e6 }));
       resolve(m);
@@ -2175,6 +2187,7 @@ addEventListener('resize', resize);
     for (let i = 0; i < 15; i++) { await sleep(1500); await loadState(); if (totalCredits() > before || (i === 0 && before > 0)) break; }
     toast(totalCredits() ? 'Tes boosters sont prêts : ouvre-les !' : 'Paiement en cours de validation, recharge la page dans un instant', totalCredits() ? 'ok' : '');
   }
+  warmUp();
   // Laisse le temps au panorama de charger avant de lever le rideau
   await Promise.race([allLoaded, sleep(8000)]);
   $('#loader').classList.add('done');
