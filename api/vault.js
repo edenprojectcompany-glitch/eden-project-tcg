@@ -121,7 +121,7 @@ async function demoOpen(kv, { boxId, count }) {
     items[c.cardId] = { id: c.cardId, kind: c.kind || 'card', name: c.kind ? c.name : (c.nameFr ? `${c.nameFr} · ${c.rarity}` : c.name), short: c.nameFr || c.name, img: playImg(c.img), value: c.value, rarity: c.rarity, set: c.set, number: c.number, total: c.total, intlPreview: !!c.intlPreview };
     results.push({ item: c.cardId, tier: c.lot });
   }
-  return { demo: true, results, items };
+  return { demo: true, results, items: publicItems(items) };
 }
 const publicGiftStatus = user => { const s = giftStatus(user); return { eligible: s.eligible, reason: s.reason, nextAt: s.nextAt }; };
 async function openGift(kv, req) {
@@ -195,6 +195,7 @@ async function catalog(kv) {
     boxes.push({
       id, name: pack.name || info.name, tagline: info.tagline, price: pack.price > 0 ? pack.price : info.price, theme: info.theme,
       art: info.art, artKind: info.artKind, artAspect: info.artAspect || 16 / 9, draws, available: rows.length > 0 && inStock >= draws,
+      guaranteed: pack.base || [], bonus: (pack.bonus || []).filter(r => !(pack.base || []).includes(r)), bonusPct: +pack.bonusPct || 0,
       ev: round2((odds.ev || 0) * draws), table: rows.map(c => ({ itemId: c.cardId, p: c.p, tier: c.lot, qty: c.qty })),
       _odds: odds, _pack: pack,
     });
@@ -203,7 +204,9 @@ async function catalog(kv) {
 }
 // Images officielles servies par notre relais (utilisables en texture 3D)
 const playImg = img => /^https:\/\/www\.pokemon-card\.com\//.test(img || '') ? '/api/cards?src=' + encodeURIComponent(img) : img;
-const publicBoxes =boxes => boxes.map(({ _odds, _pack, ...b }) => ({ ...b, table: b.table.map(({ qty, ...r }) => r) }));
+const publicBoxes = boxes => boxes.map(({ _odds, _pack, ev, ...b }) => ({ ...b, table: b.table.map(({ qty, ...r }) => r) }));
+// Valeur des cartes : jamais montrée aux clients (le prix du marché bouge chaque jour)
+const publicItems = items => Object.fromEntries(Object.entries(items).map(([k, { value, ...it }]) => [k, it]));
 
 async function state(kv, user) {
   const [credits, inv] = await Promise.all([kv.hgetall(K.credits(user.id)), kv.hgetall(K.inv(user.id))]);
@@ -212,7 +215,7 @@ async function state(kv, user) {
   return {
     user: { name: user.name },
     credits: Object.fromEntries(Object.entries(credits || {}).map(([k, v]) => [k, Number(v) || 0]).filter(([, v]) => v > 0)),
-    inventory: Object.values(inv || {}).map(parse).filter(Boolean).sort((a, b) => b.at - a.at),
+    inventory: Object.values(inv || {}).map(parse).filter(Boolean).map(({ value, ...o }) => o).sort((a, b) => b.at - a.at),
     fair: { serverHash: sha256(seeds.server), clientSeed: seeds.client, nonce },
   };
 }
@@ -334,7 +337,7 @@ module.exports = async (req, res) => {
       if (!opened && !isAdmin(req)) return res.status(200).json({ closed: true });
       const { items, boxes } = await catalog(kv);
       res.setHeader('Cache-Control', 'no-store');
-      return res.status(200).json({ open: opened, preview: !opened, imgBase: '', maxOpen: MAX_OPEN, items, boxes: publicBoxes(boxes) });
+      return res.status(200).json({ open: opened, preview: !opened, imgBase: '', maxOpen: MAX_OPEN, items: publicItems(items), boxes: publicBoxes(boxes) });
     }
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 

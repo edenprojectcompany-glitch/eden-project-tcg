@@ -289,9 +289,9 @@ textarea.input{height:auto;min-height:96px;padding:12px 16px;resize:vertical;fon
     </div>
     <div class="stats">
       <div class="stat"><span>Prix</span><b class="num" id="sPrice">—</b></div>
-      <div class="stat"><span>Valeur moy.</span><b class="num" id="sEv">—</b></div>
-      <div class="stat"><span>Meilleur lot</span><b class="num" id="sBest" style="color:var(--gold2)">—</b></div>
-      <div class="stat"><span>Lots</span><b id="sLots">—</b></div>
+      <div class="stat"><span>Garanti</span><b id="sEv">—</b></div>
+      <div class="stat"><span>Bonus possible</span><b id="sBest" style="color:var(--gold2)">—</b></div>
+      <div class="stat"><span>Chance bonus</span><b class="num" id="sLots">—</b></div>
     </div>
     <div class="p-actions">
       <div class="seg" id="seg"></div>
@@ -311,7 +311,7 @@ textarea.input{height:auto;min-height:96px;padding:12px 16px;resize:vertical;fon
   <div class="reveal glass off" id="reveal">
     <div class="tier" id="rTier"></div>
     <h2 id="rName"></h2>
-    <div class="val num"><i class="coin"></i><span id="rVal"></span></div>
+    <div class="val"><span id="rVal"></span></div>
     <div class="acts"><button class="btn btn-gold btn-sm" id="rNext">Suivant</button></div>
   </div>
 
@@ -428,6 +428,11 @@ const imgOf = it => it.img ? (/^(https?:)?\//.test(it.img) ? it.img : S.cfg.imgB
 const credits = id => (S.st?.credits || {})[id] || 0;
 const totalCredits = () => Object.values(S.st?.credits || {}).reduce((a, n) => a + n, 0);
 const eur = n => fmt(n) + ' €';
+// Noms des raretés affichés aux clients (jamais la valeur des cartes : elle bouge chaque jour)
+const RAR_FR = { AR: 'Art Rare', SAR: 'Special Art Rare', SR: 'Super Rare', UR: 'Ultra Rare', RR: 'Carte ex', BOOSTER: 'Booster scellé', BOOSTER30: 'Booster 30 ans', DISPLAY: 'Display scellée', CADEAU: 'Cadeau' };
+const rarFr = r => RAR_FR[r] || r || '';
+const rarList = a => (a || []).map(rarFr).join(' ou ') || '—';
+const itemLine = it => [rarFr(it.rarity), it.set, it.number].filter(Boolean).join(' · ');
 
 // ════════════════════════════════════════════════════════════
 // SON (synthèse WebAudio)
@@ -474,6 +479,26 @@ const sfx = (() => {
     const g = ctx.createGain(); g.gain.value = vol;
     src.connect(hp).connect(lp).connect(g); out(g, .2); src.start(t);
   };
+  // Déchirure réaliste : suite de micro-ruptures (stick-slip) de densité variable, filtrée comme un film plastique
+  const rip = (t, d, power, vol) => {
+    const sr = ctx.sampleRate, n = sr * d | 0, buf = ctx.createBuffer(2, n, sr);
+    for (let ch = 0; ch < 2; ch++) {
+      const a = buf.getChannelData(ch); let i = 0;
+      while (i < n) {
+        const x = i / n, dens = .4 + power * Math.sin(x * Math.PI) ** .6;
+        i += Math.max(8, (sr / (500 + 2600 * dens)) * (.4 + Math.random() * 1.2)) | 0;
+        const L = 24 + Math.random() * 110 | 0, amp = (.25 + Math.random() * .75) * (Math.random() < .08 ? 1.8 : 1);
+        for (let k = 0; k < L && i + k < n; k++) a[i + k] += (Math.random() * 2 - 1) * amp * Math.exp(-k / (L * .3));
+      }
+      for (let k = 0; k < n; k++) a[k] += (Math.random() * 2 - 1) * .05;   // grain continu du film
+    }
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 900;
+    const pk = ctx.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 3400; pk.Q.value = .9; pk.gain.value = 5;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 9500;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol * .5, t + .01); g.gain.linearRampToValueAtTime(vol, t + d * .5); g.gain.exponentialRampToValueAtTime(.001, t + d + .03);
+    src.connect(hp).connect(pk).connect(lp).connect(g); out(g, .08); src.start(t);
+  };
   // Cloche / cristal en synthèse FM (partiels inharmoniques)
   const bell = (f, t, d, vol, ratio = 3.51, index = 4) => {
     const car = ctx.createOscillator(), mod = ctx.createOscillator(), mg = ctx.createGain(), g = ctx.createGain();
@@ -494,16 +519,18 @@ const sfx = (() => {
   const A = [220, 277.18, 329.63, 440, 554.37, 659.25, 880, 1108.73, 1318.51];
   return {
     click() { if (!ok()) return; bell(1760, ctx.currentTime, .12, .03, 2, 1.5); },
+    // Prise en main du sachet : froissement doux du plastique
+    handle() { if (!ok()) return; const t = ctx.currentTime; crinkle(t, .5, 90, .28, 1800, 8000); crinkle(t + .55, .35, 60, .2, 2200, 7000); },
     swish() { if (!ok()) return; noise(ctx.currentTime, .45, { vol: .07, freq: 500, sweep: 2600, q: .6, attack: .12 }); },
     // Pendant la déchirure : froissement d'alu + petits craquements
-    crackle() { if (!ok()) return; const t = ctx.currentTime; crinkle(t, .09, 260, .5); if (Math.random() < .5) noise(t, .03, { vol: .05, freq: 5200, q: 3, wet: .1 }); },
+    crackle() { if (!ok()) return; rip(ctx.currentTime, .07 + Math.random() * .05, .35 + Math.random() * .2, .45); },
     // La bande cède : « zip » métallique granuleux + claquement sourd
     tear() {
       if (!ok()) return; const t = ctx.currentTime;
-      crinkle(t, .32, 2600, .9, 1800, 11000);
-      noise(t, .28, { vol: .16, freq: 1100, sweep: 5200, q: 1.4, attack: .01 });
-      noise(t + .02, .5, { vol: .06, freq: 7000, type: 'highpass', attack: .01 });
-      sub(120, t, .25, .22, .45);
+      rip(t, .26, 1, .9);
+      // Petit souffle d'air quand le sachet s'ouvre (pas de « boum » électronique)
+      noise(t + .16, .32, { vol: .05, freq: 900, sweep: 260, type: 'lowpass', attack: .02, wet: .12 });
+      crinkle(t + .2, .25, 140, .22, 3000, 9000);
     },
     // Ouverture : souffle qui monte dans la salle
     hum() { if (!ok()) return; const t = ctx.currentTime; noise(t, 1.2, { vol: .05, freq: 160, sweep: 700, q: .8, type: 'lowpass', attack: .4, wet: .5 }); sub(48, t, 1.4, .12, .9); },
@@ -775,7 +802,7 @@ function pillow(y0, y1, bulge = .075) {
 }
 const G_BODY = pillow(-PH / 2 + CRIMP, SEAM);
 const G_STRIP = pillow(SEAM, PH / 2 - CRIMP); G_STRIP.translate(PW / 2, -SEAM, 0);
-const G_CRIMP = new THREE.BoxGeometry(PW, CRIMP, PD * 1.4, 1, 1, 1);
+const G_CRIMP = new THREE.BoxGeometry(PW, CRIMP, PD * 1.1, 1, 1, 1);
 const G_CRIMP_T = G_CRIMP.clone().translate(PW / 2, PH / 2 - CRIMP / 2 - SEAM, 0);
 const crimpTex = (() => {
   const c = document.createElement('canvas'); c.width = 256; c.height = 32; const g = c.getContext('2d');
@@ -784,6 +811,43 @@ const crimpTex = (() => {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 })();
 const crimpMat = new THREE.MeshStandardMaterial({ map: crimpTex, metalness: .75, roughness: .55, color: 0xb8b8b8 });
+// Soudure propre à chaque booster : reprend ses couleurs, stries de thermo-scellage en relief,
+// bord dentelé (cranté comme un vrai sachet), liseré doré et micro-gravure « EDEN VAULT »
+const crimpMats = {};
+function crimpMaterial(box, top) {
+  const key = box.id + (top ? 't' : 'b');
+  if (crimpMats[key]) return crimpMats[key];
+  const d = DESIGNS[box.id] || DESIGNS.japan, W = 1024, H = 112;
+  const mk = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; return [c, c.getContext('2d')]; };
+  const [ca, a] = mk(), [cb, b] = mk(), [cm, m] = mk();
+  // Couleur : dégradé du sachet + reflet métal
+  const gr = a.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, d.base[0]); gr.addColorStop(.5, d.base[1]); gr.addColorStop(1, d.base[0]);
+  a.fillStyle = gr; a.fillRect(0, 0, W, H);
+  const sh = a.createLinearGradient(0, 0, 0, H); sh.addColorStop(0, 'rgba(255,255,255,.28)'); sh.addColorStop(.45, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(0,0,0,.35)');
+  a.fillStyle = sh; a.fillRect(0, 0, W, H);
+  // Stries verticales fines (relief) + ombrage dans la couleur
+  b.fillStyle = '#808080'; b.fillRect(0, 0, W, H);
+  for (let x = 0; x < W; x += 7) {
+    const g1 = b.createLinearGradient(x, 0, x + 7, 0); g1.addColorStop(0, '#3a3a3a'); g1.addColorStop(.5, '#e6e6e6'); g1.addColorStop(1, '#3a3a3a');
+    b.fillStyle = g1; b.fillRect(x, 10, 7, H - 20);
+    a.fillStyle = 'rgba(0,0,0,.22)'; a.fillRect(x, 10, 2, H - 20); a.fillStyle = 'rgba(255,255,255,.12)'; a.fillRect(x + 3, 10, 1, H - 20);
+  }
+  // Liseré doré côté sachet + gravure
+  const edgeY = top ? H - 12 : 4;
+  const gold = a.createLinearGradient(0, 0, W, 0); gold.addColorStop(0, '#7e5412'); gold.addColorStop(.3, '#fff1c4'); gold.addColorStop(.5, '#e3b75e'); gold.addColorStop(.7, '#fff1c4'); gold.addColorStop(1, '#7e5412');
+  a.fillStyle = gold; a.fillRect(0, edgeY, W, 8); b.fillStyle = '#ffffff'; b.fillRect(0, edgeY, W, 8);
+  a.font = '800 22px Manrope, sans-serif'; a.textAlign = 'center'; a.textBaseline = 'middle'; a.fillStyle = 'rgba(255,240,200,.5)';
+  a.fillText(top ? 'EDEN VAULT ✦ OUVRIR ICI ✦ EDEN VAULT' : 'EDEN PROJECT TCG ✦ AUTHENTIQUE', W / 2, H / 2 + (top ? -4 : 4));
+  // Bord extérieur dentelé (alpha)
+  m.fillStyle = '#fff'; m.fillRect(0, 0, W, H);
+  m.fillStyle = '#000'; m.beginPath();
+  const ey = top ? 0 : H, dir = top ? 1 : -1;
+  m.moveTo(0, ey); for (let x = 0; x <= W; x += 16) { m.lineTo(x + 8, ey + dir * 9); m.lineTo(x + 16, ey); } m.closePath(); m.fill();
+  const tex = c => { const t = new THREE.CanvasTexture(c); t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; };
+  const map = tex(ca); map.colorSpace = THREE.SRGBColorSpace;
+  const mat = new THREE.MeshPhysicalMaterial({ map, bumpMap: tex(cb), bumpScale: 2.2, alphaMap: tex(cm), alphaTest: .5, metalness: .85, roughness: .32, clearcoat: .6, clearcoatRoughness: .25, envMapIntensity: 1.8 });
+  return (crimpMats[key] = mat);
+}
 
 // ── Boosters mystère : l'illustration animée recouvre tout le sachet, devant et derrière ──
 // Des surfaces épousent le bombé du sachet (corps + bande à déchirer) ; par-dessus, un calque
@@ -817,7 +881,7 @@ function artTexture(url) {
 function artOverlay(box, back) {
   const key = box.id + (back ? ':b' : ':f');
   if (artOverlays[key]) return artOverlays[key];
-  const W = MOBILE ? 600 : 1000, H = Math.round(W * PH / PW), S = W / 800;
+  const W = MOBILE ? 900 : 1600, H = Math.round(W * PH / PW), S = W / 800;
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d');
   const topY = H * CRIMP / PH, botY = H - topY, seamY = H * (1 - (SEAM + PH / 2) / PH), cx = W / 2;
@@ -927,13 +991,9 @@ const ART_FS = `uniform sampler2D map, ov; uniform float t, kind, op, back, aspe
     tint = mix(tint, vec3(.75, .5, 1.15), smoothstep(.62, .9, p.y) * .6);
     col = mix(col, col * tint, mist * (.75 + .1 * sin(t * .8 + p.x * 6.)));
     col = pow(max((col - .5) * 1.12 + .49, 0.), vec3(1.12));
-    // Les zones électriques bleues crépitent
+    // Énergie bleue du poing : lueur douce qui respire (sans éclairs)
     float cyan = smoothstep(.12, .45, col.b - col.r) * smoothstep(.35, .8, col.b);
-    float flash = step(.55, n3(vec3(floor(t * 11.), 1., 2.)));
-    col += vec3(.3, .85, 1.) * cyan * (.25 + .9 * flash * (.6 + .4 * sin(t * 80.)));
-    // Éclairs qui jaillissent du poing
-    float bz = bolt(p, fist, fist + vec2(-.13, -.24), 1.) * flash + bolt(p, fist, fist + vec2(-.16, .1), 7.) * step(.6, n3(vec3(floor(t * 9.), 4., 1.)));
-    col += vec3(.55, .92, 1.) * bz * 1.4;
+    col += vec3(.3, .8, 1.) * cyan * (.18 + .1 * sin(t * 1.6));
     // Orbe rose : cœur qui pulse + anneaux d'onde
     float orb = 1. - smoothstep(0., .17, r);
     col += vec3(1., .3, .85) * orb * (.3 + .25 * sin(t * 2.2));
@@ -1184,7 +1244,7 @@ function drawPack(g, W, H, box, d, pass) {
 
 function packMaps(box) {
   const d = DESIGNS[box.id] || DESIGNS.japan;
-  const W = MOBILE ? 512 : 800, H = Math.round(W * PH / PW), out = {};
+  const W = MOBILE ? 768 : 1400, H = Math.round(W * PH / PW), out = {};
   for (const pass of ['albedo', 'orm', 'bump']) {
     const c = document.createElement('canvas'); c.width = W; c.height = H;
     drawPack(c.getContext('2d'), W, H, box, d, pass);
@@ -1206,10 +1266,10 @@ function buildPack(box, maps) {
   const mat = packMaterial(maps);
   const g = new THREE.Group();
   const body = new THREE.Mesh(G_BODY, mat); g.add(body);
-  const crB = new THREE.Mesh(G_CRIMP, crimpMat); crB.position.y = -PH / 2 + CRIMP / 2; g.add(crB);
+  const crB = new THREE.Mesh(G_CRIMP, crimpMaterial(box, false)); crB.position.y = -PH / 2 + CRIMP / 2; g.add(crB);
   const strip = new THREE.Group(); strip.position.set(-PW / 2, SEAM, 0); g.add(strip);
   strip.add(new THREE.Mesh(G_STRIP, mat));
-  strip.add(new THREE.Mesh(G_CRIMP_T, crimpMat));
+  strip.add(new THREE.Mesh(G_CRIMP_T, crimpMaterial(box, true)));
   // Ligne de découpe lumineuse (grandit pendant la déchirure)
   const seamMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
   const seam = new THREE.Mesh(new THREE.PlaneGeometry(1, .03), seamMat);
@@ -1453,6 +1513,28 @@ const showcase = (() => {
 })();
 // Assombrissement doux de la salle pendant la révélation (focus sur l'écrin)
 let roomDim = 0, roomDimT = 0;
+// Rayons de lumière en éventail depuis l'ouverture du sachet (additifs, s'étirent puis s'éteignent)
+const RAY_MAT = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+  uniforms: { o: { value: 0 }, c: { value: new THREE.Color('#ffe2b0') } },
+  vertexShader: 'varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
+  fragmentShader: 'uniform float o; uniform vec3 c; varying vec2 vU; void main(){ float a = (1. - vU.y) * smoothstep(0., .5, vU.x) * smoothstep(1., .5, vU.x); gl_FragColor = vec4(c * a * o, 1.); }',
+});
+function godRays(at, lvl) {
+  const g = new THREE.Group(); g.position.copy(at); scene.add(g);
+  const mats = [], n = 9 + lvl * 3;
+  for (let k = 0; k < n; k++) {
+    const m = RAY_MAT.clone(); m.uniforms.c.value.set(lvl >= 3 ? (k % 2 ? '#ffd97f' : '#ffb3e6') : '#ffe2b0'); mats.push(m);
+    const ray = new THREE.Mesh(new THREE.PlaneGeometry(.05 + Math.random() * .09, 1).translate(0, .5, 0), m);
+    ray.rotation.z = (k / (n - 1) - .5) * 2.4 + (Math.random() - .5) * .15; ray.rotation.y = (Math.random() - .5) * .6;
+    ray.userData.len = 1.6 + Math.random() * 1.8; g.add(ray);
+  }
+  tween(1500, (e, k) => {
+    g.children.forEach((r, i) => { r.scale.y = r.userData.len * E.out(Math.min(1, k * 2.2)); });
+    mats.forEach((m, i) => { m.uniforms.o.value = Math.sin(Math.min(1, k * 1.6) * Math.PI) * (.55 + .25 * Math.sin(i * 1.7 + k * 12)); });
+    g.rotation.z = k * .15;
+  }, t => t).then(() => { scene.remove(g); g.children.forEach(r => r.geometry.dispose()); mats.forEach(m => m.dispose()); });
+}
 function flash(color) { const f = $('#flash'); f.style.setProperty('--c', color); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
 
 // ════════════════════════════════════════════════════════════
@@ -1603,6 +1685,18 @@ async function openOne(st, r, prize, i, n) {
   await tween(900, e => { pack.position.lerpVectors(from, STAGE, e); pack.rotation.y = lerp(fromRotY + Math.PI * 2, 0, e); }, E.inOut);
   st.pack.visible = true; st.pack.scale.setScalar(.01);
   tween(700, e => st.pack.scale.setScalar(Math.max(.01, e)), E.back);
+  if (!autoAll) {
+    sfx.handle();
+    burstLight.color.set('#ffe2b0'); burstLight.position.copy(STAGE).add(new THREE.Vector3(0, .2, 1.4));
+    await tween(1100, (e, k) => {
+      pack.rotation.y = Math.sin(k * Math.PI) * .55; pack.rotation.x = -Math.sin(k * Math.PI) * .12;
+      pack.position.y = STAGE.y + Math.sin(k * Math.PI) * .08;
+      burstLight.intensity = Math.sin(k * Math.PI) * 2.4; bloom.strength = BLOOM_BASE + Math.sin(k * Math.PI) * .05;
+    }, E.inOut);
+    // Frémissement : le sachet vibre, la lumière se concentre sur la ligne de découpe
+    await tween(520, (e, k) => { pack.position.x = Math.sin(k * 90) * .006 * (1 - k); pack.rotation.z = Math.sin(k * 70) * .012 * (1 - k); seamMat.opacity = k * .35; seam.scale.x = Math.max(.0001, PW * k * .15); }, t => t);
+    pack.position.x = 0; pack.rotation.z = 0;
+  }
 
   // ── Déchirure ──
   S.mode = 'tear'; $('#tearbar').classList.remove('off'); $('#allBtn').style.display = n > 1 && !autoAll ? '' : 'none';
@@ -1631,6 +1725,10 @@ async function openOne(st, r, prize, i, n) {
 
   // ── Explosion de lumière + la bande s'envole ──
   sfx.tear(); vibrate(30);
+  { const c0 = new THREE.Vector3(0, SEAM, PD / 2); pack.localToWorld(c0); godRays(c0, lvl); }
+  const camFrom = cam.tPos.clone();
+  tween(1400, (e, k) => cam.tPos.copy(camFrom).add(new THREE.Vector3(0, -.12 * Math.sin(k * Math.PI), -.9 * Math.sin(k * Math.PI * .5))), E.inOut);
+  tween(380, (e, k) => { body.scale.x = 1 + Math.sin(k * Math.PI) * .03; body.scale.z = 1 + Math.sin(k * Math.PI) * .25; });
   { const c0 = new THREE.Vector3(0, SEAM, PD / 2 + .05); pack.localToWorld(c0);
     for (let k = 0; k < 5; k++) { const pt = new THREE.Vector3(-PW / 2 + PW * k / 4, SEAM, PD / 2 + .05); pack.localToWorld(pt); particleBurst(pt, { n: 40, speed: 3.2, up: 2.2, grav: 7, life: .8, size: .04, spread: 1.1, dir: new THREE.Vector3(0, 1, .6) }); } }
   const sv = new THREE.Vector3(2.4, 3.2, 1.2), sp = strip.position.clone();
@@ -1658,6 +1756,7 @@ async function openOne(st, r, prize, i, n) {
 
 // Présentation d'un lot sorti du sachet : rotation, écrin selon la rareté, fiche, envoi au coffre
 async function presentPrize(r, prize, wp, i, n, fx) {
+  setView(VIEW_STAGE);
   const it = item(r.item), color = new THREE.Color(TIER_COLOR[r.tier]), lvl = TIERS.indexOf(r.tier);
   const target = STAGE.clone().add(new THREE.Vector3(0, .38, .55));
   tween(1200 * fx, e => { prize.position.lerpVectors(wp, target, e); prize.rotation.y = (1 - e) * Math.PI * 2; prize.scale.setScalar(lerp(.9, 1, e)); }, E.out);
@@ -1676,7 +1775,7 @@ async function presentPrize(r, prize, wp, i, n, fx) {
 
   // Carte d'info
   $('#rTier').textContent = TIER_FR[r.tier]; $('#rTier').style.color = TIER_COLOR[r.tier];
-  $('#rName').textContent = it.name; $('#rVal').textContent = it.kind === 'coupon' ? `Code ${it.code} · valable 30 jours` : 'Valeur ' + eur(it.value) + (it.intlPreview ? ' · illustration version internationale' : '');
+  $('#rName').textContent = it.name; $('#rVal').textContent = it.kind === 'coupon' ? `Code ${it.code} · valable 30 jours` : itemLine(it) + (it.intlPreview ? ' · illustration version internationale' : '');
   if (it.kind === 'coupon') $('#rTier').textContent = r.tier === 'legendary' ? 'GROS LOT' : 'TON CADEAU';
   $('#rNext').textContent = i < n - 1 ? 'Booster suivant' : it.kind === 'coupon' ? 'Voir mon code' : 'Voir le récap';
   $('#reveal').classList.remove('off');
@@ -1716,15 +1815,14 @@ async function openExtra(st, r, prize, i, n) {
 
 function showSummary(b, results) {
   $('#counter').classList.add('off');
-  const total = results.reduce((s, r) => s + item(r.item).value, 0);
   const per = b.draws || 1, packsOpened = Math.max(1, Math.round(results.length / per));
   $('#shTitle').textContent = per > 1 ? `Tes ${results.length} boosters scellés` : results.length > 1 ? `${results.length} boosters ouverts` : 'Ta carte';
   $('#shSub').textContent = b.name + (S.demo ? ' · démo : rien n’est ajouté à ton coffre' : ' · ajouté à ton coffre');
   $('#shItems').innerHTML = results.map(r => {
     const it = item(r.item), src = imgOf(it);
-    return `<div class="it" style="--c:${TIER_COLOR[r.tier]}">${src ? `<img src="${src}" alt="">` : ''}<b>${esc(it.name)}</b><span>${TIER_FR[r.tier]}</span><div class="v num">${eur(it.value)}</div></div>`;
+    return `<div class="it" style="--c:${TIER_COLOR[r.tier]}">${src ? `<img src="${src}" alt="">` : ''}<b>${esc(it.name)}</b><span>${TIER_FR[r.tier]}</span><div class="v">${esc(rarFr(it.rarity))}</div></div>`;
   }).join('');
-  $('#shSum').innerHTML = `Valeur ${per > 1 ? 'des lots' : 'des cartes'} <b class="num">${eur(total)}</b>`;
+  $('#shSum').textContent = S.demo ? 'Démo : rien n’est ajouté à ton coffre' : 'Tout est rangé dans ton coffre, prêt à être expédié';
   const left = credits(b.id), n = packsOpened;
   $('#shActions').innerHTML = `<button class="btn btn-glass" id="shKeep">Fermer</button>
     <button class="btn btn-gold" id="shAgain">${left >= n ? `Ouvrir ×${n} · ${left} restant${left > 1 ? 's' : ''}` : `Racheter ×${n} · ${eur(b.price * n)}`}</button>`;
@@ -1813,12 +1911,11 @@ function renderPanel() {
   if (!S.cfg || !stands.length) return;
   const b = stands[S.sel].box;
   if (b.free) return renderGiftPanel(b);
-  const best = b.table.length ? Math.max(...b.table.map(r => item(r.itemId).value)) : 0;
   const have = credits(b.id);
   $('#pEyebrow').textContent = have ? `${have} booster${have > 1 ? 's' : ''} payé${have > 1 ? 's' : ''} à ouvrir` : 'Booster mystère';
   $('#pName').textContent = b.name; $('#pTag').textContent = b.tagline;
   $('#sPrice').textContent = eur(b.price);
-  $('#sEv').textContent = b.available ? eur(b.ev) : '—'; $('#sBest').textContent = b.available ? eur(best) : '—'; $('#sLots').textContent = b.available ? b.table.length : '—';
+  $('#sEv').textContent = rarList(b.guaranteed); $('#sBest').textContent = rarList(b.bonus); $('#sLots').textContent = b.bonusPct ? `${String(b.bonusPct).replace('.', ',')} %` : '—';
   $('#dots').innerHTML = stands.map((s, i) => `<i class="${i === S.sel ? 'on' : ''}"></i>`).join('');
   $('#seg').innerHTML = [1, 2, 3, 5].map(n => `<button data-n="${n}" class="${n === S.count ? 'on' : ''}">×${n}</button>`).join('');
   document.querySelectorAll('#seg button').forEach(bt => bt.onclick = () => { S.count = +bt.dataset.n; sfx.click(); renderPanel(); });
@@ -1869,9 +1966,8 @@ $('#soundBtn').textContent = S.muted ? '🔇' : '🔊';
 // Tiroir Coffre
 function renderDrawer() {
   const inv = S.st?.inventory || [];
-  const total = inv.reduce((s, o) => s + (o.value || 0), 0);
-  $('#drSub').textContent = S.st ? `${inv.length} carte${inv.length > 1 ? 's' : ''} · ${eur(total)}` : 'Connecte-toi pour voir ton coffre';
-  $('#drItems').innerHTML = inv.map(o => `<div class="it" style="--c:${TIER_COLOR[o.tier]}">${o.img ? `<img src="${esc(imgOf(o))}" alt="" loading="lazy">` : ''}<b>${esc(o.name)}</b><span>${esc([o.set, o.number, o.rarity].filter(Boolean).join(' · '))}</span><div class="v num">${eur(o.value || 0)}</div></div>`).join('') || '<p style="color:var(--mute);grid-column:1/-1;padding:20px 0">Ton coffre est vide. Ouvre un booster !</p>';
+  $('#drSub').textContent = S.st ? `${inv.length} lot${inv.length > 1 ? 's' : ''} dans ton coffre` : 'Connecte-toi pour voir ton coffre';
+  $('#drItems').innerHTML = inv.map(o => `<div class="it" style="--c:${TIER_COLOR[o.tier]}">${o.img ? `<img src="${esc(imgOf(o))}" alt="" loading="lazy">` : ''}<b>${esc(o.name)}</b><span>${esc([o.set, o.number].filter(Boolean).join(' · '))}</span><div class="v">${esc(rarFr(o.rarity))}</div></div>`).join('') || '<p style="color:var(--mute);grid-column:1/-1;padding:20px 0">Ton coffre est vide. Ouvre un booster !</p>';
 }
 $('#chestBtn').onclick = () => { if (!S.token) return openAuth('login'); renderDrawer(); $('#drawer').classList.remove('off'); };
 $('#drawerX').onclick = () => $('#drawer').classList.add('off');
