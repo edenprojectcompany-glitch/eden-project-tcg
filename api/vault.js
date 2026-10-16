@@ -173,7 +173,8 @@ const sealedPool = lots => (lots || []).map(l => ({
 function packSource(id, cards, sealed, packs) {
   const info = PACK_INFO[id], draws = info.draws || 1;
   const saved = (packs && packs[id]) || {};
-  const pack = info.sealed ? { ...DEFAULT_LEGEND, ...saved } : saved;
+  // Sans réglage enregistré dans le calculateur : réglage par défaut (mêmes valeurs que les préréglages de l'admin)
+  const pack = { ...(info.sealed ? DEFAULT_LEGEND : DEMO_PACKS[id]), ...(saved.price > 0 || info.sealed ? saved : {}) };
   const perDraw = { ...pack, price: (+pack.price || 0) / draws, feeFix: (+pack.feeFix || 0) / draws };
   return { info, draws, pack, perDraw, pool: info.sealed ? sealedPool(sealed) : (cards || []), key: info.sealed ? K.sealed : K.cards };
 }
