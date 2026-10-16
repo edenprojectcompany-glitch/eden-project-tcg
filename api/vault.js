@@ -22,10 +22,15 @@ const MAX_OPEN = 10;
 const PACK_INFO = {
   ar: { name: 'Mystère AR', price: 9.9, tagline: '1 carte Art Rare garantie', theme: ['#ffd97f', '#c9a8ff'], art: '/image/vault3d/mew-sm.jpg', artKind: 'flames' },
   ex: { name: 'Mystère EX', price: 4.9, tagline: '1 carte ex garantie', theme: ['#7fd9ff', '#b98aff'], art: '/image/vault3d/pack-dracaufeu.jpg', artKind: 'sky' },
+  // Booster Légende : 2 boosters scellés tirés dans le stock « Lots scellés » (151, SV8a, SV10, M2a, CN151, 30 ans CN…)
+  legend: { name: 'Booster Légende', price: 19.9, tagline: '2 boosters scellés garantis', theme: ['#c77dff', '#5ad1ff'], art: '/image/vault3d/pack-mewtwo.jpg', artKind: 'psy', artAspect: 1.25, draws: 2, sealed: true },
 };
+// Réglage par défaut du Booster Légende (modifiable dans le calculateur de l'admin)
+const DEFAULT_LEGEND = { price: 19.9, margin: 25, base: ['BOOSTER', 'BOOSTER30'], bonus: ['DISPLAY'], bonusPct: 2, feePct: 1.5, feeFix: .25 };
+const BOX_IDS = ['ar', 'ex', 'legend'];
 
 const K = {
-  open: 'vault:open', cards: 'vault:cards', packs: 'vault:packs', lock: 'vault:lock:stock',
+  open: 'vault:open', cards: 'vault:cards', packs: 'vault:packs', sealed: 'vault:sealed', lock: 'vault:lock:stock',
   credits: uid => `vault:credits:${uid}`, inv: uid => `vault:inv:${uid}`, history: uid => `vault:history:${uid}`,
   seed: uid => `vault:seed:${uid}`, nonce: uid => `vault:nonce:${uid}`, feed: 'vault:feed',
 };
@@ -69,26 +74,42 @@ async function nextRoll(kv, uid) {
 }
 
 // ── Catalogue : packs réglés dans l'admin + cartes en stock ───
-// Les deux boosters sont toujours présentés ; sans réglage ou sans stock, ils sont « bientôt disponibles »
+// Lots scellés (boosters, displays) présentés comme des « cartes » pour le calcul des chances
+const sealedPool = lots => (lots || []).map(l => ({
+  cardId: 'sl-' + l.id, name: l.name, nameFr: l.name, rarity: l.tag, value: +l.value || 0, qty: +l.qty || 0,
+  img: l.img, set: l.set || '', kind: l.kind === 'display' ? 'display' : 'booster', lang: l.lang,
+}));
+
+// Source d'un booster : stock utilisé, réglage, nombre de tirages ; les chances sont calculées PAR TIRAGE
+function packSource(id, cards, sealed, packs) {
+  const info = PACK_INFO[id], draws = info.draws || 1;
+  const saved = (packs && packs[id]) || {};
+  const pack = info.sealed ? { ...DEFAULT_LEGEND, ...saved } : saved;
+  const perDraw = { ...pack, price: (+pack.price || 0) / draws, feeFix: (+pack.feeFix || 0) / draws };
+  return { info, draws, pack, perDraw, pool: info.sealed ? sealedPool(sealed) : (cards || []), key: info.sealed ? K.sealed : K.cards };
+}
+
+// Les boosters sont toujours présentés ; sans réglage ou sans stock, ils sont « bientôt disponibles »
 async function catalog(kv) {
-  const [stock, packs] = await Promise.all([kv.get(K.cards), kv.get(K.packs)]);
+  const [cards, sealed, packs] = await Promise.all([kv.get(K.cards), kv.get(K.sealed), kv.get(K.packs)]);
   const items = {}, boxes = [];
-  for (const id of ['ar', 'ex']) {
-    const info = PACK_INFO[id], p = (packs && packs[id]) || {};
-    const odds = p.price > 0 ? packOdds(stock || [], p) : { ok: false, rows: [], ev: 0 };
+  for (const id of BOX_IDS) {
+    const src = packSource(id, cards, sealed, packs), { info, draws, pack } = src;
+    const odds = pack.price > 0 ? packOdds(src.pool, src.perDraw) : { ok: false, rows: [], ev: 0 };
     const rows = odds.ok ? odds.rows : [];
     for (const c of rows) items[c.cardId] = {
-      id: c.cardId, kind: 'card', name: c.nameFr ? `${c.nameFr} · ${c.rarity}` : c.name, nameJa: c.name, short: c.nameFr || c.name,
+      id: c.cardId, kind: c.kind || 'card', name: c.kind ? c.name : (c.nameFr ? `${c.nameFr} · ${c.rarity}` : c.name), nameJa: c.name, short: c.nameFr || c.name,
       img: playImg(c.img), value: c.value, rarity: c.rarity, set: c.set, number: c.number, total: c.total, intlPreview: !!c.intlPreview,
     };
+    const inStock = rows.reduce((a, r) => a + r.qty, 0);
     boxes.push({
-      id, name: p.name || info.name, tagline: info.tagline, price: p.price > 0 ? p.price : info.price, theme: info.theme,
-      art: info.art, artKind: info.artKind, available: rows.length > 0,
-      ev: round2(odds.ev || 0), table: rows.map(c => ({ itemId: c.cardId, p: c.p, tier: c.lot, qty: c.qty })),
-      _odds: odds, _pack: p,
+      id, name: pack.name || info.name, tagline: info.tagline, price: pack.price > 0 ? pack.price : info.price, theme: info.theme,
+      art: info.art, artKind: info.artKind, artAspect: info.artAspect || 16 / 9, draws, available: rows.length > 0 && inStock >= draws,
+      ev: round2((odds.ev || 0) * draws), table: rows.map(c => ({ itemId: c.cardId, p: c.p, tier: c.lot, qty: c.qty })),
+      _odds: odds, _pack: pack,
     });
   }
-  return { items, boxes, stock: stock || [] };
+  return { items, boxes, stock: cards || [] };
 }
 // Images officielles servies par notre relais (utilisables en texture 3D)
 const playImg = img => /^https:\/\/www\.pokemon-card\.com\//.test(img || '') ? '/api/cards?src=' + encodeURIComponent(img) : img;
@@ -122,27 +143,45 @@ async function open(kv, user, { boxId, count }) {
   const left = await kv.hincrby(K.credits(user.id), String(boxId), -n);
   if (left < 0) { await kv.hincrby(K.credits(user.id), String(boxId), n); throw new HttpError(402, 'Aucun pack à ouvrir : achète-en d’abord'); }
 
+  if (!PACK_INFO[boxId]) throw new HttpError(404, 'Booster inconnu');
+  let opened = 0;
   const results = await withStockLock(kv, async () => {
     const out = [];
-    const packs = (await kv.get(K.packs)) || {};
-    const pack = packs[boxId];
-    let stock = (await kv.get(K.cards)) || [];
+    const [packs, cards, sealedLots] = await Promise.all([kv.get(K.packs), kv.get(K.cards), kv.get(K.sealed)]);
+    const src = packSource(boxId, cards, sealedLots, packs);
+    const isSealed = !!src.info.sealed;
+    let lots = isSealed ? (sealedLots || []) : null;
+    let stock = isSealed ? sealedPool(lots) : (cards || []);
     for (let i = 0; i < n; i++) {
-      const odds = pack ? packOdds(stock, pack) : { ok: false };
-      if (!odds.ok || !odds.rows.length) break; // plus de stock : les packs restants sont rendus plus bas
-      const r = await nextRoll(kv, user.id);
-      const card = pickCard(odds.rows, r.roll);
-      stock = stock.map(c => c.cardId === card.cardId ? { ...c, qty: c.qty - 1 } : c);
-      const uid = 'i' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
-      const owned = { uid, itemId: card.cardId, tier: card.lot, from: boxId, value: card.value, name: card.nameFr || card.name, img: playImg(card.img), rarity: card.rarity, set: card.set, number: card.number, at: Date.now() };
-      await kv.hset(K.inv(user.id), { [uid]: JSON.stringify(owned) });
-      out.push({ item: card.cardId, tier: card.lot, uid, roll: r.roll, nonce: r.nonce, clientSeed: r.clientSeed, serverHash: r.serverHash });
+      // Un booster n'est ouvert que si son contenu complet (draws lots) est disponible
+      const avail = stock.filter(c => c.qty > 0).reduce((a, c) => a + c.qty, 0);
+      if (!(src.pack.price > 0) || avail < src.draws) break;
+      const pull = [];
+      for (let d = 0; d < src.draws; d++) {
+        const odds = packOdds(stock, src.perDraw);
+        if (!odds.ok || !odds.rows.length) break;
+        const r = await nextRoll(kv, user.id);
+        const card = pickCard(odds.rows, r.roll);
+        stock = stock.map(c => c.cardId === card.cardId ? { ...c, qty: c.qty - 1 } : c);
+        pull.push({ card, r });
+      }
+      if (pull.length < src.draws) { for (const { card } of pull) stock = stock.map(c => c.cardId === card.cardId ? { ...c, qty: c.qty + 1 } : c); break; }
+      for (const { card, r } of pull) {
+        const uid = 'i' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
+        const owned = { uid, itemId: card.cardId, tier: card.lot, from: boxId, value: card.value, name: card.nameFr || card.name, img: playImg(card.img), rarity: card.rarity, set: card.set, number: card.number, kind: card.kind || 'card', at: Date.now() };
+        await kv.hset(K.inv(user.id), { [uid]: JSON.stringify(owned) });
+        out.push({ item: card.cardId, tier: card.lot, uid, roll: r.roll, nonce: r.nonce, clientSeed: r.clientSeed, serverHash: r.serverHash });
+      }
+      opened++;
     }
-    await kv.set(K.cards, stock);
+    if (isSealed) {
+      const left = Object.fromEntries(stock.map(c => [c.cardId, c.qty]));
+      await kv.set(K.sealed, lots.map(l => ({ ...l, qty: left['sl-' + l.id] ?? l.qty })));
+    } else await kv.set(K.cards, stock);
     return out;
   });
 
-  if (results.length < n) await kv.hincrby(K.credits(user.id), String(boxId), n - results.length);
+  if (opened < n) await kv.hincrby(K.credits(user.id), String(boxId), n - opened);
   if (!results.length) throw new HttpError(409, 'Ce pack est en rupture de stock, tes packs sont conservés');
   await kv.lpush(K.history(user.id), JSON.stringify({ type: 'open', box: boxId, n: results.length, items: results.map(r => r.item), at: Date.now() }));
   await kv.ltrim(K.history(user.id), 0, 199);
@@ -154,8 +193,8 @@ async function buy(kv, req, user, { boxId, count }) {
   const { boxes } = await catalog(kv);
   const box = boxes.find(b => b.id === boxId);
   if (!box || !box.available) throw new HttpError(409, 'Ce booster sera bientôt disponible');
-  const inStock = box.table.reduce((a, r) => a + r.qty, 0);
-  if (inStock < n) throw new HttpError(409, inStock ? `Plus que ${inStock} pack${inStock > 1 ? 's' : ''} disponible${inStock > 1 ? 's' : ''}` : 'Pack en rupture de stock');
+  const inStock = Math.floor(box.table.reduce((a, r) => a + r.qty, 0) / (box.draws || 1));
+  if (inStock < n) throw new HttpError(409, inStock ? `Plus que ${inStock} booster${inStock > 1 ? 's' : ''} disponible${inStock > 1 ? 's' : ''}` : 'Booster en rupture de stock');
   const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
@@ -185,7 +224,7 @@ async function admin(kv, body) {
     const user = await kv.get(`user:${email}`);
     if (!user) throw new HttpError(404, 'Aucun compte avec cet e-mail');
     const n = Math.min(50, Math.max(1, Math.floor(+body.count || 1)));
-    if (!['ar', 'ex'].includes(body.boxId)) throw new HttpError(400, 'Pack inconnu');
+    if (!BOX_IDS.includes(body.boxId)) throw new HttpError(400, 'Pack inconnu');
     const total = await kv.hincrby(K.credits(user.id), body.boxId, n);
     return { email, boxId: body.boxId, credits: total };
   }

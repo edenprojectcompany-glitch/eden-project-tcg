@@ -101,6 +101,10 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;min
 .calc-tbl td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
 .calc-tbl img{width:30px;border-radius:3px;vertical-align:middle}
 .calc-bar{height:6px;border-radius:3px;background:var(--c1);min-width:2px}
+.sl-tbl img{width:34px!important;border-radius:4px}
+.sl-in{padding:6px 8px;background:var(--bg3);border:1px solid var(--gb);border-radius:7px;color:var(--text);font-family:inherit;font-size:12.5px;outline:none;width:100%}
+.sl-in:focus{border-color:var(--c1)}
+select.sl-in option{background:var(--bg2);color:var(--text)}
 @media(max-width:600px){.calc-wide{grid-column:span 1}}
 @media(max-width:600px){.crd-grid{grid-template-columns:repeat(2,1fr)}.crd-search{flex-direction:column}}
 .nav-tab:hover:not(.active){color:var(--text)}
@@ -527,10 +531,20 @@ tr:hover td{background:rgba(255,255,255,.015)}
       <div class="sec-head" style="margin-top:34px"><div class="sec-title">📦 Stock de cartes <span class="sec-meta" id="crdStockMeta"></span></div></div>
       <div id="crdStock" class="crd-grid"></div>
 
+      <div class="sec-head" style="margin-top:34px"><div class="sec-title">📦 Lots scellés <span class="sec-meta">— contenu du Booster Légende (2 boosters par ouverture) · sortent du stock à chaque tirage</span></div></div>
+      <div class="calc">
+        <div class="table-wrap"><table class="calc-tbl sl-tbl"><tr><th></th><th>Booster</th><th>Langue</th><th>Type</th><th>Valeur marché €</th><th>Prix d'achat €</th><th>Stock</th><th></th></tr><tbody id="slRows"></tbody></table></div>
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn-sm" id="slAdd">+ Ajouter un lot</button>
+          <button class="btn-sm crd-go" id="slSave">💾 Enregistrer les lots scellés</button>
+          <span class="crd-sub" id="slMeta" style="align-self:center"></span>
+        </div>
+        <p class="crd-help" style="margin-top:10px">« Booster 30 ans » = le graal (plus rare, car plus cher). « Display » = gros lot bonus, réglé par la chance de bonus du calculateur. Les valeurs proposées sont indicatives : mets tes vrais prix.</p>
+      </div>
       <div class="sec-head" style="margin-top:34px"><div class="sec-title">🧮 Calculateur de pack mystère <span class="sec-meta">— chances calculées à partir de ton stock</span></div></div>
       <div class="calc">
         <div class="calc-form">
-          <div class="calc-f"><label>Pack</label><select id="pkId" class="crd-inp"><option value="ar">Mystère AR</option><option value="ex">Mystère EX</option></select></div>
+          <div class="calc-f"><label>Pack</label><select id="pkId" class="crd-inp"><option value="ar">Mystère AR</option><option value="ex">Mystère EX</option><option value="legend">Booster Légende (2 boosters)</option></select></div>
           <div class="calc-f"><label>Prix de vente (€)</label><input id="pkPrice" type="number" min="0" step="0.1" class="crd-inp"></div>
           <div class="calc-f"><label>Marge visée (% du prix)</label><input id="pkMargin" type="number" min="0" max="90" step="1" class="crd-inp"></div>
           <div class="calc-f"><label>Frais de paiement</label><div class="calc-two"><input id="pkFeePct" type="number" min="0" step="0.1" class="crd-inp"><span>% +</span><input id="pkFeeFix" type="number" min="0" step="0.05" class="crd-inp"><span>€</span></div></div>
@@ -746,13 +760,18 @@ async function addCard(i){
   catch(e){toast(e.message,'err');}
 }
 async function loadCardStock(){
-  try{const d=await cardsApi('?stock=1');_crdStock=d.cards||[];_packs=d.packs||{};document.getElementById('pkPrice').value='';renderCardStock();}
+  try{const d=await cardsApi('?stock=1');_crdStock=d.cards||[];_packs=d.packs||{};_sealed=(d.sealed&&d.sealed.length)?d.sealed:SEALED_PRESETS.map(x=>({...x}));renderSealed();document.getElementById('pkPrice').value='';renderCardStock();}
   catch(e){document.getElementById('crdStock').innerHTML='<p class="crd-msg">⚠️ '+escH(e.message)+'</p>';}
 }
 // ── Calculateur de pack mystère ──────────────────────────────
 // Chaque carte a un poids = quantité × valeur^(-k) : plus elle est chère, plus elle est rare.
 // k est ajusté automatiquement pour que la valeur moyenne d'une ouverture respecte la marge visée.
-const PACK_PRESETS={ar:{name:'Mystère AR',base:['AR'],bonus:['SAR'],bonusPct:3,price:9.9,margin:25},ex:{name:'Mystère EX',base:['RR'],bonus:['AR','SAR'],bonusPct:5,price:4.9,margin:25}};
+// Booster Légende : 2 tirages par ouverture dans les lots scellés (calcul fait par tirage, affiché par booster)
+const LEGEND_DRAWS=2;
+const isLegend=()=>document.getElementById('pkId').value==='legend';
+const sealedCards=()=>_sealed.map(l=>({cardId:'sl-'+l.id,name:l.name,nameFr:l.name,rarity:l.tag,value:+l.value||0,cost:+l.cost||0,qty:+l.qty||0,img:l.img,set:l.lang==='cn'?'CN':'JP'}));
+const calcPool=()=>isLegend()?sealedCards():_crdStock;
+const PACK_PRESETS={legend:{name:'Booster Légende',base:['BOOSTER','BOOSTER30'],bonus:['DISPLAY'],bonusPct:2,price:19.9,margin:25},ar:{name:'Mystère AR',base:['AR'],bonus:['SAR'],bonusPct:3,price:9.9,margin:25},ex:{name:'Mystère EX',base:['RR'],bonus:['AR','SAR'],bonusPct:5,price:4.9,margin:25}};
 let _packs={};
 const eur=v=>(Math.round(v*100)/100).toFixed(2).replace('.',',')+' €';
 function packForm(){
@@ -767,7 +786,7 @@ function fillPackForm(keep){
   const id=document.getElementById('pkId').value, cur=keep&&document.getElementById('pkPrice').value!==''?packForm():null;
   const p=cur||{...PACK_PRESETS[id],feePct:1.5,feeFix:0.25,..._packs[id]};
   for(const k of ['Price','Margin','FeePct','FeeFix','BonusPct']) document.getElementById('pk'+k).value=p[k[0].toLowerCase()+k.slice(1)];
-  const rars=[...new Set([..._crdStock.map(c=>c.rarity).filter(Boolean),...p.base,...p.bonus])].sort();
+  const rars=[...new Set([...calcPool().map(c=>c.rarity).filter(Boolean),...p.base,...p.bonus])].sort();
   const chips=(sel)=>rars.map(r=>`<label><input type="checkbox" value="${escH(r)}" ${sel.includes(r)?'checked':''}> ${escH(r)}</label>`).join('')||'<span class="crd-sub">Ajoute des cartes au stock d\'abord</span>';
   document.getElementById('pkBase').innerHTML=chips(p.base);
   document.getElementById('pkBonus').innerHTML=chips(p.bonus);
@@ -782,11 +801,13 @@ function packOdds(cards,b,k){
 const packEV=rows=>rows.reduce((a,c)=>a+c.p*c.value,0);
 function calcPack(){
   const out=document.getElementById('pkOut'); if(!out) return;
-  const f=packForm();
-  const pick=(r,tier)=>_crdStock.filter(c=>c.qty>0&&r.includes(c.rarity)).map(c=>({...c,tier}));
-  const noValue=_crdStock.filter(c=>c.qty>0&&(f.base.includes(c.rarity)||f.bonus.includes(c.rarity))&&!(c.value>0));
+  const f0=packForm(), D=isLegend()?LEGEND_DRAWS:1;
+  // Le calcul se fait par tirage : prix et frais fixes répartis sur les D tirages du booster
+  const f={...f0,price:f0.price/D,feeFix:f0.feeFix/D};
+  const pick=(r,tier)=>calcPool().filter(c=>c.qty>0&&r.includes(c.rarity)).map(c=>({...c,tier}));
+  const noValue=calcPool().filter(c=>c.qty>0&&(f.base.includes(c.rarity)||f.bonus.includes(c.rarity))&&!(c.value>0));
   const cards=[...pick(f.base,'base'),...pick(f.bonus.filter(r=>!f.base.includes(r)),'bonus')].filter(c=>c.value>0);
-  if(!cards.some(c=>c.tier==='base')){out.innerHTML='<p class="crd-msg">Coche une rareté garantie présente dans ton stock (avec une valeur en €) pour voir le calcul.</p>';return;}
+  if(!cards.some(c=>c.tier==='base')){out.innerHTML=`<p class="crd-msg">${isLegend()?'Ajoute des lots scellés (avec stock et valeur en €) et coche BOOSTER / BOOSTER30 pour voir le calcul.':'Coche une rareté garantie présente dans ton stock (avec une valeur en €) pour voir le calcul.'}</p>`;return;}
   const b=f.bonusPct/100, fees=f.price*f.feePct/100+f.feeFix, target=f.price-fees-f.price*f.margin/100;
   // k entre 0 (tirage proportionnel au stock) et 3 (cartes chères très rares)
   let k=0, rows=packOdds(cards,b,0), ev=packEV(rows), note='';
@@ -797,8 +818,10 @@ function calcPack(){
     rows=packOdds(cards,b,k); ev=packEV(rows);
   }
   const profit=f.price-fees-ev, marginPct=f.price?profit/f.price*100:0;
+  // Coût réel (prix d'achat des lots), quand il est renseigné
+  const hasCost=rows.some(c=>c.cost>0), realCost=rows.reduce((a,c)=>a+c.p*(c.cost||0),0), realProfit=(f.price-fees-realCost)*D;
   if(ev>target+0.005){
-    const minPrice=(ev+f.feeFix)/(1-f.feePct/100-f.margin/100);
+    const minPrice=(ev+f.feeFix)/(1-f.feePct/100-f.margin/100)*D;
     note=`⚠️ Avec ce stock, impossible d'atteindre ${f.margin} % de marge à ${eur(f.price)} : même en rendant les cartes chères très rares, une ouverture te coûte ${eur(ev)} en moyenne. Prix minimum conseillé : <b>${eur(minPrice)}</b> (ou baisse la chance de bonus).`;
   }
   const S=rows.filter(c=>c.tier==='bonus'), B=rows.filter(c=>c.tier==='base');
@@ -808,11 +831,12 @@ function calcPack(){
   rows.sort((a,b)=>b.value-a.value);
   out.innerHTML=(note?`<div class="calc-note">${note}</div>`:'')+(noValue.length?`<div class="calc-note">ℹ️ ${noValue.length} carte${noValue.length>1?'s':''} sans valeur en € ignorée${noValue.length>1?'s':''} : ${noValue.map(c=>escH(c.nameFr||c.name)).join(', ')}.</div>`:'')+
   `<div class="calc-kpis">
-    <div class="calc-kpi"><small>Valeur moyenne d'une ouverture</small><b>${eur(ev)}</b></div>
-    <div class="calc-kpi"><small>Frais de paiement</small><b>${eur(fees)}</b></div>
-    <div class="calc-kpi ${profit<0?'bad':marginPct+0.5<f.margin?'warn':'good'}"><small>Ta marge par pack</small><b>${eur(profit)} · ${marginPct.toFixed(1).replace('.',',')} %</b></div>
+    <div class="calc-kpi"><small>Valeur moyenne d'une ouverture${D>1?` (${D} lots)`:''}</small><b>${eur(ev*D)}</b></div>
+    <div class="calc-kpi"><small>Frais de paiement</small><b>${eur(fees*D)}</b></div>
+    <div class="calc-kpi ${profit<0?'bad':marginPct+0.5<f.margin?'warn':'good'}"><small>Ta marge par pack (valeur marché)</small><b>${eur(profit*D)} · ${marginPct.toFixed(1).replace('.',',')} %</b></div>
+    ${hasCost?`<div class="calc-kpi ${realProfit<0?'bad':'good'}"><small>Ta marge réelle (prix d'achat)</small><b>${eur(realProfit)} · ${(f0.price?realProfit/f0.price*100:0).toFixed(1).replace('.',',')} %</b></div>`:''}
     ${S.length?`<div class="calc-kpi warn"><small>Coût de chaque +1 % de bonus</small><b>+${eur(bonusCost)} / pack</b></div>`:''}
-    <div class="calc-kpi ${life.n<50?'bad':life.n<200?'warn':''}"><small>Le stock tient environ</small><b>${Math.floor(life.n)} ouvertures</b><small style="margin:4px 0 0">avant rupture : ${escH(life.c.nameFr||life.c.name)} (${life.c.qty} ex.)</small></div>
+    <div class="calc-kpi ${life.n<50?'bad':life.n<200?'warn':''}"><small>Le stock tient environ</small><b>${Math.floor(life.n/D)} ouvertures</b><small style="margin:4px 0 0">avant rupture : ${escH(life.c.nameFr||life.c.name)} (${life.c.qty} ex.)</small></div>
   </div>
   <div class="table-wrap"><table class="calc-tbl"><tr><th></th><th>Carte</th><th>Rareté</th><th>Valeur</th><th>Stock</th><th>Chance</th><th>Soit</th><th style="width:20%"></th></tr>${rows.map(c=>`<tr>
     <td><img src="${escH(c.img)}" alt="" loading="lazy"></td><td>${escH(c.nameFr||c.name)}<div class="crd-sub">${escH(c.set)} ${c.number||''}</div></td>
@@ -820,6 +844,36 @@ function calcPack(){
     <td>${eur(c.value)}</td><td>${c.qty}</td><td><b>${(c.p*100).toFixed(c.p<0.01?2:1).replace('.',',')} %</b></td><td class="crd-sub">1 sur ${Math.round(1/c.p)}</td>
     <td><div class="calc-bar" style="width:${Math.max(1,c.p/rows.reduce((m,x)=>Math.max(m,x.p),0)*100)}%"></div></td></tr>`).join('')}</table></div>`;
 }
+// ── Lots scellés du Booster Légende ──────────────────────────
+let _sealed=[];
+const SEALED_PRESETS=[
+  {id:'sv2a',name:'Booster Pokémon 151 (SV2a)',lang:'jp',kind:'booster',tag:'BOOSTER',img:'/image/packs/sv2a.webp',value:15,cost:0,qty:0},
+  {id:'sv8a',name:'Booster Terastal Festival (SV8a)',lang:'jp',kind:'booster',tag:'BOOSTER',img:'/image/packs/sv8a.webp',value:10,cost:0,qty:0},
+  {id:'sv10',name:'Booster Glory Team Rocket (SV10)',lang:'jp',kind:'booster',tag:'BOOSTER',img:'/image/packs/sv10.webp',value:5,cost:0,qty:0},
+  {id:'m2a',name:'Booster Méga Dream ex (M2a)',lang:'jp',kind:'booster',tag:'BOOSTER',img:'/image/packs/m2a.webp',value:9,cost:0,qty:0},
+  {id:'cn151-3',name:'Booster CN151 Vol.3',lang:'cn',kind:'booster',tag:'BOOSTER',img:'/image/packs/cn151-3.webp',value:5,cost:0,qty:0},
+  {id:'cn-30ans',name:'Booster 30 ans (chinois)',lang:'cn',kind:'booster',tag:'BOOSTER30',img:'/image/packs/cn-30ans.jpg',value:8,cost:0,qty:0},
+];
+const SL_TAGS={BOOSTER:'Booster',BOOSTER30:'Booster 30 ans (graal)',DISPLAY:'Display'};
+function renderSealed(){
+  const rows=document.getElementById('slRows'); if(!rows) return;
+  rows.innerHTML=_sealed.map((l,i)=>`<tr>
+    <td>${l.img?`<img src="${escH(l.img)}" alt="">`:''}</td>
+    <td><input class="sl-in" data-i="${i}" data-k="name" value="${escH(l.name)}" style="min-width:190px"></td>
+    <td><select class="sl-in" data-i="${i}" data-k="lang"><option value="jp" ${l.lang!=='cn'?'selected':''}>JP</option><option value="cn" ${l.lang==='cn'?'selected':''}>CN</option></select></td>
+    <td><select class="sl-in" data-i="${i}" data-k="tag">${Object.entries(SL_TAGS).map(([k,v])=>`<option value="${k}" ${l.tag===k?'selected':''}>${v}</option>`).join('')}</select></td>
+    <td><input class="sl-in" data-i="${i}" data-k="value" type="number" min="0" step="0.5" value="${l.value||''}" style="width:80px"></td>
+    <td><input class="sl-in" data-i="${i}" data-k="cost" type="number" min="0" step="0.1" value="${l.cost||''}" placeholder="—" style="width:80px"></td>
+    <td><input class="sl-in" data-i="${i}" data-k="qty" type="number" min="0" step="1" value="${l.qty||0}" style="width:70px"></td>
+    <td><button class="btn-sm crd-del" data-del="${i}">✕</button></td></tr>`).join('');
+  const n=_sealed.reduce((a,l)=>a+(+l.qty||0),0);
+  document.getElementById('slMeta').textContent=`${n} booster${n>1?'s':''} en stock · ${Math.floor(n/LEGEND_DRAWS)} Booster${Math.floor(n/LEGEND_DRAWS)>1?'s':''} Légende possibles`;
+  rows.querySelectorAll('.sl-in').forEach(el=>el.oninput=el.onchange=()=>{const l=_sealed[+el.dataset.i],k=el.dataset.k;l[k]=['value','cost','qty'].includes(k)?+el.value||0:el.value;if(k==='tag')l.kind=el.value==='DISPLAY'?'display':'booster';if(isLegend())calcPack();});
+  rows.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{_sealed.splice(+b.dataset.del,1);renderSealed();if(isLegend())fillPackForm(true);});
+}
+document.getElementById('slAdd').onclick=()=>{_sealed.push({id:'lot'+Date.now().toString(36),name:'Nouveau lot',lang:'jp',kind:'booster',tag:'BOOSTER',img:'',value:0,cost:0,qty:0});renderSealed();};
+document.getElementById('slSave').onclick=async()=>{try{const d=await cardsApi('',{action:'save_sealed',sealed:_sealed});_sealed=d.sealed;renderSealed();if(isLegend())fillPackForm(true);toast('Lots scellés enregistrés');}catch(e){toast(e.message,'err');}};
+
 async function savePack(){
   try{const d=await cardsApi('',{action:'save_pack',pack:packForm()});_packs=d.packs;toast('Réglage enregistré');}catch(e){toast(e.message,'err');}
 }

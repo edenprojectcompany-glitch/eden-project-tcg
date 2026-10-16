@@ -24,6 +24,8 @@ const INTL_IMG = /^https:\/\/assets\.tcgdex\.net\/(?:fr|en)\/[a-z0-9]+\/[a-z0-9-
 const UA = { 'User-Agent': 'Mozilla/5.0 (EdenProjectTCG admin)' };
 const STOCK_KEY = 'vault:cards';
 const PACKS_KEY = 'vault:packs';  // réglages des packs mystère (prix, marge, raretés, % bonus)
+const SEALED_KEY = 'vault:sealed'; // lots scellés du Booster Légende (boosters, displays)
+const SEALED_TAGS = ['BOOSTER', 'BOOSTER30', 'DISPLAY'];
 const MAX_DETAILS = 24;      // fiches lues par recherche (nom)
 const INDEX_BATCH = 40;      // fiches lues par appel quand il faut tout parcourir (numéro, rareté)
 const MAX_PAGES = 15;        // 15 × 39 = 585 résultats officiels au maximum
@@ -321,18 +323,36 @@ module.exports = async (req, res) => {
     if (!code || code !== process.env.ADMIN_CODE) return res.status(403).json({ error: 'Accès refusé' });
 
     if (req.method === 'GET') {
-      if (req.query.stock) return res.status(200).json({ cards: (await kv.get(STOCK_KEY)) || [], packs: (await kv.get(PACKS_KEY)) || {} });
+      if (req.query.stock) return res.status(200).json({ cards: (await kv.get(STOCK_KEY)) || [], packs: (await kv.get(PACKS_KEY)) || {}, sealed: (await kv.get(SEALED_KEY)) || [] });
       return res.status(200).json(await search(kv, req.query.q));
     }
 
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
 
+      // Lots scellés du Booster Légende : la liste complète est enregistrée d'un bloc
+      if (body.action === 'save_sealed') {
+        const list = (Array.isArray(body.sealed) ? body.sealed : []).slice(0, 60).map((l, i) => ({
+          id: /^[a-z0-9-]{1,30}$/.test(String(l.id || '')) ? String(l.id) : 'lot' + Date.now().toString(36) + i,
+          name: String(l.name || 'Booster').slice(0, 60),
+          set: String(l.set || '').slice(0, 20),
+          lang: l.lang === 'cn' ? 'cn' : 'jp',
+          kind: l.kind === 'display' ? 'display' : 'booster',
+          tag: SEALED_TAGS.includes(l.tag) ? l.tag : (l.kind === 'display' ? 'DISPLAY' : 'BOOSTER'),
+          img: /^\/image\/[a-z0-9/_.-]+$/i.test(String(l.img || '')) || /^https:\/\//.test(String(l.img || '')) ? String(l.img).slice(0, 300) : '',
+          value: Math.max(0, Math.round((+l.value || 0) * 100) / 100),
+          cost: Math.max(0, Math.round((+l.cost || 0) * 100) / 100),
+          qty: Math.max(0, Math.min(9999, Math.floor(+l.qty || 0))),
+        }));
+        await kv.set(SEALED_KEY, list);
+        return res.status(200).json({ sealed: list });
+      }
+
       // Réglage d'un pack mystère (calculateur de l'admin)
       if (body.action === 'save_pack') {
         const p = body.pack || {};
         if (!/^[a-z0-9_-]{2,30}$/.test(String(p.id || ''))) return res.status(400).json({ error: 'Pack invalide' });
-        const rar = a => (Array.isArray(a) ? a : []).map(String).filter(r => RARITIES.includes(r));
+        const rar = a => (Array.isArray(a) ? a : []).map(String).filter(r => RARITIES.includes(r) || SEALED_TAGS.includes(r));
         const packs = (await kv.get(PACKS_KEY)) || {};
         packs[p.id] = {
           id: p.id, name: String(p.name || p.id).slice(0, 40),

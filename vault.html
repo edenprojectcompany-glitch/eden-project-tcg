@@ -843,7 +843,7 @@ function artOverlay(box, back) {
     text(box.name, cx, py + ph * .5, g.font, gold(py, py + ph));
     g.shadowBlur = 0;
     // Pastille + pied
-    const lab = '1 CARTE RÉELLE À L’INTÉRIEUR';
+    const lab = (box.draws || 1) > 1 ? `${box.draws} BOOSTERS SCELLÉS À L’INTÉRIEUR` : '1 CARTE RÉELLE À L’INTÉRIEUR';
     g.font = `800 ${16 * S}px Manrope, sans-serif`; const lw = g.measureText(lab).width + 44 * S, ly = py + ph + 22 * S;
     g.fillStyle = 'rgba(8,6,12,.7)'; g.beginPath(); g.roundRect(cx - lw / 2, ly, lw, 38 * S, 19 * S); g.fill();
     g.strokeStyle = gold(ly, ly + 38 * S); g.lineWidth = 2 * S; g.stroke();
@@ -866,7 +866,7 @@ function artOverlay(box, back) {
     text('E', cx, cy + 8 * S, `800 ${150 * S}px Fraunces, Georgia, serif`, gold(cy - 80 * S, cy + 80 * S));
     g.shadowBlur = 0;
     text('EDEN PROJECT TCG', cx, H * .68, `800 ${26 * S}px Manrope, sans-serif`, gold(H * .66, H * .7));
-    text('Contient 1 carte Pokémon japonaise réelle,', cx, H * .725, `600 ${16 * S}px Manrope, sans-serif`, 'rgba(255,245,225,.9)');
+    text((box.draws || 1) > 1 ? `Contient ${box.draws} boosters Pokémon scellés réels,` : 'Contient 1 carte Pokémon japonaise réelle,', cx, H * .725, `600 ${16 * S}px Manrope, sans-serif`, 'rgba(255,245,225,.9)');
     text('conservée dans ton coffre jusqu’à l’envoi.', cx, H * .752, `600 ${16 * S}px Manrope, sans-serif`, 'rgba(255,245,225,.9)');
     let bx = cx - 120 * S; for (let k = 0; k < 40; k++) { const w = (1 + (k * 7 % 3)) * S; g.fillStyle = 'rgba(255,245,225,.85)'; g.fillRect(bx, botY - 110 * S, w, 44 * S); bx += w + (1 + k * 5 % 3) * S; }
     text('EV-' + box.id.toUpperCase() + ' · AUTHENTIQUE · TIRAGE VÉRIFIABLE', cx, botY - 46 * S, `700 ${12 * S}px Manrope, sans-serif`, 'rgba(255,240,210,.8)');
@@ -883,7 +883,82 @@ const ART_FS = `uniform sampler2D map, ov; uniform float t, kind, op, back, aspe
     return mix(mix(mix(h3(i), h3(i + vec3(1,0,0)), f.x), mix(h3(i + vec3(0,1,0)), h3(i + vec3(1,1,0)), f.x), f.y),
                mix(mix(h3(i + vec3(0,0,1)), h3(i + vec3(1,0,1)), f.x), mix(h3(i + vec3(0,1,1)), h3(i + vec3(1,1,1)), f.x), f.y), f.z); }
   float fbm(vec3 p){ float s = 0., a = .5; for (int i = 0; i < 4; i++) { s += a * n3(p); p = p * 2.03 + 7.1; a *= .5; } return s; }
+  mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+  // Éclair procédural : ligne brisée qui tremble entre deux points, visible par flashs
+  float bolt(vec2 p, vec2 a, vec2 b, float seed){
+    vec2 ab = b - a; float h = clamp(dot(p - a, ab) / dot(ab, ab), 0., 1.);
+    vec2 nrm = normalize(vec2(-ab.y, ab.x));
+    float off = (fbm(vec3(h * 9., floor(t * 14.) + seed, seed)) - .5) * .09 * sin(h * 3.1416);
+    float d = abs(dot(p - (a + ab * h), nrm) - off);
+    return smoothstep(.006, 0., d) + smoothstep(.03, 0., d) * .35;
+  }
+  // Booster Légende : Mewtwo et Mew, éclairs bleus, orbe psychique rose, particules d'énergie, couleurs vives
+  vec3 psyArt(vec2 p){
+    vec2 mt = vec2(.507, .5), mw = vec2(.62, .533), oc = vec2(.787, .608), fist = vec2(.36, .53);
+    float mtm = 1. - smoothstep(.6, 1., length((p - mt) / vec2(.16, .36)));
+    float mwm = 1. - smoothstep(.5, 1., length((p - mw) / vec2(.05, .07)));
+    // Mewtwo respire depuis les pieds, Mew flotte sur son épaule
+    vec2 base = vec2(.507, .18);
+    vec2 q = mix(p, base + (p - base) / (1. + .006 * sin(t * 1.2)), mtm);
+    q -= vec2(sin(t * .9) * .002, sin(t * 1.7) * .0045) * mwm;
+    // L'orbe tourbillonne : rotation qui s'atténue en s'éloignant du centre
+    vec2 d = q - oc; float r = length(d * vec2(1., 1.25));
+    float sw = (1. - smoothstep(.02, .22, r)) * (1. - mtm) * (1. - mwm);
+    q = oc + rot(sw * (.55 * sin(t * .7) + .25 * sin(t * 1.9 + r * 30.))) * d;
+    // La brume d'énergie dérive
+    vec3 c0 = texture2D(map, q).rgb;
+    float fog = smoothstep(.35, .9, dot(c0, vec3(.33))) * (1. - mtm) * (1. - mwm);
+    q += (vec2(fbm(vec3(q * 4. + vec2(t * .05, 0.), t * .06)), fbm(vec3(q * 4. + vec2(3., t * .04), 1.))) - .5) * .014 * fog;
+    vec3 col = texture2D(map, clamp(q, 0., 1.)).rgb;
+    // Couleurs plus vives : saturation et contraste renforcés
+    float L = dot(col, vec3(.299, .587, .114));
+    col = mix(vec3(L), col, 1.5);
+    // La brume blanche se colore : bleu électrique côté poing, magenta côté orbe, violet en haut
+    float chroma = max(col.r, max(col.g, col.b)) - min(col.r, min(col.g, col.b));
+    float mist = smoothstep(.45, .9, L) * (1. - smoothstep(.1, .3, chroma)) * (1. - mtm * .85) * (1. - mwm);
+    vec3 tint = mix(vec3(.3, .7, 1.15), vec3(1.1, .4, .95), smoothstep(.38, .72, p.x));
+    tint = mix(tint, vec3(.75, .5, 1.15), smoothstep(.62, .9, p.y) * .6);
+    col = mix(col, col * tint, mist * (.75 + .1 * sin(t * .8 + p.x * 6.)));
+    col = pow(max((col - .5) * 1.12 + .49, 0.), vec3(1.12));
+    // Les zones électriques bleues crépitent
+    float cyan = smoothstep(.12, .45, col.b - col.r) * smoothstep(.35, .8, col.b);
+    float flash = step(.55, n3(vec3(floor(t * 11.), 1., 2.)));
+    col += vec3(.3, .85, 1.) * cyan * (.25 + .9 * flash * (.6 + .4 * sin(t * 80.)));
+    // Éclairs qui jaillissent du poing
+    float bz = bolt(p, fist, fist + vec2(-.13, -.24), 1.) * flash + bolt(p, fist, fist + vec2(-.16, .1), 7.) * step(.6, n3(vec3(floor(t * 9.), 4., 1.)));
+    col += vec3(.55, .92, 1.) * bz * 1.4;
+    // Orbe rose : cœur qui pulse + anneaux d'onde
+    float orb = 1. - smoothstep(0., .17, r);
+    col += vec3(1., .3, .85) * orb * (.3 + .25 * sin(t * 2.2));
+    for (int k = 0; k < 2; k++) { float ph = fract(t * .35 + float(k) * .5); col += vec3(1., .55, .95) * smoothstep(.007, 0., abs(r - ph * .24)) * (1. - ph) * .9; }
+    // Particules d'énergie qui spiralent vers l'orbe (roses) et autour du poing (bleues)
+    float ang = atan(d.y, d.x), lr = log(max(r, .001));
+    vec2 sp = vec2(ang * 3.2 + lr * 2. + t * .8, lr * 6. + t * 1.6);
+    vec2 id = floor(sp), f = fract(sp) - .5;
+    col += vec3(1., .6, .95) * step(.86, h2(id)) * smoothstep(.16, 0., length(f)) * smoothstep(.36, .05, r) * 1.2;
+    vec2 g = p * vec2(40., 32.) + vec2(t * .3, t * 1.2); vec2 gid = floor(g), gf = fract(g) - .5;
+    float side = smoothstep(.62, .3, p.x);
+    col += mix(vec3(.4, .9, 1.), vec3(1., .5, .9), 1. - side) * step(.94, h2(gid)) * smoothstep(.14, 0., length(gf - (vec2(h2(gid + 3.), h2(gid + 7.)) - .5) * .6)) * (.6 + .4 * sin(t * 4. + h2(gid) * 30.));
+    // Aura bleue / rose qui pulse autour de Mewtwo
+    col += mix(vec3(.3, .75, 1.), vec3(1., .4, .9), smoothstep(.42, .66, p.x)) * (1. - smoothstep(0., 1.2, length((p - mt) / vec2(.22, .42)))) * (.5 + .5 * sin(t * 1.5)) * .16;
+    return col;
+  }
   void main(){
+    if (kind > 1.5) {
+      // Image 5:4 cadrée sur Mewtwo, Mew et l'orbe
+      vec2 pp = clamp(vec2(.56, .5) + (vUv - vec2(.5, .47)) * vec2(aspect, 1.) * .96, .002, .998);
+      vec3 col = psyArt(pp);
+      if (back > .5) col *= .62;
+      vec3 n = normalize(vN), v = normalize(vV), l = normalize(vec3(.35, .6, 1.));
+      col *= .74 + .36 * max(dot(n, l), 0.);
+      col += vec3(1., .92, 1.) * pow(max(dot(reflect(-l, n), v), 0.), 26.) * .3;
+      // Reflet holographique irisé qui balaie le sachet
+      float sw = fract(vUv.x * .55 + vUv.y * .35 - t * .09);
+      col += (.5 + .5 * cos(6.2832 * (vUv.y + t * .1 + vec3(0., .33, .67)))) * smoothstep(.07, 0., abs(sw - .5)) * .22;
+      vec4 o = texture2D(ov, vUv);
+      gl_FragColor = vec4(mix(col, o.rgb, o.a), op);
+      return;
+    }
     bool mew = kind < .5;
     // L'image 16:9 couvre tout le sachet (format portrait), cadrée sur le héros
     vec2 c = mew ? vec2(.487, .56) : vec2(.48, .5);
@@ -928,8 +1003,8 @@ const ART_FS = `uniform sampler2D map, ov; uniform float t, kind, op, back, aspe
   }`;
 function artMaterial(box, back) {
   return new THREE.ShaderMaterial({
-    uniforms: { map: { value: artTexture(box.art) }, ov: { value: artOverlay(box, back) }, t: artTime, kind: { value: box.artKind === 'sky' ? 1 : 0 },
-      op: { value: 1 }, back: { value: back ? 1 : 0 }, aspect: { value: (PW / PH) / (16 / 9) } },
+    uniforms: { map: { value: artTexture(box.art) }, ov: { value: artOverlay(box, back) }, t: artTime, kind: { value: box.artKind === 'psy' ? 2 : box.artKind === 'sky' ? 1 : 0 },
+      op: { value: 1 }, back: { value: back ? 1 : 0 }, aspect: { value: (PW / PH) / (box.artAspect || 16 / 9) } },
     vertexShader: ART_VS, fragmentShader: ART_FS, transparent: true,
   });
 }
@@ -942,6 +1017,7 @@ function artMaterial(box, back) {
 const DESIGNS = {
   ar:     { base: ['#5e3e0e', '#c4923d', '#f7e0a2'], accent: 'platinum', pattern: 'guilloche', ink: '#2a1904', tag: 'MYSTÈRE AR', art: true },
   ex:     { base: ['#071a3a', '#1d4f8f', '#8cc4ff'], accent: 'silver',   pattern: 'sunrise',   ink: '#030a19', tag: 'MYSTÈRE EX', art: true },
+  legend: { base: ['#1a0730', '#5b1f9e', '#d59cff'], accent: 'rose',     pattern: 'hex',       ink: '#0c0318', tag: 'BOOSTER LÉGENDE', art: true },
   china:  { base: ['#4a0909', '#a8201a', '#e2553c'], accent: 'gold',     pattern: 'scales',    ink: '#210303', tag: 'SÉRIE CHINE' },
   japan:  { base: ['#07123a', '#1b3f9c', '#6b98ff'], accent: 'silver',   pattern: 'sunrise',   ink: '#030819', tag: 'SÉRIE JAPON' },
   mega:   { base: ['#170830', '#4f2396', '#b98aff'], accent: 'rose',     pattern: 'hex',       ink: '#0b031c', tag: 'SÉRIE MÉGA' },
@@ -1414,7 +1490,8 @@ async function openFlow() {
   setView(VIEW_STAGE); sfx.hum(); sfx.music.duck(true);
   autoAll = false;
   const prizes = await Promise.all(resp.results.map(r => prizeMesh(item(r.item))));
-  for (let i = 0; i < resp.results.length; i++) await openOne(st, resp.results[i], prizes[i], i, resp.results.length);
+  const per = b.draws || 1;
+  for (let i = 0; i < resp.results.length; i++) await (i % per ? openExtra : openOne)(st, resp.results[i], prizes[i], i, resp.results.length);
   S.st = resp.state; renderUser();
   showSummary(b, resp.results);
 }
@@ -1492,6 +1569,12 @@ async function openOne(st, r, prize, i, n) {
   const bodyStart = pack.position.clone();
   const packMat = mat; packMat.transparent = true;
   tween(900, e => { pack.position.y = bodyStart.y - e * 3.2; pack.rotation.x = e * .9; packMat.opacity = 1 - e; (pack.userData.art || []).forEach(m => { m.uniforms.op.value = 1 - e; }); }, E.inOut).then(() => { scene.remove(pack); packMat.dispose(); (pack.userData.art || []).forEach(m => m.dispose()); });
+  await presentPrize(r, prize, wp, i, n, fx);
+}
+
+// Présentation d'un lot sorti du sachet : rotation, écrin selon la rareté, fiche, envoi au coffre
+async function presentPrize(r, prize, wp, i, n, fx) {
+  const it = item(r.item), color = new THREE.Color(TIER_COLOR[r.tier]), lvl = TIERS.indexOf(r.tier);
   const target = STAGE.clone().add(new THREE.Vector3(0, .38, .55));
   tween(1200 * fx, e => { prize.position.lerpVectors(wp, target, e); prize.rotation.y = (1 - e) * Math.PI * 2; prize.scale.setScalar(lerp(.9, 1, e)); }, E.out);
   await sleep(250 * fx);
@@ -1530,17 +1613,34 @@ async function openOne(st, r, prize, i, n) {
   await sleep(350);
 }
 
+// Lots suivants d'un même sachet (Booster Légende : 2 boosters) : ils jaillissent du sachet déjà ouvert
+async function openExtra(st, r, prize, i, n) {
+  S.mode = 'anim';
+  const lvl = TIERS.indexOf(r.tier), from = STAGE.clone().add(new THREE.Vector3(0, -.55, .3));
+  prize.position.copy(from); prize.scale.setScalar(.45); scene.add(prize);
+  $('#counter').textContent = `BOOSTER ${i + 1} / ${n}`; $('#counter').classList.remove('off');
+  burstLight.color.set('#e6c8ff'); burstLight.position.copy(STAGE).add(new THREE.Vector3(0, .4, .7));
+  const lightUp = tween(500, e => { burstLight.intensity = 2 + e * (2 + lvl * 1.5); bloom.strength = BLOOM_BASE + e * (.04 + lvl * .06); roomDimT = 1; });
+  particleBurst(STAGE.clone(), { n: 70, speed: 2.8, up: 2.2, grav: 5, life: .9, size: .04, spread: 1 });
+  sfx.swish(); vibrate(20);
+  const wp = STAGE.clone().add(new THREE.Vector3(0, .55, .2));
+  await tween(750, e => { prize.position.lerpVectors(from, wp, e); prize.scale.setScalar(lerp(.45, .9, e)); prize.rotation.y = (1 - e) * Math.PI; }, E.out);
+  await lightUp;
+  await presentPrize(r, prize, wp, i, n, autoAll ? .55 : 1);
+}
+
 function showSummary(b, results) {
   $('#counter').classList.add('off');
   const total = results.reduce((s, r) => s + item(r.item).value, 0);
-  $('#shTitle').textContent = results.length > 1 ? `${results.length} boosters ouverts` : 'Ta carte';
+  const per = b.draws || 1, packsOpened = Math.max(1, Math.round(results.length / per));
+  $('#shTitle').textContent = per > 1 ? `Tes ${results.length} boosters scellés` : results.length > 1 ? `${results.length} boosters ouverts` : 'Ta carte';
   $('#shSub').textContent = b.name + ' · ajouté à ton coffre';
   $('#shItems').innerHTML = results.map(r => {
     const it = item(r.item), src = imgOf(it);
     return `<div class="it" style="--c:${TIER_COLOR[r.tier]}">${src ? `<img src="${src}" alt="">` : ''}<b>${esc(it.name)}</b><span>${TIER_FR[r.tier]}</span><div class="v num">${eur(it.value)}</div></div>`;
   }).join('');
-  $('#shSum').innerHTML = `Valeur des cartes <b class="num">${eur(total)}</b>`;
-  const left = credits(b.id), n = results.length;
+  $('#shSum').innerHTML = `Valeur ${per > 1 ? 'des lots' : 'des cartes'} <b class="num">${eur(total)}</b>`;
+  const left = credits(b.id), n = packsOpened;
   $('#shActions').innerHTML = `<button class="btn btn-glass" id="shKeep">Fermer</button>
     <button class="btn btn-gold" id="shAgain">${left >= n ? `Ouvrir ×${n} · ${left} restant${left > 1 ? 's' : ''}` : `Racheter ×${n} · ${eur(b.price * n)}`}</button>`;
   $('#shKeep').onclick = closeSummary;
