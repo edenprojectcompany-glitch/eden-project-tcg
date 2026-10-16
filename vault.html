@@ -64,28 +64,28 @@ a{color:inherit;text-decoration:none}
 .btn-sm{height:38px;padding:0 14px;font-size:13px;border-radius:12px}
 
 /* Panneau du booster sélectionné */
-.panel{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:min(620px,calc(100% - 32px));padding:22px 24px 20px;border-radius:26px;transition:opacity .5s,transform .7s var(--spring)}
+.panel{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:min(470px,calc(100% - 32px));padding:14px 18px 12px;border-radius:20px;transition:opacity .5s,transform .7s var(--spring)}
 .panel.off{opacity:0;transform:translate(-50%,40px);pointer-events:none}
 .panel.zoomed{opacity:.0;transform:translate(-50%,60px);pointer-events:none}
 .zoomhint{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);font-size:12px;font-weight:700;color:var(--mute);padding:10px 16px;border-radius:99px;opacity:0;transition:opacity .4s;pointer-events:none}
 .panel.zoomed~.zoomhint{opacity:1}
 .p-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-.eyebrow{font-size:10.5px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
-.p-head h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,5vw,44px);letter-spacing:-.02em;line-height:1;margin-top:6px}
-.p-head p{color:var(--mute);font-size:13.5px;margin-top:6px}
+.eyebrow{font-size:9px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
+.p-head h1{font-family:var(--serif);font-weight:700;font-size:clamp(22px,3.2vw,30px);letter-spacing:-.02em;line-height:1;margin-top:4px}
+.p-head p{color:var(--mute);font-size:12px;margin-top:4px}
 .dots{display:flex;gap:6px;padding-bottom:6px}
 .dots i{width:7px;height:7px;border-radius:4px;background:rgba(255,255,255,.2);transition:all .4s var(--spring)}
 .dots i.on{width:22px;background:var(--gold)}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}
-.stat{padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06)}
-.stat span{display:block;font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
-.stat b{display:block;font-size:16px;margin-top:3px}
-.p-actions{display:flex;gap:10px;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.stat{padding:6px 9px;border-radius:11px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06)}
+.stat span{display:block;font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.stat b{display:block;font-size:13px;margin-top:2px}
+.p-actions{display:flex;gap:8px;align-items:center}
 .seg{display:flex;padding:4px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.07)}
-.seg button{width:40px;height:40px;border-radius:10px;font-weight:800;font-size:13px;color:var(--mute);transition:all .35s var(--spring)}
+.seg button{width:32px;height:32px;border-radius:9px;font-weight:800;font-size:12px;color:var(--mute);transition:all .35s var(--spring)}
 .seg button.on{background:var(--txt);color:var(--ob)}
-.p-actions .btn-gold{flex:1;height:48px}
-.p-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:12px;color:var(--dim);font-weight:700}
+.p-actions .btn-gold{flex:1;height:40px;font-size:14px}
+.p-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:10.5px;color:var(--dim);font-weight:700}
 .p-foot a{color:var(--gold)}
 .nav-arrow{position:absolute;top:44%;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:22px;transition:transform .4s var(--spring),opacity .4s}
 .nav-arrow:hover{transform:scale(1.08)}
@@ -225,9 +225,12 @@ textarea.input{height:auto;min-height:96px;padding:12px 16px;resize:vertical;fon
   .bal{padding-left:8px}
   .bal .add{width:34px}
   .me-menu{position:fixed;right:12px;top:62px;width:calc(100vw - 24px);max-width:320px}
-  .panel{bottom:12px;padding:16px 16px 14px;border-radius:22px}
-  .stats{grid-template-columns:repeat(2,1fr);margin:12px 0}
-  .seg button{width:34px}
+  .panel{bottom:10px;padding:12px 12px 10px;border-radius:18px}
+  .stats{gap:5px;margin:8px 0}
+  .stat{padding:5px 7px}
+  .stat span{font-size:7px;letter-spacing:.08em}
+  .stat b{font-size:11.5px}
+  .seg button{width:28px;height:30px}
   .nav-arrow{top:36%;width:46px;height:46px}
   .nav-arrow.l{left:10px}.nav-arrow.r{right:10px}
   .counter{top:70px}
@@ -240,7 +243,7 @@ textarea.input{height:auto;min-height:96px;padding:12px 16px;resize:vertical;fon
 #demoBtn.on{background:linear-gradient(135deg,#ffe7a8,#d9b26a);color:#2a1904;border-color:transparent;font-weight:800}
 .demo-flag{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:30;padding:7px 16px;border-radius:999px;font:800 11px Manrope,sans-serif;letter-spacing:.16em;color:#2a1904;background:linear-gradient(135deg,#ffe7a8,#d9b26a);box-shadow:0 6px 24px rgba(217,178,106,.35);pointer-events:none;transition:opacity .3s}
 .demo-flag.off{opacity:0}
-.p-win{display:block;margin-top:6px;font-size:12px;line-height:1.5;color:var(--gold2)}
+.p-win{display:block;margin-top:4px;font-size:11px;line-height:1.5;color:var(--gold2)}
 </style>
 </head>
 <body>
@@ -291,7 +294,7 @@ textarea.input{height:auto;min-height:96px;padding:12px 16px;resize:vertical;fon
     <div class="stats">
       <div class="stat"><span>Prix</span><b class="num" id="sPrice">—</b></div>
       <div class="stat"><span>Garanti</span><b id="sEv">—</b></div>
-      <div class="stat"><span>Bonus possible</span><b id="sBest" style="color:var(--gold2)">—</b></div>
+      <div class="stat"><span>Bonus</span><b id="sBest" style="color:var(--gold2)">—</b></div>
       <div class="stat"><span>Chance bonus</span><b class="num" id="sLots">—</b></div>
     </div>
     <div class="p-actions">
