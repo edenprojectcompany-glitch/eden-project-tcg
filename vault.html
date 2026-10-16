@@ -759,8 +759,6 @@ if (!MOBILE && !LITE) {
   top.rotation.x = -Math.PI / 2; top.position.y = .002;
   scene.add(top);
   const goldM = new THREE.MeshBasicMaterial({ color: 0xd9b26a, transparent: true, opacity: .75 });
-  const ring1 = new THREE.Mesh(new THREE.RingGeometry(RING_R + 1.25, RING_R + 1.29, 128), goldM); ring1.rotation.x = -Math.PI / 2; ring1.position.y = .01; scene.add(ring1);
-  const ring2 = new THREE.Mesh(new THREE.RingGeometry(RING_R - 1.3, RING_R - 1.27, 128), goldM); ring2.rotation.x = -Math.PI / 2; ring2.position.y = .01; scene.add(ring2);
   for (const x of [-1.6, 1.6]) { const l = new THREE.Mesh(new THREE.PlaneGeometry(.035, 30), goldM); l.rotation.x = -Math.PI / 2; l.position.set(x, .01, RING_R + 16); scene.add(l); }
 }
 
