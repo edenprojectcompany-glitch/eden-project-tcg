@@ -27,7 +27,7 @@ const MAX_OPEN = 10;
 // Les deux boosters mystère : illustration animée sur le sachet, nom et prix par défaut
 // (le nom et le prix réels viennent du calculateur de l'admin dès qu'un réglage est enregistré)
 const PACK_INFO = {
-  ar: { name: 'Mystère AR', price: 9.9, tagline: '1 carte Art Rare garantie', theme: ['#ffd97f', '#c9a8ff'], art: '/image/vault3d/mew-sm.jpg', artKind: 'flames' },
+  ar: { name: 'Mystère AR', price: 9.9, tagline: '1 carte AR garantie', theme: ['#ffd97f', '#c9a8ff'], art: '/image/vault3d/mew-sm.jpg', artKind: 'flames' },
   ex: { name: 'Mystère EX', price: 4.9, tagline: '1 carte ex garantie', theme: ['#7fd9ff', '#b98aff'], art: '/image/vault3d/pack-dracaufeu.jpg', artKind: 'sky' },
   // Booster Légende : 2 boosters scellés tirés dans le stock « Lots scellés » (151, SV8a, SV10, M2a, CN151, 30 ans CN…)
   legend: { name: 'Booster Légende', price: 19.9, tagline: '2 boosters scellés garantis', theme: ['#c77dff', '#5ad1ff'], art: '/image/vault3d/pack-mewtwo.jpg', artKind: 'psy', artAspect: 1.25, draws: 2, sealed: true },

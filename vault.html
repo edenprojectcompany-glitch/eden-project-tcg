@@ -2141,16 +2141,18 @@ const lastSize = { w: 0, h: 0, dpr: 0 };
 let prScale = 1;
 const perf = { acc: 0, n: 0, calm: 0 };
 function watchPerf(dt) {
+  // Pas de mesure pendant le chargement (images lourdes, préparation des effets)
+  if (S.mode === 'boot' || !document.getElementById('loader').classList.contains('done')) return;
   perf.acc += dt; perf.n++;
   if (perf.acc < .5) return;
   const avg = perf.acc / perf.n; perf.acc = 0; perf.n = 0;
-  if (avg > 1 / 42 && prScale > .55) { prScale = Math.max(.55, prScale - .15); resize(); perf.calm = 0; }
-  else if (avg < 1 / 57 && prScale < 1 && S.mode === 'browse' && ++perf.calm > 6) { prScale = Math.min(1, prScale + .1); resize(); perf.calm = 0; }
+  if (avg > 1 / 40 && prScale > (MOBILE ? .6 : .8)) { prScale = Math.max(MOBILE ? .6 : .8, prScale - .1); resize(); perf.calm = 0; }
+  else if (avg < 1 / 50 && prScale < 1 && ++perf.calm > 2) { prScale = Math.min(1, prScale + .2); resize(); perf.calm = 0; }
 }
 function resize() {
   const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
   lastSize.w = w; lastSize.h = h; lastSize.dpr = devicePixelRatio;
-  const pr = Math.min(devicePixelRatio, MOBILE ? 1.5 : 1.75) * prScale;
+  const pr = Math.min(devicePixelRatio, MOBILE ? 1.75 : 2) * prScale;
   renderer.setPixelRatio(pr);
   renderer.setSize(w, h, false);
   if (composer) { composer.setPixelRatio(pr); composer.setSize(w, h); }
