@@ -1493,7 +1493,9 @@ const showcase = (() => {
   const ring = new THREE.Mesh(new THREE.TorusGeometry(1.25, .022, 24, 180), brass); ring.position.set(0, .38, -.35); g.add(ring);
   const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.34, .008, 12, 180), brass); ring2.position.copy(ring.position); g.add(ring2);
   const ticks = new THREE.Group(); ticks.position.copy(ring.position); g.add(ticks);
-  for (let k = 0; k < 48; k++) { const a = k / 48 * Math.PI * 2, m = new THREE.Mesh(new THREE.BoxGeometry(.012, k % 4 ? .05 : .1, .012), brass); m.position.set(Math.cos(a) * 1.3, Math.sin(a) * 1.3, 0); m.rotation.z = a - Math.PI / 2; ticks.add(m); }
+  { const im = new THREE.InstancedMesh(new THREE.BoxGeometry(.012, 1, .012), brass, 48), o = new THREE.Object3D();
+    for (let k = 0; k < 48; k++) { const a = k / 48 * Math.PI * 2; o.position.set(Math.cos(a) * 1.3, Math.sin(a) * 1.3, 0); o.rotation.set(0, 0, a - Math.PI / 2); o.scale.set(1, k % 4 ? .05 : .1, 1); o.updateMatrix(); im.setMatrixAt(k, o.matrix); }
+    ticks.add(im); }
   // Accent de rareté : fin filet émissif sur l'anneau
   const accentMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
   const accent = new THREE.Mesh(new THREE.TorusGeometry(1.25, .006, 8, 180), accentMat); accent.position.copy(ring.position); accent.position.z += .025; g.add(accent);
@@ -2083,7 +2085,8 @@ async function loadState() {
 const clock = new THREE.Clock();
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = Math.min(.05, clock.getDelta()), t = clock.elapsedTime;
+  const rawDt = clock.getDelta(), dt = Math.min(.05, rawDt), t = clock.elapsedTime;
+  if (!document.hidden && rawDt < .5) watchPerf(rawDt);
   runTweens(now);
   // Carrousel
   ringAngle = lerp(ringAngle, ringTarget, 1 - Math.pow(.0015, dt));
@@ -2130,10 +2133,19 @@ function frame(now) {
   if (composer) composer.render(); else renderer.render(scene, camera);
 }
 const lastSize = { w: 0, h: 0, dpr: 0 };
+let prScale = 1;
+const perf = { acc: 0, n: 0, calm: 0 };
+function watchPerf(dt) {
+  perf.acc += dt; perf.n++;
+  if (perf.acc < .5) return;
+  const avg = perf.acc / perf.n; perf.acc = 0; perf.n = 0;
+  if (avg > 1 / 42 && prScale > .55) { prScale = Math.max(.55, prScale - .15); resize(); perf.calm = 0; }
+  else if (avg < 1 / 57 && prScale < 1 && S.mode === 'browse' && ++perf.calm > 6) { prScale = Math.min(1, prScale + .1); resize(); perf.calm = 0; }
+}
 function resize() {
   const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
   lastSize.w = w; lastSize.h = h; lastSize.dpr = devicePixelRatio;
-  const pr = Math.min(devicePixelRatio, MOBILE ? 1.5 : 1.75);
+  const pr = Math.min(devicePixelRatio, MOBILE ? 1.5 : 1.75) * prScale;
   renderer.setPixelRatio(pr);
   renderer.setSize(w, h, false);
   if (composer) { composer.setPixelRatio(pr); composer.setSize(w, h); }
