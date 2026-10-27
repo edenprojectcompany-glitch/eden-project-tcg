@@ -1307,7 +1307,9 @@ function packMaps(box) {
   const W = MOBILE ? 768 : 1400, H = Math.round(W * PH / PW), out = {};
   for (const pass of ['albedo', 'orm', 'bump']) {
     const c = document.createElement('canvas'); c.width = W; c.height = H;
-    drawPack(c.getContext('2d'), W, H, box, d, pass);
+    // Sachet illustré : l'illustration couvre tout, le corps dessous reste sombre et neutre (l'ancien dessin ne doit jamais transparaître)
+    if (d.art) { const g = c.getContext('2d'); g.fillStyle = pass === 'albedo' ? '#0d0b12' : pass === 'orm' ? 'rgb(0,150,70)' : '#808080'; g.fillRect(0, 0, W, H); }
+    else drawPack(c.getContext('2d'), W, H, box, d, pass);
     const t = new THREE.CanvasTexture(c); t.anisotropy = renderer.capabilities.getMaxAnisotropy();
     if (pass === 'albedo') t.colorSpace = THREE.SRGBColorSpace;
     out[pass] = t;
