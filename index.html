@@ -3276,6 +3276,8 @@ window.addEventListener('load', () => {
 
   /* ══ CONSTANTES ══ */
   const IMG_BASE = 'https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/';
+  // Images du catalogue (nom de fichier) ou hébergées sur le site (chemin /image/…)
+  const imgSrc = f => /^(\/|https?:)/.test(f||'') ? f : IMG_BASE + (f||'');
   const PROMO_CODES = {
     EDEN5:{pct:5,type:'discount',rule:{maxEur:15}}, WELCOME5:{pct:5,type:'discount'},
     EDEN10:{pct:10,type:'discount'}, TCG15:{pct:15,type:'discount'},
@@ -3347,6 +3349,7 @@ window.addEventListener('load', () => {
     {id:20,name:'SV11w — White Flare',  sub:'Display JP · 20 boosters',        price:110, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',urgent:false,img:'white-flare-sv11w.png',     ebay:112,tiers:[{q:6,p:110},{q:6,p:105},{q:12,p:99}],desc:'SV11w — Reshiram ex BWR. Pendant de Black Bolt. 20 boosters · 7 cartes/booster.'},
     {id:21,name:'SV2a — Pokémon 151',   sub:'Display JP · 20 boosters',        price:299, tag:'Display JP',cat:'display',lang:'jp',rare:'RÉFÉRENCE',urgent:false,img:'pokemon-151-sv2a.png',      ebay:310,tiers:[{q:12,p:299},{q:12,p:295},{q:36,p:280}],desc:'Pokémon 151 JP (SV2a) — Charizard ex, Mewtwo ex, retour Kadabra. 165+ cartes.'},
     {id:22,name:'M5 — Mega Abyss Eye', sub:'Display JP · 30 boosters',         price:120, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'abyss-eye-m5.png',         ebay:128,tiers:[{q:12,p:120},{q:12,p:110},{q:36,p:105}],desc:'M5 — Dragapult en Mega Évolution. Nouvelle rareté MUR. 30 boosters.'},
+    {id:23,name:'Collection 30 ans',     sub:'Display CN · 20 boosters',   price:99,  tag:'Display CN',cat:'display',lang:'cn',rare:'30 ANS',   urgent:false,img:'/image/products/cn-30ans-display.webp',stock:0,ebay:null,tiers:[{q:1,p:99}],desc:'30th Celebration (30thC) — édition chinoise simplifiée du 30e anniversaire Pokémon, sortie le 16/09/2026. 20 boosters/boîte · 6 cartes/booster, toutes brillantes · 1 Pikachu garanti par booster (30 versions, une par illustrateur). Nouvelle rareté Futuristic Rare (FUR).'},
   ];
 
   /* ── Mise à jour dynamique des compteurs de filtres ──
@@ -4008,7 +4011,7 @@ void main(){
           ${stockBadge}
           ${p.flashSale&&!outOfStock?`<div class="flash-timer" style="position:absolute;bottom:12px;right:12px;z-index:3"><span class="timer-seg flash-timer-val" data-end="${p._flashEndTime||0}">--:--:--</span></div>`:''}
           <div class="visual">
-            <img src="${IMG_BASE}${p.img}" alt="${p.name}" loading="lazy"
+            <img src="${imgSrc(p.img)}" alt="${p.name}" loading="lazy"
                  onerror="this.parentElement.innerHTML='<div class=\\'img-ph\\'>${p.lang==='cn'?'🀄':'🎴'}</div>'">
             <div class="foil"></div>
           </div>
@@ -4093,7 +4096,7 @@ void main(){
       return `<div class="case-card${caseOutOfStock?' card-disabled':''}" data-id="${p.id}" role="button" tabindex="0" style="cursor:pointer" onclick="if(!event.target.closest('.card-qty')&&!event.target.closest('.add-btn'))openCaseModal(${p.id},${caseQty},${caseTotal},${tierPrice},${saving})">
         <div class="case-img">
           ${caseOutOfStock?`<span class="badge-soon" style="position:absolute;top:12px;right:12px;z-index:2">${t('product.soon')}</span>`:''}
-          <img src="${IMG_BASE}${p.img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
+          <img src="${imgSrc(p.img)}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
           <div class="foil"></div>
         </div>
         <div class="case-body">
@@ -4217,7 +4220,7 @@ void main(){
     // Image
     let imgEl=modalImg.querySelector('img');
     if(!imgEl){imgEl=document.createElement('img');modalImg.insertBefore(imgEl,modalImg.querySelector('.foil-modal'));}
-    imgEl.src=IMG_BASE+p.img; imgEl.alt=p.name; imgEl.loading='lazy';
+    imgEl.src=imgSrc(p.img); imgEl.alt=p.name; imgEl.loading='lazy';
     imgEl.onerror=()=>{imgEl.style.display='none';}; imgEl.style.display='';
 
     // Quantité de cases déjà au panier
@@ -4308,7 +4311,7 @@ void main(){
     const p=products.find(x=>x.id===id); if(!p) return;
     let imgEl=modalImg.querySelector('img');
     if(!imgEl){imgEl=document.createElement('img');modalImg.insertBefore(imgEl,modalImg.querySelector('.foil-modal'));}
-    imgEl.src=IMG_BASE+p.img; imgEl.alt=p.name; imgEl.loading='lazy';
+    imgEl.src=imgSrc(p.img); imgEl.alt=p.name; imgEl.loading='lazy';
     imgEl.onerror=()=>{imgEl.style.display='none';};
     imgEl.style.display='';
     const fp=p.tiers?p.tiers[0].p:p.price;
@@ -4328,7 +4331,7 @@ void main(){
           if(!other) return '';
           const otherPrice = getBasePrice(other);
           return `<div class="bundle-item" onclick="cardChangeQty(${other.id},1)">
-            <img src="${IMG_BASE}${other.img}" alt="${other.name}" style="width:44px;height:44px;object-fit:contain;border-radius:8px;background:var(--glass);flex-shrink:0;padding:2px" onerror="this.style.display='none'">
+            <img src="${imgSrc(other.img)}" alt="${other.name}" style="width:44px;height:44px;object-fit:contain;border-radius:8px;background:var(--glass);flex-shrink:0;padding:2px" onerror="this.style.display='none'">
             <div style="flex:1;min-width:0">
               <div class="bi-names" style="font-weight:600;margin-bottom:2px">${other.name}</div>
               <div style="font-size:11px;color:var(--text-dim)">${other.sub}${otherPrice?` · ${otherPrice}${t('modal.per_box')}`:''}</div>
@@ -4409,7 +4412,7 @@ void main(){
     const p = MYSTERY_BOX;
     const imgEl = modalImg.querySelector('img') || document.createElement('img');
     if(!modalImg.querySelector('img')) modalImg.insertBefore(imgEl, modalImg.querySelector('.foil-modal'));
-    imgEl.src = IMG_BASE + p.img; imgEl.alt = p.name; imgEl.style.display = '';
+    imgEl.src = imgSrc(p.img); imgEl.alt = p.name; imgEl.style.display = '';
     modalBody.innerHTML = `
       <div class="modal-tag"><span class="vip-badge vip-diamond" style="margin:0;font-size:9px">🎁 MYSTERY BOX</span></div>
       <div class="modal-name">${p.name}</div>
@@ -4444,7 +4447,7 @@ void main(){
       toast.innerHTML='<img id="ctImg" src="" alt=""><div><div class="ct-name" id="ctName"></div><div class="ct-sub" id="ctSub">Ajouté au panier ✓</div></div>';
       document.body.appendChild(toast);
     }
-    document.getElementById('ctImg').src=IMG_BASE+(p.img||'');
+    document.getElementById('ctImg').src=imgSrc(p.img);
     document.getElementById('ctName').textContent=p.name;
     toast.classList.add('show');
     clearTimeout(_toastTimer);
@@ -4694,7 +4697,7 @@ void main(){
         return `
         <div class="cart-item">
           <div class="thumb" style="background:rgba(127,217,255,.06);border-radius:9px;display:flex;align-items:center;justify-content:center">
-            <img src="${IMG_BASE}${esc(i.img)}" alt="${esc(i.name)}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">
+            <img src="${esc(imgSrc(i.img))}" alt="${esc(i.name)}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">
           </div>
           <div class="info">
             <div class="n">${esc(i.name)}</div>
@@ -4713,7 +4716,7 @@ void main(){
       }
       return `
       <div class="cart-item">
-        <div class="thumb"><img src="${IMG_BASE}${esc(i.img)}" alt="${esc(i.name)}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'"></div>
+        <div class="thumb"><img src="${esc(imgSrc(i.img))}" alt="${esc(i.name)}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'"></div>
         <div class="info">
           <div class="n">${esc(i.name)}</div>
           <div class="s">${safeQty} × ${safePrice}€/boîte</div>
@@ -5941,7 +5944,7 @@ void main(){
       const p=PURCHASES[idx%PURCHASES.length];
       const fn=FIRST_NAMES[Math.floor(Math.random()*FIRST_NAMES.length)];
       const agoText=p.ago<60?`il y a ${p.ago} min`:`il y a ${Math.round(p.ago/60)}h`;
-      ptImg.src=IMG_BASE+p.img;
+      ptImg.src=imgSrc(p.img);
       ptName.textContent=fn+' a commandé '+p.name;
       ptInfo.textContent=p.city+' · '+agoText;
       toast.classList.add('show');

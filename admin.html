@@ -535,7 +535,8 @@ tr:hover td{background:rgba(255,255,255,.015)}
       <div class="calc">
         <div class="table-wrap"><table class="calc-tbl sl-tbl"><tr><th></th><th>Booster</th><th>Langue</th><th>Type</th><th>Valeur marché €</th><th>Prix d'achat €</th><th>Stock</th><th></th></tr><tbody id="slRows"></tbody></table></div>
         <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
-          <button class="btn-sm" id="slAdd">+ Ajouter un lot</button>
+          <select id="slShop" class="btn-sm" style="max-width:290px"></select>
+          <button class="btn-sm" id="slAdd">+ Lot libre</button>
           <button class="btn-sm crd-go" id="slSave">💾 Enregistrer les lots scellés</button>
           <span class="crd-sub" id="slMeta" style="align-self:center"></span>
         </div>
@@ -665,28 +666,29 @@ let _code=sessionStorage.getItem('eden_admin_code')||'', _orders=[], _liveTimer=
 
 /* Prix de référence = tier[0].p de lib/prices.js — SOURCE DE VÉRITÉ */
 const PRODUCTS=[
-  {id:1, name:'CN151 Vol.3',            lang:'cn',price:65},
-  {id:2, name:'CN151 Vol.4',            lang:'cn',price:65},
-  {id:3, name:'CN151 Vol.1',            lang:'cn',price:65},
-  {id:4, name:'CN151 Vol.2',            lang:'cn',price:65},
-  {id:5, name:'Gempack Vol.3',          lang:'cn',price:65},
-  {id:6, name:'Gempack Vol.2',          lang:'cn',price:65},
-  {id:7, name:'Gempack Vol.1',          lang:'cn',price:null},
-  {id:8, name:'Gempack Vol.4',          lang:'cn',price:50},
-  {id:9, name:'Gempack Vol.5',          lang:'cn',price:50},
-  {id:10,name:'M2a — Méga Dream EX',   lang:'jp',price:85},
-  {id:11,name:'M2 — Méga Inferno X',   lang:'jp',price:110},
-  {id:12,name:'M1L — Méga Brave',      lang:'jp',price:89},
-  {id:13,name:'M1s — Méga Symphonia',  lang:'jp',price:80},
-  {id:14,name:'M3 — Nihil Zero',       lang:'jp',price:80},
-  {id:15,name:'SV8a — Terastal Festival',lang:'jp',price:100},
-  {id:16,name:'SV9 — Battle Partners', lang:'jp',price:80},
-  {id:17,name:'SV9a — Heat Wave Arena',lang:'jp',price:99},
-  {id:18,name:'SV10 — Glory Team Rocket',lang:'jp',price:130},
-  {id:19,name:'SV11b — Black Bolt',    lang:'jp',price:115},
-  {id:20,name:'SV11w — White Flare',   lang:'jp',price:110},
-  {id:21,name:'SV2a — Pokémon 151',   lang:'jp',price:299},
-  {id:22,name:'M5 — Mega Abyss Eye',  lang:'jp',price:120},
+  {id:1, name:'CN151 Vol.3',            lang:'cn',price:65,img:'151c-vol3.png',boosters:15},
+  {id:2, name:'CN151 Vol.4',            lang:'cn',price:65,img:'151c-vol4.png',boosters:15},
+  {id:3, name:'CN151 Vol.1',            lang:'cn',price:65,img:'151c-vol1.png',boosters:15},
+  {id:4, name:'CN151 Vol.2',            lang:'cn',price:65,img:'151c-vol2.png',boosters:15},
+  {id:5, name:'Gempack Vol.3',          lang:'cn',price:65,img:'gem-pack-vol3.png',boosters:18},
+  {id:6, name:'Gempack Vol.2',          lang:'cn',price:65,img:'gem-pack-vol2.png',boosters:15},
+  {id:7, name:'Gempack Vol.1',          lang:'cn',price:null,img:'gem-pack-vol1.png',boosters:15},
+  {id:8, name:'Gempack Vol.4',          lang:'cn',price:50,img:'gem-pack-vol4.png',boosters:15},
+  {id:9, name:'Gempack Vol.5',          lang:'cn',price:50,img:'gem-pack-vol5.png',boosters:15},
+  {id:10,name:'M2a — Méga Dream EX',   lang:'jp',price:85,img:'mega-dream-ex-m2a.png',boosters:10},
+  {id:11,name:'M2 — Méga Inferno X',   lang:'jp',price:110,img:'inferno-x-m2.png',boosters:30},
+  {id:12,name:'M1L — Méga Brave',      lang:'jp',price:89,img:'mega-brave-m1l.png',boosters:30},
+  {id:13,name:'M1s — Méga Symphonia',  lang:'jp',price:80,img:'mega-symphonia-m1s.png',boosters:30},
+  {id:14,name:'M3 — Nihil Zero',       lang:'jp',price:80,img:'munikis-zero-m3.png',boosters:30},
+  {id:15,name:'SV8a — Terastal Festival',lang:'jp',price:100,img:'terastal-fest-sv8a.png',boosters:10},
+  {id:16,name:'SV9 — Battle Partners', lang:'jp',price:80,img:'battle-partners-sv9.png',boosters:30},
+  {id:17,name:'SV9a — Heat Wave Arena',lang:'jp',price:99,img:'heat-wave-sv9a.png',boosters:30},
+  {id:18,name:'SV10 — Glory Team Rocket',lang:'jp',price:130,img:'glory-rocket-sv10.png',boosters:30},
+  {id:19,name:'SV11b — Black Bolt',    lang:'jp',price:115,img:'black-bolt-sv11b.png',boosters:20},
+  {id:20,name:'SV11w — White Flare',   lang:'jp',price:110,img:'white-flare-sv11w.png',boosters:20},
+  {id:21,name:'SV2a — Pokémon 151',   lang:'jp',price:299,img:'pokemon-151-sv2a.png',boosters:20},
+  {id:22,name:'M5 — Mega Abyss Eye',  lang:'jp',price:120,img:'abyss-eye-m5.png',boosters:30},
+  {id:23,name:'Collection 30 ans (30thC)',lang:'cn',price:99,img:'/image/products/cn-30ans-display.webp',boosters:20,defStock:0},
 ];
 
 /* Cases — expédition directe Asie, pas de stock */
@@ -854,6 +856,30 @@ const SEALED_PRESETS=[
   {id:'cn151-3',name:'Booster CN151 Vol.3',lang:'cn',kind:'booster',tag:'BOOSTER',img:'/image/packs/cn151-3.webp',value:5,cost:0,qty:0},
   {id:'cn-30ans',name:'Booster 30 ans (chinois)',lang:'cn',kind:'booster',tag:'BOOSTER30',img:'/image/packs/cn-30ans.png',value:8,cost:0,qty:0},
 ];
+// Lots tirés des produits de la boutique : photo du booster seul quand on l'a, sinon photo de la display
+const SHOP_IMG='https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/';
+const PACK_PHOTO={21:'/image/packs/sv2a.webp',15:'/image/packs/sv8a.webp',18:'/image/packs/sv10.webp',10:'/image/packs/m2a.webp',1:'/image/packs/cn151-3.webp',23:'/image/packs/cn-30ans.png'};
+const shopImg=p=>/^(\/|https?:)/.test(p.img)?p.img:SHOP_IMG+p.img;
+const shopLotId=(p,kind)=>'shop-'+p.id+(kind==='display'?'-d':'');
+// Lots déjà présents d'origine (mêmes boosters que la boutique) : comptent comme déjà ajoutés
+const PRESET_LOT={21:'sv2a',15:'sv8a',18:'sv10',10:'m2a',1:'cn151-3',23:'cn-30ans'};
+const lotTaken=(p,kind)=>_sealed.some(l=>l.id===shopLotId(p,kind)||(kind==='booster'&&l.id===PRESET_LOT[p.id]));
+function shopLot(p,kind){
+  const d=kind==='display';
+  return {id:shopLotId(p,kind),name:(d?'Display ':'Booster ')+p.name,lang:p.lang,kind,tag:d?'DISPLAY':(p.id===23?'BOOSTER30':'BOOSTER'),
+    img:d?shopImg(p):(PACK_PHOTO[p.id]||shopImg(p)),value:d?(p.price||0):(p.price&&p.boosters?Math.round(p.price/p.boosters*2)/2:0),cost:0,qty:0};
+}
+function renderShopPicker(){
+  const sel=document.getElementById('slShop'); if(!sel) return;
+  const opts=kind=>PRODUCTS.map(p=>{const on=lotTaken(p,kind);return `<option value="${kind}:${p.id}" ${on?'disabled':''}>${p.lang.toUpperCase()} · ${escH(p.name)}${on?' ✓':''}</option>`;}).join('');
+  sel.innerHTML=`<option value="">＋ Ajouter depuis la boutique…</option><optgroup label="Booster à l'unité">${opts('booster')}</optgroup><optgroup label="Display entière (gros lot)">${opts('display')}</optgroup>`;
+}
+document.getElementById('slShop').onchange=e=>{
+  const [kind,id]=e.target.value.split(':'), p=PRODUCTS.find(x=>x.id===+id); e.target.value='';
+  if(!p||lotTaken(p,kind)) return;
+  _sealed.push(shopLot(p,kind)); renderSealed(); if(isLegend()) fillPackForm(true);
+  toast((kind==='display'?'Display ':'Booster ')+p.name+' ajouté — indique ton stock puis enregistre');
+};
 const SL_TAGS={BOOSTER:'Booster',BOOSTER30:'Booster 30 ans (graal)',DISPLAY:'Display'};
 function renderSealed(){
   const rows=document.getElementById('slRows'); if(!rows) return;
@@ -866,6 +892,7 @@ function renderSealed(){
     <td><input class="sl-in" data-i="${i}" data-k="cost" type="number" min="0" step="0.1" value="${l.cost||''}" placeholder="—" style="width:80px"></td>
     <td><input class="sl-in" data-i="${i}" data-k="qty" type="number" min="0" step="1" value="${l.qty||0}" style="width:70px"></td>
     <td><button class="btn-sm crd-del" data-del="${i}">✕</button></td></tr>`).join('');
+  renderShopPicker();
   const n=_sealed.reduce((a,l)=>a+(+l.qty||0),0);
   document.getElementById('slMeta').textContent=`${n} booster${n>1?'s':''} en stock · ${Math.floor(n/LEGEND_DRAWS)} Booster${Math.floor(n/LEGEND_DRAWS)>1?'s':''} Légende possibles`;
   rows.querySelectorAll('.sl-in').forEach(el=>el.oninput=el.onchange=()=>{const l=_sealed[+el.dataset.i],k=el.dataset.k;l[k]=['value','cost','qty'].includes(k)?+el.value||0:el.value;if(k==='tag')l.kind=el.value==='DISPLAY'?'display':'booster';if(isLegend())calcPack();});
@@ -1470,7 +1497,7 @@ function buildProduits(prices,stocks){
     <td><span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;background:${p.lang==='cn'?'rgba(168,255,212,.15)':'rgba(127,217,255,.15)'};color:${p.lang==='cn'?'var(--c4)':'var(--c1)'}">${p.lang.toUpperCase()}</span> <span style="font-size:13px">${p.name}</span></td>
     <td style="color:var(--dim);font-size:12px">${p.price!=null?p.price+' €':'—'}</td>
     <td><input type="number" id="ap-${p.id}" value="${prices[p.id]??p.price??''}" placeholder="${p.price??'—'}" style="width:90px;padding:6px 10px;background:var(--glass);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none"></td>
-    <td><input type="number" id="as-${p.id}" value="${stocks[p.id]??''}" placeholder="illim." style="width:80px;padding:6px 10px;background:var(--glass);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none"></td>
+    <td><input type="number" id="as-${p.id}" value="${stocks[p.id]??p.defStock??''}" placeholder="illim." style="width:80px;padding:6px 10px;background:var(--glass);border:1px solid var(--gb);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none"></td>
   </tr>`).join('');
 }
 document.getElementById('resetAllBtn').addEventListener('click',async()=>{

@@ -3,7 +3,7 @@
 
 const { PAYPAL_BASE, getPayPalToken } = require('../lib/paypal');
 const jwt = require('jsonwebtoken');
-const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, PRODUCT_LANG, effectiveDiscountPct, getServerPrice, computeLangPools, CASE_CATALOG, getCasePrice } = require('../lib/prices');
+const { PROMO_CODES, PRIZE_CODES, FIRST_ORDER_CODES, WHEEL_ONLY_CODES, PRODUCT_LANG, DEFAULT_STOCKS, effectiveDiscountPct, getServerPrice, computeLangPools, CASE_CATALOG, getCasePrice } = require('../lib/prices');
 const { wonCodeValid } = require('../lib/gift');
 
 const CORS_ORIGIN = process.env.SITE_URL || 'https://edenprojecttcg.com';
@@ -134,7 +134,7 @@ module.exports = async (req, res) => {
       const serverPrice = getServerPrice(item.id, qty, adminPrices, pooledQty);
       if (serverPrice === null) continue;
       // Vérification stock côté serveur
-      const availableStock = adminStocks[String(item.id)];
+      const availableStock = adminStocks[String(item.id)] ?? DEFAULT_STOCKS[item.id];
       // Mystery Box (id 0) : fermée par défaut, vente possible uniquement si explicitement activée en admin
       if (item.id === 0 && !(availableStock > 0)) {
         return res.status(400).json({ error: `${item.name || 'Mystery Box'} n'est plus en stock` });

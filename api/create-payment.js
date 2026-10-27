@@ -138,14 +138,14 @@ module.exports = async (req, res) => {
         continue;
       }
 
-      const { PRODUCT_LANG } = require('../lib/prices');
+      const { PRODUCT_LANG, DEFAULT_STOCKS } = require('../lib/prices');
       const lang = PRODUCT_LANG[item.id];
       const pooledQty = lang && langPools[lang] ? langPools[lang] : qty;
       const serverPrice = getServerPrice(item.id, qty, adminPrices, pooledQty);
       if (serverPrice === null) continue;
       // Vérification stock côté serveur
       const stockKey = String(item.id);
-      const availableStock = adminStocks[stockKey];
+      const availableStock = adminStocks[stockKey] ?? DEFAULT_STOCKS[item.id];
       // Mystery Box (id 0) : fermée par défaut, vente possible uniquement si explicitement activée en admin
       if (item.id === 0 && !(availableStock > 0)) {
         return res.status(400).json({ error: `${item.name || 'Mystery Box'} n'est plus en stock` });
