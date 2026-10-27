@@ -1758,6 +1758,8 @@ async function buyFlow(b, n) {
   S.mode = 'busy'; $('#openBtn').disabled = true; $('#openBtn').textContent = 'Ouverture du paiement…';
   try {
     const r = await api('buy', { boxId: b.id, count: n, embedded: true });
+    // Mode test (prix 0 €, admin) : boosters ajoutés sans paiement, on enchaîne directement sur l'ouverture
+    if (r.test) { S.st = r.state; S.mode = 'browse'; return openFlow(); }
     if (r.url) { $('#openBtn').textContent = 'Redirection vers le paiement…'; location.href = r.url; return; }
     $('#payTitle').textContent = `${n} × ${b.name}`;
     $('#paySub').textContent = `${(b.price * n).toFixed(2).replace('.', ',')} € · paiement sécurisé par Stripe`;
@@ -2033,6 +2035,7 @@ function renderPanel() {
   if (!b.available && !have) { btn.innerHTML = 'Bientôt disponible'; btn.disabled = true; }
   else if (!S.token) btn.innerHTML = 'Se connecter pour ouvrir';
   else if (have >= S.count) btn.innerHTML = `Ouvrir${S.count > 1 ? ' ×' + S.count : ''}`;
+  else if (b.test) btn.innerHTML = `🧪 Ouvrir${S.count > 1 ? ' ×' + S.count : ''} · test gratuit`;
   else btn.innerHTML = `Acheter${S.count > 1 ? ' ×' + S.count : ''} · <span class="num">${eur(b.price * S.count)}</span>`;
 }
 // Panneau du booster cadeau : gains et chances, état du compte

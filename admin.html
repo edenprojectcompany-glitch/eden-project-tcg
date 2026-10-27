@@ -803,7 +803,8 @@ function packOdds(cards,b,k){
 const packEV=rows=>rows.reduce((a,c)=>a+c.p*c.value,0);
 function calcPack(){
   const out=document.getElementById('pkOut'); if(!out) return;
-  const f0=packForm(), D=isLegend()?LEGEND_DRAWS:1;
+  const f1=packForm(), D=isLegend()?LEGEND_DRAWS:1, testMode=!(f1.price>0);
+  const f0=testMode?{...f1,price:PACK_PRESETS[f1.id].price}:f1;
   // Le calcul se fait par tirage : prix et frais fixes répartis sur les D tirages du booster
   const f={...f0,price:f0.price/D,feeFix:f0.feeFix/D};
   const pick=(r,tier)=>calcPool().filter(c=>c.qty>0&&r.includes(c.rarity)).map(c=>({...c,tier}));
@@ -820,6 +821,7 @@ function calcPack(){
     rows=packOdds(cards,b,k); ev=packEV(rows);
   }
   const profit=f.price-fees-ev, marginPct=f.price?profit/f.price*100:0;
+  const testNote=testMode?`<p class="crd-msg" style="margin-bottom:10px">🧪 <b>Prix 0 € = mode test</b> : enregistre ce réglage, puis ouvre ce booster gratuitement dans le Vault (seulement avec ton code admin). Les chances ci-dessous sont calculées comme s'il était vendu ${eur(f0.price)}. Remets le vrai prix avant d'ouvrir au public.</p>`:'';
   // Coût réel (prix d'achat des lots), quand il est renseigné
   const hasCost=rows.some(c=>c.cost>0), realCost=rows.reduce((a,c)=>a+c.p*(c.cost||0),0), realProfit=(f.price-fees-realCost)*D;
   if(ev>target+0.005){
@@ -831,7 +833,7 @@ function calcPack(){
   const bonusCost=S.length?(avg(S)-avg(B))/100:0;
   const life=rows.map(c=>({c,n:c.qty/c.p})).sort((a,b)=>a.n-b.n)[0];
   rows.sort((a,b)=>b.value-a.value);
-  out.innerHTML=(note?`<div class="calc-note">${note}</div>`:'')+(noValue.length?`<div class="calc-note">ℹ️ ${noValue.length} carte${noValue.length>1?'s':''} sans valeur en € ignorée${noValue.length>1?'s':''} : ${noValue.map(c=>escH(c.nameFr||c.name)).join(', ')}.</div>`:'')+
+  out.innerHTML=testNote+(note?`<div class="calc-note">${note}</div>`:'')+(noValue.length?`<div class="calc-note">ℹ️ ${noValue.length} carte${noValue.length>1?'s':''} sans valeur en € ignorée${noValue.length>1?'s':''} : ${noValue.map(c=>escH(c.nameFr||c.name)).join(', ')}.</div>`:'')+
   `<div class="calc-kpis">
     <div class="calc-kpi"><small>Valeur moyenne d'une ouverture${D>1?` (${D} lots)`:''}</small><b>${eur(ev*D)}</b></div>
     <div class="calc-kpi"><small>Frais de paiement</small><b>${eur(fees*D)}</b></div>
@@ -904,7 +906,7 @@ document.getElementById('slSave').onclick=async()=>{try{const d=await cardsApi('
 async function savePack(){
   try{const d=await cardsApi('',{action:'save_pack',pack:packForm()});_packs=d.packs;toast('Réglage enregistré');}catch(e){toast(e.message,'err');}
 }
-document.getElementById('pkId').onchange=fillPackForm;
+document.getElementById('pkId').onchange=()=>fillPackForm();
 document.getElementById('pkSave').onclick=savePack;
 document.querySelector('.calc-form').addEventListener('input',calcPack);
 
@@ -942,7 +944,7 @@ document.getElementById('vltGrant').onclick=async()=>{
 };
 
 async function updateCard(id,patch){try{const d=await cardsApi('',{action:'update',id,...patch});_crdStock=d.cards;renderCardStock();toast('Enregistré');}catch(e){toast(e.message,'err');}}
-async function deleteCard(id){const c=_crdStock.find(x=>x.id===id); if(!confirm('Retirer '+(c.nameFr||c.name)+' du stock ?'))return; try{const d=await cardsApi('',{action:'delete',id});_crdStock=d.cards;renderCardStock();}catch(e){toast(e.message,'err');}}
+async function deleteCard(id){const c=_crdStock.find(x=>x.id===id); try{const d=await cardsApi('',{action:'delete',id});_crdStock=d.cards;renderCardStock();toast((c?(c.nameFr||c.name):'Carte')+' retirée du stock');}catch(e){toast(e.message,'err');}}
 document.getElementById('crdGo').onclick=searchCards;
 document.getElementById('crdQ').addEventListener('keydown',e=>{if(e.key==='Enter')searchCards();});
 

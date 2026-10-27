@@ -174,7 +174,10 @@ function packSource(id, cards, sealed, packs) {
   const info = PACK_INFO[id], draws = info.draws || 1;
   const saved = (packs && packs[id]) || {};
   // Sans réglage enregistré dans le calculateur : réglage par défaut (mêmes valeurs que les préréglages de l'admin)
-  const pack = { ...(info.sealed ? DEFAULT_LEGEND : DEMO_PACKS[id]), ...(saved.price > 0 || info.sealed ? saved : {}) };
+  const base = info.sealed ? DEFAULT_LEGEND : DEMO_PACKS[id];
+  // Prix enregistré à 0 € = mode test : chances calculées sur le prix par défaut, ouverture gratuite réservée à l'admin
+  const test = !!(packs && packs[id]) && !(saved.price > 0);
+  const pack = { ...base, ...(saved.price > 0 || info.sealed || test ? saved : {}), ...(test ? { price: base.price, test } : {}) };
   const perDraw = { ...pack, price: (+pack.price || 0) / draws, feeFix: (+pack.feeFix || 0) / draws };
   return { info, draws, pack, perDraw, pool: info.sealed ? sealedPool(sealed) : (cards || []), key: info.sealed ? K.sealed : K.cards };
 }
@@ -193,7 +196,7 @@ async function catalog(kv) {
     };
     const inStock = rows.reduce((a, r) => a + r.qty, 0);
     boxes.push({
-      id, name: pack.name || info.name, tagline: info.tagline, price: pack.price > 0 ? pack.price : info.price, theme: info.theme,
+      id, name: pack.name || info.name, tagline: info.tagline, price: pack.test ? 0 : pack.price > 0 ? pack.price : info.price, test: !!pack.test, theme: info.theme,
       art: info.art, artKind: info.artKind, artAspect: info.artAspect || 16 / 9, draws, available: rows.length > 0 && inStock >= draws,
       // Booster Légende : liste des boosters à gagner (lots scellés enregistrés, sinon préréglages)
       contents: info.sealed ? ((sealed || []).length ? sealed : DEMO_SEALED).filter(l => (pack.base || []).includes(l.tag)).map(l => l.name.replace(/^Booster /, '')) : undefined,
@@ -290,6 +293,13 @@ async function buy(kv, req, user, { boxId, count, embedded }) {
   if (!box || !box.available) throw new HttpError(409, 'Ce booster sera bientôt disponible');
   const inStock = Math.floor(box.table.reduce((a, r) => a + r.qty, 0) / (box.draws || 1));
   if (inStock < n) throw new HttpError(409, inStock ? `Plus que ${inStock} booster${inStock > 1 ? 's' : ''} disponible${inStock > 1 ? 's' : ''}` : 'Booster en rupture de stock');
+  // Mode test (prix 0 €) : boosters ajoutés sans paiement, uniquement avec le code admin
+  if (box.test) {
+    if (!isAdmin(req)) throw new HttpError(409, 'Ce booster sera bientôt disponible');
+    const have = Number((await kv.hgetall(K.credits(user.id)) || {})[box.id]) || 0;
+    if (n > have) await kv.hincrby(K.credits(user.id), box.id, n - have);
+    return { test: true, state: await state(kv, user) };
+  }
   const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
   // Clé publique Stripe : faite pour être visible côté navigateur (la clé secrète reste dans STRIPE_SECRET_KEY)
   const PK = process.env.STRIPE_PUBLISHABLE_KEY || 'pk_live_51BrnndJwQ3fowDgxPubsf0CFPy9mWuZBEahgh0UMAaUeIAs3qcSx1gG3tThPnApmTkbyuig5Z3Vhkm9GluZGSuyy00bthfqERW';
