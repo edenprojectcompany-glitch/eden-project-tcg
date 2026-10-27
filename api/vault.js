@@ -283,7 +283,7 @@ async function open(kv, user, { boxId, count }) {
   return { results, state: await state(kv, user) };
 }
 
-async function buy(kv, req, user, { boxId, count }) {
+async function buy(kv, req, user, { boxId, count, embedded }) {
   const n = Math.min(MAX_OPEN, Math.max(1, Math.floor(+count || 1)));
   const { boxes } = await catalog(kv);
   const box = boxes.find(b => b.id === boxId);
@@ -291,15 +291,20 @@ async function buy(kv, req, user, { boxId, count }) {
   const inStock = Math.floor(box.table.reduce((a, r) => a + r.qty, 0) / (box.draws || 1));
   if (inStock < n) throw new HttpError(409, inStock ? `Plus que ${inStock} booster${inStock > 1 ? 's' : ''} disponible${inStock > 1 ? 's' : ''}` : 'Booster en rupture de stock');
   const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  // Clé publique Stripe : faite pour être visible côté navigateur (la clé secrète reste dans STRIPE_SECRET_KEY)
+  const PK = process.env.STRIPE_PUBLISHABLE_KEY || 'pk_live_51BrnndJwQ3fowDgxPubsf0CFPy9mWuZBEahgh0UMAaUeIAs3qcSx1gG3tThPnApmTkbyuig5Z3Vhkm9GluZGSuyy00bthfqERW';
+  const inline = !!embedded && /^pk_(live|test)_/.test(PK);
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     customer_email: user.email,
     line_items: [{ quantity: n, price_data: { currency: 'eur', unit_amount: Math.round(box.price * 100), product_data: { name: `Eden Vault — ${box.name}`, description: `${box.tagline}. La carte est conservée dans ton coffre jusqu'à ce que tu demandes l'envoi.` } } }],
     metadata: { type: 'vault', uid: user.id, email: user.email, boxId: box.id, count: String(n) },
-    success_url: `${SITE}/vault?paid={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${SITE}/vault?cancel=1`,
+    // Paiement dans une fenêtre par-dessus le jeu (clé publique requise), sinon page Stripe classique
+    ...(inline
+      ? { ui_mode: 'embedded', redirect_on_completion: 'never' }
+      : { success_url: `${SITE}/vault?paid={CHECKOUT_SESSION_ID}`, cancel_url: `${SITE}/vault?cancel=1` }),
   });
-  return { url: session.url };
+  return inline ? { clientSecret: session.client_secret, publishableKey: PK } : { url: session.url };
 }
 
 async function rotateSeed(kv, user, { clientSeed }) {
