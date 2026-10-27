@@ -460,14 +460,16 @@ const itemLine = it => [rarFr(it.rarity), it.set, it.number].filter(Boolean).joi
 // SON (synthèse WebAudio)
 // ════════════════════════════════════════════════════════════
 const sfx = (() => {
-  let ctx, master, verb;
+  let ctx, master, verb, mainOut;
   const ensure = () => {
     if (!ctx) {
       const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
       ctx = new AC();
       master = ctx.createGain(); master.gain.value = .6;
       const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3;
-      master.connect(comp).connect(ctx.destination);
+      // Sortie générale : 🔇 la ferme (bruitages, musique et réverbération)
+      mainOut = ctx.createGain(); mainOut.gain.value = S.muted ? 0 : 1;
+      master.connect(comp).connect(mainOut).connect(ctx.destination);
       // Réverbération « chambre forte » : réponse impulsionnelle générée (décroissance exponentielle)
       const len = ctx.sampleRate * 2.6, ir = ctx.createBuffer(2, len, ctx.sampleRate);
       for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
@@ -476,7 +478,7 @@ const sfx = (() => {
       verb.connect(conv).connect(comp);
       loadBuf('tear'); loadBuf('handle');
     }
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state === 'suspended' && !document.hidden) ctx.resume();
     return ctx;
   };
   const ok = () => S.muted ? null : ensure();
@@ -553,6 +555,9 @@ const sfx = (() => {
   };
   const A = [220, 277.18, 329.63, 440, 554.37, 659.25, 880, 1108.73, 1318.51];
   return {
+    setMuted(m) { if (mainOut) mainOut.gain.setTargetAtTime(m ? 0 : 1, ctx.currentTime, .04); },
+    // Onglet caché, appli quittée, écran verrouillé : tout l'audio s'arrête, et reprend au retour
+    pause(p) { if (!ctx) return; p ? ctx.suspend() : ctx.resume(); },
     click() { if (!ok()) return; bell(1760, ctx.currentTime, .12, .03, 2, 1.5); },
     // Prise en main du sachet : froissement doux du plastique
     handle() { if (!ok()) return; if (play('handle', 0, undefined, .8)) return; const t = ctx.currentTime; crinkle(t, .5, 70, .2, 600, 3500); crinkle(t + .55, .35, 50, .15, 700, 3200); },
@@ -575,7 +580,8 @@ const sfx = (() => {
     coin() { if (!ok()) return; const t = ctx.currentTime; bell(2637, t, .5, .05, 1.41, 2); bell(3520, t + .07, .7, .04, 1.41, 2); },
     // ── Musique : « La Chambre forte », thème orchestral original en ré mineur, 66 BPM ──
     music: (() => {
-      let bus = null, timer = null, nextBar = 0, barIdx = 0, on = false;
+      // bus = son direct, wetBus = écho : tous deux coupés à l'arrêt (sinon l'écho des notes déjà programmées continuait)
+      let bus = null, wetBus = null, timer = null, nextBar = 0, barIdx = 0, on = false;
       const BEAT = 60 / 66, BAR = BEAT * 4;
       const hz = m => 440 * Math.pow(2, (m - 69) / 12);          // note MIDI → fréquence
       // Grille : Dm | Bb | F | C | Dm | Gm | Bb | A (accords en notes MIDI)
@@ -588,7 +594,7 @@ const sfx = (() => {
       const voice = (type, f, t, d, vol, { a = .3, cut = 1400, det = 7, vib = 0, wet = .55, q = .7 } = {}) => {
         const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(cut * .55, t); lp.frequency.linearRampToValueAtTime(cut, t + a); lp.Q.value = q;
         const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + a); g.gain.setValueAtTime(vol, t + Math.max(a, d - .35)); g.gain.linearRampToValueAtTime(0, t + d + .25);
-        lp.connect(g); g.connect(bus); const w = ctx.createGain(); w.gain.value = wet; g.connect(w).connect(verb);
+        lp.connect(g); g.connect(bus); const w = ctx.createGain(); w.gain.value = wet; g.connect(w).connect(wetBus);
         let lfo = null;
         if (vib) { lfo = ctx.createOscillator(); lfo.frequency.value = 5.2; const lg = ctx.createGain(); lg.gain.value = vib; lfo.connect(lg); lfo.start(t); lfo.stop(t + d + .4); lfo.__g = lg; }
         for (const dt of det ? [-det, det] : [0]) { const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; o.detune.value = dt; if (lfo) lfo.__g.connect(o.detune); o.connect(lp); o.start(t); o.stop(t + d + .4); }
@@ -596,12 +602,12 @@ const sfx = (() => {
       const timpani = (f, t, vol) => {
         const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(f * 1.5, t); o.frequency.exponentialRampToValueAtTime(f, t + .08);
         g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + 1.8);
-        o.connect(g); g.connect(bus); const w = ctx.createGain(); w.gain.value = .5; g.connect(w).connect(verb); o.start(t); o.stop(t + 2);
+        o.connect(g); g.connect(bus); const w = ctx.createGain(); w.gain.value = .5; g.connect(w).connect(wetBus); o.start(t); o.stop(t + 2);
         const n = ctx.sampleRate * .25 | 0, b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n * .15));
         const src = ctx.createBufferSource(); src.buffer = b; const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 380; const ng = ctx.createGain(); ng.gain.value = vol * .8;
         src.connect(lp).connect(ng).connect(bus); src.start(t);
       };
-      const harp = (f, t, vol) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + 1.6); o.connect(g); g.connect(bus); const w = ctx.createGain(); w.gain.value = .6; g.connect(w).connect(verb); o.start(t); o.stop(t + 1.7); };
+      const harp = (f, t, vol) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + 1.6); o.connect(g); g.connect(bus); const w = ctx.createGain(); w.gain.value = .6; g.connect(w).connect(wetBus); o.start(t); o.stop(t + 1.7); };
       const scheduleBar = (i, t) => {
         const section = Math.floor(i / 8) % 3, k = i % 8, ch = CH[k];   // 0 = intro, 1 = thème, 2 = thème + chœur
         // Cordes : nappe de l'accord
@@ -623,12 +629,12 @@ const sfx = (() => {
         start() {
           if (on || !ensure()) return; on = true;
           bus = ctx.createGain(); bus.gain.setValueAtTime(0, ctx.currentTime); bus.gain.linearRampToValueAtTime(.42, ctx.currentTime + 3); bus.connect(master);
+          wetBus = ctx.createGain(); wetBus.gain.setValueAtTime(0, ctx.currentTime); wetBus.gain.linearRampToValueAtTime(1, ctx.currentTime + 3); wetBus.connect(verb);
           nextBar = ctx.currentTime + .2; barIdx = 0; tick(); timer = setInterval(tick, 400);
         },
         stop() {
           if (!on) return; on = false; clearInterval(timer);
-          const b = bus; b.gain.cancelScheduledValues(ctx.currentTime); b.gain.setValueAtTime(b.gain.value, ctx.currentTime); b.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.2);
-          setTimeout(() => b.disconnect(), 1500);
+          for (const b of [bus, wetBus]) { b.gain.cancelScheduledValues(ctx.currentTime); b.gain.setValueAtTime(b.gain.value, ctx.currentTime); b.gain.linearRampToValueAtTime(0, ctx.currentTime + .4); setTimeout(() => b.disconnect(), 600); }
         },
         duck(v) { if (on && bus) { bus.gain.cancelScheduledValues(ctx.currentTime); bus.gain.linearRampToValueAtTime(v ? .14 : .42, ctx.currentTime + .6); } },
       };
@@ -1859,6 +1865,8 @@ async function openOne(st, r, prize, i, n) {
   scene.attach(prize);
   const bodyStart = pack.position.clone();
   const packMat = mat; packMat.transparent = true;
+  // Sachet illustré : le corps garde l'ancien dessin sous l'illustration, on le masque pour qu'il ne transparaisse pas pendant le fondu
+  if (pack.userData.art) packMat.visible = false;
   tween(900, e => { pack.position.y = bodyStart.y - e * 3.2; pack.rotation.x = e * .9; packMat.opacity = 1 - e; (pack.userData.art || []).forEach(m => { m.uniforms.op.value = 1 - e; }); }, E.inOut).then(() => { scene.remove(pack); packMat.dispose(); (pack.userData.art || []).forEach(m => m.dispose()); });
   await presentPrize(r, prize, wp, i, n, fx);
 }
@@ -2071,7 +2079,7 @@ function renderUser() {
 }
 function bumpChest() { const b = $('#chestBtn'); b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], { duration: 500, easing: 'cubic-bezier(.34,1.56,.64,1)' }); }
 function toast(msg, cls = '') { const t = document.createElement('div'); t.className = 'toast glass ' + cls; t.textContent = msg; $('#toasts').appendChild(t); setTimeout(() => t.remove(), 3200); }
-$('#soundBtn').onclick = () => { S.muted = !S.muted; try { localStorage.setItem('vault_muted', S.muted); } catch {} $('#soundBtn').textContent = S.muted ? '🔇' : '🔊'; sfx.click(); };
+$('#soundBtn').onclick = () => { S.muted = !S.muted; try { localStorage.setItem('vault_muted', S.muted); } catch {} $('#soundBtn').textContent = S.muted ? '🔇' : '🔊'; sfx.setMuted(S.muted); sfx.click(); syncMe(); };
 $('#soundBtn').textContent = S.muted ? '🔇' : '🔊';
 
 // Tiroir Coffre
@@ -2145,7 +2153,9 @@ const toggleMusic = () => { musicWanted = !sfx.music.on; try { localStorage.setI
 $('#musicBtn').onclick = toggleMusic; $('#meMusic').onclick = toggleMusic;
 const firstGesture = () => { if (musicWanted && !sfx.music.on) { sfx.music.start(); syncMe(); } removeEventListener('pointerdown', firstGesture, true); removeEventListener('keydown', firstGesture, true); };
 addEventListener('pointerdown', firstGesture, true); addEventListener('keydown', firstGesture, true);
-document.addEventListener('visibilitychange', () => { if (document.hidden) sfx.music.duck(true); else sfx.music.duck(false); });
+document.addEventListener('visibilitychange', () => sfx.pause(document.hidden));
+addEventListener('pagehide', () => sfx.pause(true));
+addEventListener('pageshow', e => { if (e.persisted && !document.hidden) sfx.pause(false); });
 $('#meLite').onclick = () => $('#liteBtn').click();
 syncMe();
 // Livraison depuis le coffre : branchée à l'étape suivante (relais Chronopost + Boxtal, comme la boutique)
