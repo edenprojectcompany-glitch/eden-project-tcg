@@ -689,6 +689,7 @@ const PRODUCTS=[
   {id:21,name:'SV2a — Pokémon 151',   lang:'jp',price:299,img:'pokemon-151-sv2a.png',boosters:20},
   {id:22,name:'M5 — Mega Abyss Eye',  lang:'jp',price:120,img:'abyss-eye-m5.png',boosters:30},
   {id:23,name:'Collection 30 ans (30thC)',lang:'cn',price:99,img:'/image/products/cn-30ans-display.webp',boosters:20,defStock:0},
+  {id:24,name:'M6 — Storm Emeralda',lang:'jp',price:120,img:'/image/products/m6-display.webp',boosters:30,defStock:0},
 ];
 
 /* Cases — expédition directe Asie, pas de stock */
@@ -860,7 +861,7 @@ const SEALED_PRESETS=[
 ];
 // Lots tirés des produits de la boutique : photo du booster seul quand on l'a, sinon photo de la display
 const SHOP_IMG='https://raw.githubusercontent.com/edenprojectcompany-glitch/catalogue-pokemon/main/img/';
-const PACK_PHOTO={21:'/image/packs/sv2a.webp',15:'/image/packs/sv8a.webp',18:'/image/packs/sv10.webp',10:'/image/packs/m2a.webp',1:'/image/packs/cn151-3.webp',23:'/image/packs/cn-30ans.png'};
+const PACK_PHOTO={21:'/image/packs/sv2a.webp',15:'/image/packs/sv8a.webp',18:'/image/packs/sv10.webp',10:'/image/packs/m2a.webp',1:'/image/packs/cn151-3.webp',23:'/image/packs/cn-30ans.png',24:'/image/packs/m6.webp'};
 const shopImg=p=>/^(\/|https?:)/.test(p.img)?p.img:SHOP_IMG+p.img;
 const shopLotId=(p,kind)=>'shop-'+p.id+(kind==='display'?'-d':'');
 // Lots déjà présents d'origine (mêmes boosters que la boutique) : comptent comme déjà ajoutés

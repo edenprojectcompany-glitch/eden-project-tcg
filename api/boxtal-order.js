@@ -44,7 +44,7 @@ const POIDS_PAR_PRODUIT_KG = {
   15:0.200,
   16:0.300, 17:0.300, 18:0.300, 19:0.300,
   20:0.300, 21:0.300, 22:0.300,
-  23:0.200,
+  23:0.200, 24:0.300,
 };
 const POIDS_DEFAUT_KG = 0.300; // fallback si ID inconnu
 

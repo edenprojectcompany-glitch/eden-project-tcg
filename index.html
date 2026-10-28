@@ -855,6 +855,95 @@ h1 span{display:block}
 .news-tag{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   padding:3px 9px;border-radius:100px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text-dim)}
 .news-cta{font-size:12.5px;padding:9px 18px}
+/* ── Accueil : visuel « Nouveauté » (remplace la carte gradée) ── */
+.hero-news{position:relative;display:block;width:300px;padding:26px 26px 74px;border-radius:26px;text-decoration:none;color:inherit;
+  background:radial-gradient(120% 80% at 50% 10%,rgba(124,255,170,.22),transparent 60%),linear-gradient(170deg,rgba(18,40,30,.85),rgba(8,12,20,.9));
+  border:1px solid rgba(140,255,190,.35);box-shadow:0 40px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.12);
+  transform-style:preserve-3d;transition:transform .15s ease-out;will-change:transform;overflow:hidden}
+.hero-news__pack{display:block;width:100%;filter:drop-shadow(0 18px 30px rgba(0,0,0,.55))}
+.hero-news__tag{position:absolute;top:14px;left:14px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  padding:6px 11px;border-radius:100px;color:#062314;background:linear-gradient(135deg,#d6ffe5,#5cf09a 60%,#1fb866)}
+.hero-news__cap{position:absolute;left:0;right:0;bottom:0;padding:14px 18px 16px;display:flex;flex-direction:column;gap:2px;
+  background:linear-gradient(180deg,transparent,rgba(4,10,8,.92) 40%)}
+.hero-news__cap b{font-family:'Fraunces',serif;font-size:20px;font-weight:600}
+.hero-news__cap small{font-size:12.5px;color:#9ff0c2;font-weight:600}
+.hero-news .card-foil{border-radius:26px;opacity:.16}
+
+/* ── Accueil : section Nouveautés Pokémon ── */
+.hnews{max-width:1200px;margin:0 auto;padding:30px 20px 70px}
+.hnews-head{text-align:center;margin-bottom:30px}
+.hnews-kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;text-transform:uppercase;letter-spacing:.15em;color:var(--text-dim);margin-bottom:10px}
+.hnews-kicker .dot{width:7px;height:7px;border-radius:50%;background:#5cf09a;box-shadow:0 0 12px #5cf09a}
+.hnews-head h2{font-family:'Fraunces',serif;font-size:clamp(26px,4vw,40px);font-weight:500;line-height:1.15}
+.hnews-head h2 em{font-style:italic;color:var(--foil-1)}
+.hnews-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.hnews-card{display:flex;flex-direction:column;border-radius:24px;overflow:hidden;border:1px solid var(--glass-border);
+  background:linear-gradient(170deg,rgba(255,255,255,.06),rgba(255,255,255,.02)),rgba(8,10,20,.55);box-shadow:0 30px 70px rgba(0,0,0,.35)}
+.hnews-card--delta{border-color:rgba(120,255,175,.32)}
+.hnews-card--gold{border-color:rgba(255,217,127,.32)}
+.hnews-media{position:relative;aspect-ratio:16/9;overflow:hidden;background:#0a0d16}
+.hnews-media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 6s ease}
+.hnews-card:hover .hnews-media img{transform:scale(1.04)}
+.hnews-media::after{content:'';position:absolute;inset:auto 0 0 0;height:35%;background:linear-gradient(180deg,transparent,rgba(8,10,20,.7))}
+.hnews-badge{position:absolute;left:14px;bottom:14px;z-index:1;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  padding:7px 13px;border-radius:100px;color:#2a1b00;background:linear-gradient(135deg,#fff3c4,#f2c35a 55%,#c8902b);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.hnews-badge--green{color:#062314;background:linear-gradient(135deg,#d6ffe5,#5cf09a 60%,#1fb866)}
+.hnews-count{position:absolute;right:14px;top:14px;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:20px;padding:6px 14px;border-radius:14px;
+  background:rgba(4,10,8,.88);border:1px solid rgba(140,255,190,.45);color:#9ff0c2}
+.hnews-body{display:flex;flex-direction:column;flex:1;padding:22px 24px 24px}
+.hnews-meta{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px}
+.hnews-body h3{font-family:'Fraunces',serif;font-size:clamp(21px,2.4vw,27px);font-weight:500;line-height:1.2;margin-bottom:10px}
+.hnews-body p{font-size:14.5px;line-height:1.7;color:#d3dae8}
+.hnews-body b{color:#fff}
+.hnews-facts{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
+.hnews-facts li{padding:12px 12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.hnews-facts b{display:block;font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:#fff;margin-bottom:2px}
+.hnews-facts span{font-size:12px;line-height:1.35;color:var(--text-dim)}
+.hnews-cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
+.hnews-cta button{flex:1 1 auto}
+.hnews-note{margin-top:12px;font-size:12.5px!important;color:var(--text-dim)!important}
+@media (max-width:860px){
+  .hnews-grid{grid-template-columns:1fr}
+  .hero-news{width:230px;padding:20px 20px 66px}
+}
+@media (max-width:480px){
+  .hero .hero-visual{width:auto}
+  .hero .hero-news{width:min(200px,56vw);padding:16px 16px 74px}
+  .hero .hero-news__cap{padding:10px 12px 12px}
+  .hero .hero-news__cap b{font-size:16px}
+  .hero .hero-news__cap small{font-size:11px}
+  .hnews{padding:20px 14px 50px}
+  .hnews-body{padding:18px 16px 20px}
+  .hnews-facts{gap:8px}
+  .hnews-facts li{padding:10px 8px}
+  .hnews-facts b{font-size:19px}
+  .hnews-cta{flex-direction:column}
+  .hero-news{width:190px}
+}
+
+/* ── Fiche produit : cartes Alt à chercher ── */
+.alts:empty{display:none}
+.alts{margin:14px 0 6px;padding:14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--glass-border)}
+.alts-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.alts-head b{font-size:13px;letter-spacing:.04em}
+.alts-head span{font-size:11.5px;color:var(--text-dim)}
+.alts-row{display:grid;grid-auto-flow:column;grid-auto-columns:96px;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.alts-row a{scroll-snap-align:start;display:flex;flex-direction:column;gap:5px;text-decoration:none;color:inherit}
+.alts-row img{width:96px;aspect-ratio:63/88;object-fit:cover;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.45);transition:transform .2s}
+.alts-row a:hover img{transform:translateY(-3px) scale(1.03)}
+.alts-row small{font-size:10.5px;line-height:1.25;color:var(--text-dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.alts-view{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(4,6,12,.86);backdrop-filter:blur(6px);cursor:zoom-out}
+.alts-view img{max-width:min(460px,92vw);max-height:86vh;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+.alts-view figcaption{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-weight:700;font-size:14px}
+
+/* ── Page Nouveautés : article Règne Delta ── */
+.n30--delta{border-color:rgba(120,255,175,.32);background:linear-gradient(160deg,rgba(190,255,215,.1),rgba(255,255,255,.04) 45%,rgba(120,255,175,.06)),rgba(8,10,20,.45)}
+.n30--delta .n30-badge{color:#062314;background:linear-gradient(135deg,#d6ffe5,#5cf09a 60%,#1fb866)}
+.n30--delta .n30-title em{background:linear-gradient(135deg,#d6ffe5,#5cf09a 50%,#1fb866);-webkit-background-clip:text;background-clip:text;color:transparent}
+.n30--delta .n30-fact{background:rgba(120,255,175,.07);border-color:rgba(120,255,175,.22)}
+.n30--delta .n30-fact b{color:#9ff0c2}
+.n30--delta h4{color:#d6ffe5}
+
 /* ── Article à la une : 30 ans de Pokémon ── */
 .n30{max-width:1100px;margin:0 auto 42px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,217,127,.32);
   background:linear-gradient(160deg,rgba(255,236,190,.12),rgba(255,255,255,.04) 45%,rgba(255,217,127,.08)),rgba(8,10,20,.45);
@@ -1674,13 +1763,75 @@ footer{border-top:1px solid var(--glass-border);position:relative;z-index:2;
       </div>
     </div>
     <div class="hero-visual">
-      <div class="psa-wrap" id="heroCard">
-        <img src="./image/graded-hero.png" alt="Mew V PSA 10 — Fusion Arts JP" class="psa-img" loading="eager"
-          onerror="this.closest('.psa-wrap').classList.add('psa-fallback')">
+      <a class="hero-news" id="heroCard" href="#homeNews" aria-label="Nouveauté : ME06 Règne Delta, sortie le 6 novembre 2026">
+        <img src="/image/packs/m6.webp" alt="Booster Storm Emeralda (M6) — Méga-Rayquaza-ex" class="hero-news__pack" loading="eager">
+        <span class="hero-news__tag">Nouveauté</span>
+        <span class="hero-news__cap"><b>ME06 Règne Delta</b><small>En France le 6 novembre</small></span>
         <div class="card-foil" id="heroFoil"></div>
-      </div>
+      </a>
     </div>
   </section>
+  <!-- ══ NOUVEAUTÉS POKÉMON (accueil) ══ -->
+  <section class="hnews" id="homeNews" aria-labelledby="hnewsTitle">
+    <div class="hnews-head reveal-up">
+      <div class="hnews-kicker"><span class="dot"></span>Nouveautés Pokémon</div>
+      <h2 id="hnewsTitle">Les sorties <em>à ne pas manquer.</em></h2>
+    </div>
+    <div class="hnews-grid">
+      <article class="hnews-card hnews-card--delta reveal-up">
+        <div class="hnews-media">
+          <img src="/image/news/m6-regne-delta.webp" alt="Méga-Rayquaza-ex, la star de Storm Emeralda (M6) / Règne Delta (ME06)" loading="lazy">
+          <span class="hnews-badge hnews-badge--green">Sortie FR · 6 nov. 2026</span>
+          <span class="hnews-count" id="hnewsCount" hidden></span>
+        </div>
+        <div class="hnews-body">
+          <div class="hnews-meta">Méga-Évolution · ME06</div>
+          <h3>Règne Delta arrive en France</h3>
+          <p>La nouvelle extension menée par <b>Méga-Rayquaza-ex</b> sort en français le <b>6 novembre 2026</b> (avant-premières en boutique depuis le 24 octobre). Sa version japonaise, <b>Storm Emeralda (M6)</b>, est déjà sortie au Japon le 31 juillet.</p>
+          <ul class="hnews-facts">
+            <li><b>M6</b><span>Storm Emeralda (JP)</span></li>
+            <li><b>30</b><span>boosters par display</span></li>
+            <li><b>6</b><span>cartes SAR à chercher</span></li>
+          </ul>
+          <div class="hnews-cta">
+            <button class="btn-primary" onclick="openModal(24)">Voir la display M6</button>
+            <button class="btn-ghost" data-page="news">Toutes les nouveautés</button>
+          </div>
+          <p class="hnews-note">Display japonaise bientôt en stock : réservez-la sur WhatsApp ou par e-mail.</p>
+        </div>
+      </article>
+      <article class="hnews-card hnews-card--gold reveal-up">
+        <div class="hnews-media">
+          <img src="/image/news/pokemon-30-ans.jpg" alt="Les produits du 30ᵉ anniversaire du JCC Pokémon" loading="lazy">
+          <span class="hnews-badge">🎉 30 ans de Pokémon</span>
+        </div>
+        <div class="hnews-body">
+          <div class="hnews-meta">30th Celebration · 2026</div>
+          <h3>Les 30 ans du JCC Pokémon</h3>
+          <p>Pikachu, Mew et Mewtwo fêtent le 30ᵉ anniversaire. En exclusivité chez nous : la <b>Collection 30 ans chinoise (30thC)</b>, 20 boosters de 6 cartes toutes brillantes, avec <b>1 Pikachu garanti</b> dans chaque booster (30 versions).</p>
+          <ul class="hnews-facts">
+            <li><b>20</b><span>boosters par display</span></li>
+            <li><b>6</b><span>cartes brillantes / booster</span></li>
+            <li><b>30</b><span>Pikachu à collectionner</span></li>
+          </ul>
+          <div class="hnews-cta">
+            <button class="btn-primary" onclick="openModal(23)">Voir la display 30 ans</button>
+            <button class="btn-ghost" data-page="news">Lire l'article</button>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+  <script>
+    // Compte à rebours jusqu'à la sortie française de Règne Delta (6 novembre 2026)
+    (function(){
+      var el=document.getElementById('hnewsCount'); if(!el) return;
+      var d=Math.ceil((new Date('2026-11-06T00:00:00+01:00')-Date.now())/864e5);
+      if(d>0){ el.textContent='J-'+d; el.hidden=false; }
+      else if(d>-30){ el.textContent='Disponible !'; el.hidden=false; }
+    })();
+  </script>
+
   <!-- Jackpot progressif -->
   <div class="jackpot-banner" id="jackpotBanner" style="display:none">
     <div class="jackpot-icon">🏆</div>
@@ -2342,6 +2493,33 @@ loadAndRenderReviews();
       <h2 data-i18n-html="news.h2">Nouveautés<br><em>— du mois.</em></h2>
       <div class="sub" data-i18n="news.sub">Les sorties Pokémon TCG à surveiller. Mis à jour chaque mois.</div>
     </div>
+
+    <!-- ── À la une : ME06 Règne Delta / M6 Storm Emeralda ── -->
+    <article class="n30 n30--delta reveal-up">
+      <div class="n30-hero">
+        <img src="/image/news/m6-regne-delta.webp" alt="Méga-Rayquaza-ex, visuel officiel de Storm Emeralda (M6)" loading="lazy">
+        <span class="n30-badge">🟢 Sortie FR · 6 novembre 2026</span>
+      </div>
+      <div class="n30-body">
+        <div class="news-tag">Méga-Évolution · ME06</div>
+        <h3 class="n30-title">Règne Delta : le retour de <em>Méga-Rayquaza.</em></h3>
+        <p class="n30-lead">La 6ᵉ extension de l'ère Méga-Évolution sort en France le <b>6 novembre 2026</b>, avec des avant-premières en boutique depuis le 24 octobre. Elle reprend la série japonaise <b>Storm Emeralda (M6)</b>, sortie au Japon le 31 juillet 2026.</p>
+        <div class="n30-facts">
+          <div class="n30-fact"><b>06/11</b><span>sortie française de ME06 Règne Delta</span></div>
+          <div class="n30-fact"><b>31/07</b><span>sortie japonaise de M6 Storm Emeralda</span></div>
+          <div class="n30-fact"><b>30</b><span>boosters de 5 cartes par display JP</span></div>
+          <div class="n30-fact"><b>6</b><span>cartes SAR japonaises à chercher</span></div>
+        </div>
+        <h4>Les stars de l'extension</h4>
+        <p><b>Méga-Rayquaza-ex</b> mène le set, entouré de <b>Méga-Golemastoc-ex</b>, <b>Méga-Sarmuraï-ex</b> et <b>Raikou-ex</b>. Les illustrations spéciales (SAR) sont visibles dans la fiche de la display M6.</p>
+        <h4>Chez Eden Project TCG</h4>
+        <p>La <b>display japonaise M6 Storm Emeralda</b> arrive très bientôt en stock. Elle est déjà en ligne pour que vous puissiez la suivre : contactez-nous sur WhatsApp ou par e-mail pour la réserver.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
+          <button class="btn-primary news-cta" onclick="openModal(24)">Voir la display M6</button>
+        </div>
+      </div>
+    </article>
+
 
     <!-- ── À la une : les 30 ans de Pokémon ── -->
     <article class="n30 reveal-up">
@@ -3350,6 +3528,7 @@ window.addEventListener('load', () => {
     {id:21,name:'SV2a — Pokémon 151',   sub:'Display JP · 20 boosters',        price:299, tag:'Display JP',cat:'display',lang:'jp',rare:'RÉFÉRENCE',urgent:false,img:'pokemon-151-sv2a.png',      ebay:310,tiers:[{q:12,p:299},{q:12,p:295},{q:36,p:280}],desc:'Pokémon 151 JP (SV2a) — Charizard ex, Mewtwo ex, retour Kadabra. 165+ cartes.'},
     {id:22,name:'M5 — Mega Abyss Eye', sub:'Display JP · 30 boosters',         price:120, tag:'Display JP',cat:'display',lang:'jp',rare:'SCELLÉ',   urgent:false,img:'abyss-eye-m5.png',         ebay:128,tiers:[{q:12,p:120},{q:12,p:110},{q:36,p:105}],desc:'M5 — Dragapult en Mega Évolution. Nouvelle rareté MUR. 30 boosters.'},
     {id:23,name:'Collection 30 ans',     sub:'Display CN · 20 boosters',   price:99,  tag:'Display CN',cat:'display',lang:'cn',rare:'30 ANS',   urgent:false,img:'/image/products/cn-30ans-display.webp',stock:0,ebay:null,tiers:[{q:1,p:99}],desc:'30th Celebration (30thC) — édition chinoise simplifiée du 30e anniversaire Pokémon, sortie le 16/09/2026. 20 boosters/boîte · 6 cartes/booster, toutes brillantes · 1 Pikachu garanti par booster (30 versions, une par illustrateur). Nouvelle rareté Futuristic Rare (FUR).'},
+    {id:24,name:'M6 — Storm Emeralda', sub:'Display JP · 30 boosters',         price:120, tag:'Display JP',cat:'display',lang:'jp',rare:'NOUVEAU',  urgent:false,img:'/image/products/m6-display.webp',stock:0,ebay:null,tiers:[{q:1,p:120},{q:12,p:110},{q:36,p:105}],desc:'M6 — Storm Emeralda (ストームエメラルダ), sorti au Japon le 31/07/2026. Méga-Rayquaza-ex en vedette, avec Méga-Golemastoc-ex, Méga-Sarmuraï-ex et Raikou-ex. 30 boosters · 5 cartes/booster. Version japonaise de ME06 Règne Delta (sortie FR le 6 novembre 2026).'},
   ];
 
   /* ── Mise à jour dynamique des compteurs de filtres ──
@@ -3868,7 +4047,7 @@ void main(){
       if(hasGSAP) gsap.to(inner,{rotateY:0,rotateX:0,duration:.5,ease:'elastic.out(1,.5)',transformPerspective:1200});
     }
 
-    if(hero) hero.addEventListener('click', openLb);
+    if(hero) hero.addEventListener('click', e=>{ e.preventDefault(); document.getElementById('homeNews')?.scrollIntoView({behavior:'smooth',block:'start'}); });
     closeBtn.addEventListener('click', e=>{e.stopPropagation();closeLb();});
     lb.addEventListener('click', e=>{ if(e.target===lb) closeLb(); });
     document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLb(); });
@@ -4307,6 +4486,31 @@ void main(){
   const modalClose=document.getElementById('modalClose');
   const modalImg=document.getElementById('modalImg');
   const modalBody=document.getElementById('modalBody');
+  /* ══ CARTES ALT (SAR / Art Rare) de chaque display : image/alts/alts.json, chargé à la première fiche ouverte ══ */
+  let _alts=null, _altsLoading=null;
+  function loadAlts(){
+    if(_alts) return Promise.resolve(_alts);
+    if(!_altsLoading) _altsLoading=fetch('/image/alts/alts.json').then(r=>r.ok?r.json():{}).catch(()=>({})).then(j=>(_alts=j));
+    return _altsLoading;
+  }
+  function renderAlts(id){
+    loadAlts().then(all=>{
+      const box=document.getElementById('mAlts');
+      if(!box||+box.dataset.pid!==id) return;
+      const a=all[id]; if(!a||!a.cards||!a.cards.length) return;
+      const label=c=>c.fr||(c.kind==='Dresseur'?'Dresseur':'')||'';
+      box.innerHTML=`<div class="alts-head"><b>✦ Cartes Alt à chercher</b><span>${a.cards.length} carte${a.cards.length>1?'s':''} · touchez pour agrandir</span></div>
+        <div class="alts-row">${a.cards.map(c=>`<a href="${c.img}" data-alt="${escHtml(label(c)+(c.kind&&c.kind!=='Pokémon'&&c.kind!=='Dresseur'?' · '+c.kind:''))}"><img src="${c.img}" alt="${escHtml(label(c)||'Carte Alt')}" loading="lazy"><small>${escHtml(label(c)||c.kind||'')}</small></a>`).join('')}</div>`;
+      box.querySelectorAll('a').forEach(el=>el.addEventListener('click',e=>{
+        e.preventDefault();
+        const v=document.createElement('figure'); v.className='alts-view';
+        v.innerHTML=`<img src="${el.getAttribute('href')}" alt=""><figcaption>${el.dataset.alt||''}</figcaption>`;
+        v.addEventListener('click',()=>v.remove()); document.body.appendChild(v);
+      }));
+    });
+  }
+  function escHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
   function openModal(id){
     const p=products.find(x=>x.id===id); if(!p) return;
     let imgEl=modalImg.querySelector('img');
@@ -4341,7 +4545,9 @@ void main(){
         }).join('')}
       </div>` : '';
 
-    const stockLine = p.stock!=null
+    const stockLine = p.stock===0
+      ? `<div class="modal-stock-line" style="background:rgba(92,240,154,.08);border-color:rgba(92,240,154,.3);color:#9ff0c2">⏳ Bientôt en stock : contactez-nous sur WhatsApp ou par e-mail pour la réserver.</div>`
+      : p.stock!=null
       ? (p.stock<=3
           ? `<div class="modal-stock-line">${t('modal.stock_warning')} ${p.stock} ${p.stock>1?t('modal.stock_boxes'):t('modal.stock_box')} ${t('modal.stock_in_stock_label')}</div>`
           : p.stock<=8
@@ -4356,6 +4562,7 @@ void main(){
       <div class="modal-name">${p.name}</div>
       <div class="modal-sub">${p.sub}</div>
       <div class="modal-desc">${p.desc}</div>
+      <div class="alts" id="mAlts" data-pid="${p.id}"></div>
       ${flashLine}
       ${stockLine}
       ${buildTiersHtml(p,cartQty)}${buildEbayHtml(p)}
@@ -4376,6 +4583,7 @@ void main(){
         <button class="btn-ghost" id="mCloseBtn">${t('modal.close')}</button>
       </div>`;
     modalOverlay.classList.add('open'); document.body.style.overflow='hidden';
+    renderAlts(p.id);
     if(p.flashSale) startFlashTimers();
 
     // Contrôles quantité dans la modal
@@ -5994,6 +6202,7 @@ void main(){
 
   /* ══ PRIX EBAY LIVE (après le rendu initial) ══ */
   const EBAY_TERMS={
+    24:'m6 storm emeralda display',
     // CN — seuls vol3 et gempack2 ont des prix fiables sur eBay FR
     // les autres utilisent la valeur hardcodée (marché CN peu listé sur eBay FR)
     1:'151 vol 3 display',
